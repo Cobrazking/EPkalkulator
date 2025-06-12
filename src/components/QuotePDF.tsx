@@ -1,0 +1,268 @@
+import React from 'react';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
+import { formatNumber } from '../utils/calculations';
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'Helvetica',
+    fontSize: 10,
+    color: '#333',
+  },
+  header: {
+    marginBottom: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    width: 120,
+  },
+  logo: {
+    width: '100%',
+    maxHeight: 60,
+    objectFit: 'contain',
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 4,
+    color: '#111',
+  },
+  date: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 20,
+  },
+  infoSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 40,
+  },
+  infoBlock: {
+    maxWidth: '40%',
+  },
+  infoTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#111',
+    textTransform: 'uppercase',
+  },
+  infoText: {
+    marginBottom: 4,
+    fontSize: 10,
+  },
+  table: {
+    marginBottom: 30,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    marginBottom: 8,
+  },
+  tableHeaderCell: {
+    fontWeight: 'bold',
+    color: '#111',
+  },
+  tableRow: {
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  tableRowMain: {
+    flexDirection: 'row',
+    padding: 8,
+    flexWrap: 'nowrap',
+    alignItems: 'flex-start',
+  },
+  tableRowComment: {
+    marginTop: 4,
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingBottom: 8,
+  },
+  postCell: {
+    width: '15%',
+    paddingRight: 8,
+    flexShrink: 0,
+  },
+  descriptionCell: {
+    width: '40%',
+    paddingRight: 8,
+    flexShrink: 0,
+    flexGrow: 1,
+  },
+  numberCell: {
+    width: '15%',
+    textAlign: 'right',
+    flexShrink: 0,
+  },
+  commentText: {
+    fontSize: 9,
+    color: '#666',
+    fontStyle: 'italic',
+    paddingTop: 4,
+  },
+  totalSection: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 20,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  totalLabel: {
+    fontWeight: 'bold',
+    marginRight: 20,
+  },
+  totalAmount: {
+    fontWeight: 'bold',
+    width: '15%',
+    textAlign: 'right',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 40,
+    right: 40,
+    fontSize: 8,
+    color: '#666',
+    textAlign: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  text: {
+    fontSize: 10,
+    lineHeight: 1.4,
+  },
+  textWrap: {
+    maxWidth: '100%',
+    wordBreak: 'break-word',
+  },
+});
+
+interface QuotePDFProps {
+  entries: CalculationEntry[];
+  companyInfo: CompanyInfo;
+  customerInfo: CustomerInfo;
+}
+
+const formatCurrency = (value: number): string => {
+  return `${formatNumber(value)} Kr`;
+};
+
+const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo }) => {
+  // Only filter out entries with zero values
+  const validEntries = entries.filter(entry => entry.antall > 0 || entry.enhetspris > 0 || entry.sum > 0);
+
+  const totalSum = validEntries.reduce((acc, entry) => acc + entry.sum, 0);
+  const currentDate = new Date().toLocaleDateString('nb-NO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>{companyInfo.tilbudstittel || 'Tilbud'}</Text>
+            <Text style={styles.date}>{currentDate}</Text>
+          </View>
+          {companyInfo.logo && (
+            <View style={styles.headerRight}>
+              <Image src={companyInfo.logo} style={styles.logo} />
+            </View>
+          )}
+        </View>
+
+        <View style={styles.infoSection}>
+          <View style={styles.infoBlock}>
+            <Text style={styles.infoTitle}>Utsteder</Text>
+            <Text style={styles.infoText}>{companyInfo.firma}</Text>
+            <Text style={styles.infoText}>{companyInfo.navn}</Text>
+            <Text style={styles.infoText}>{companyInfo.epost}</Text>
+            <Text style={styles.infoText}>{companyInfo.tlf}</Text>
+            {companyInfo.refNr && (
+              <Text style={styles.infoText}>Ref.nr: {companyInfo.refNr}</Text>
+            )}
+          </View>
+
+          <View style={styles.infoBlock}>
+            <Text style={styles.infoTitle}>Kunde</Text>
+            <Text style={styles.infoText}>{customerInfo.kunde}</Text>
+            <Text style={styles.infoText}>{customerInfo.adresse}</Text>
+            <Text style={styles.infoText}>{customerInfo.epost}</Text>
+            <Text style={styles.infoText}>{customerInfo.tlf}</Text>
+          </View>
+        </View>
+
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
+            <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
+            <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
+            <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
+            <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
+          </View>
+
+          {validEntries.map((entry, index) => (
+            <View key={`${entry.id}-${index}`} style={[styles.tableRow, index % 2 === 0 && { backgroundColor: '#f9fafb' }]}>
+              <View style={styles.tableRowMain}>
+                <View style={styles.postCell}>
+                  <Text style={[styles.text, styles.textWrap]}>{entry.post || '-'}</Text>
+                </View>
+                <View style={styles.descriptionCell}>
+                  <Text style={[styles.text, styles.textWrap]}>{entry.beskrivelse || '-'}</Text>
+                </View>
+                <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
+                <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
+                <Text style={styles.numberCell}>{formatCurrency(entry.sum)}</Text>
+              </View>
+              {entry.kommentar && (
+                <View style={styles.tableRowComment}>
+                  <Text style={[styles.commentText, styles.textWrap]}>{entry.kommentar}</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.totalSection}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total sum eks. mva</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>MVA 25%</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(totalSum * 0.25)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total sum inkl. mva</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(totalSum * 1.25)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text>
+            Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+export default QuotePDF;

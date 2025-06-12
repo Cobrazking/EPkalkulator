@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-background via-background to-purple-900/10;
+    min-height: 100vh;
+  }
+  
+  input, select, textarea {
+    @apply bg-background-lighter border border-border text-text-primary px-3 py-2 rounded-md 
+           focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
+           backdrop-blur-sm bg-opacity-50;
+  }
+
+  input:disabled, select:disabled, textarea:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+  
+  button {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background;
+  }
+  
+  table {
+    @apply w-full border-collapse;
+  }
+  
+  th {
+    @apply py-3 px-4 text-left font-semibold text-text-primary bg-background-darker/80 border-b border-border backdrop-blur-sm;
+  }
+  
+  td {
+    @apply py-3 px-4 border-b border-border;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-purple-600 text-white 
+           hover:from-primary-600 hover:to-purple-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-background-lighter/50 text-text-primary border border-border 
+           hover:bg-background/70 focus:ring-primary-400
+           backdrop-blur-sm;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-600 text-white 
+           hover:from-red-600 hover:to-rose-700 focus:ring-red-500;
+  }
+  
+  .card {
+    @apply bg-background-lighter/40 rounded-lg border border-border/50 shadow-card
+           backdrop-blur-sm hover:shadow-hover transition-shadow duration-300
+           hover:border-border/70;
+  }
+  
+  .input-group {
+    @apply mb-4;
+  }
+  
+  .input-label {
+    @apply block text-sm font-medium text-text-secondary mb-1;
+  }
+
+  .number-input {
+    @apply text-right font-mono;
+  }
+}
+
+/* Animations */
+.fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.row-highlight {
+  @apply bg-primary-400/10;
+  transition: background-color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background-darker/50 backdrop-blur-sm;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border/70 rounded-full hover:bg-border-light/70 transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-border-light;
+}
