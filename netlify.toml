@@ -1,0 +1,4 @@
+[build]
+  base = "kalk"
+  command = "npm run build"
+  publish = "kalk/dist"
