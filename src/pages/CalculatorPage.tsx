@@ -1,0 +1,427 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { v4 as uuidv4 } from 'uuid';
+import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+
+import { useProject } from '../contexts/ProjectContext';
+import SummaryCard from '../components/SummaryCard';
+import CalculationTable from '../components/CalculationTable';
+import QuotePDF from '../components/QuotePDF';
+import SettingsModal from '../components/SettingsModal';
+import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
+import { calculateRow, calculateSummary } from '../utils/calculations';
+import { exportToExcel } from '../utils/excel';
+import useLocalStorage from '../hooks/useLocalStorage';
+
+const CalculatorPage: React.FC = () => {
+  const { projectId, calculatorId } = useParams<{ projectId: string; calculatorId?: string }>();
+  const navigate = useNavigate();
+  const { getProjectById, getCustomerById, getCalculatorById, addCalculator, updateCalculator } = useProject();
+
+  const project = projectId ? getProjectById(projectId) : null;
+  const customer = project ? getCustomerById(project.customerId) : null;
+  const calculator = calculatorId ? getCalculatorById(calculatorId) : null;
+
+  const initialSettings: CalculationSettings = {
+    defaultKostpris: 700,
+    defaultTimepris: 995,
+    defaultPaslag: 20
+  };
+
+  const initialEntries: CalculationEntry[] = [
+    {
+      id: uuidv4(),
+      post: '',
+      beskrivelse: '',
+      antall: 1,
+      kostMateriell: 1000,
+      timer: 1,
+      kostpris: initialSettings.defaultKostpris,
+      timepris: initialSettings.defaultTimepris,
+      paslagMateriell: initialSettings.defaultPaslag,
+      enhetspris: 2195,
+      sum: 2195,
+      kommentar: ''
+    },
+    {
+      id: uuidv4(),
+      post: '',
+      beskrivelse: '',
+      antall: 1,
+      kostMateriell: 0,
+      timer: 0,
+      kostpris: initialSettings.defaultKostpris,
+      timepris: initialSettings.defaultTimepris,
+      paslagMateriell: initialSettings.defaultPaslag,
+      enhetspris: 0,
+      sum: 0,
+      kommentar: ''
+    }
+  ];
+
+  const initialCompanyInfo: CompanyInfo = {
+    firma: '',
+    navn: '',
+    epost: '',
+    tlf: '',
+    refNr: ''
+  };
+
+  const initialCustomerInfo: CustomerInfo = {
+    kunde: customer?.name || '',
+    adresse: customer?.address || '',
+    epost: customer?.email || '',
+    tlf: customer?.phone || ''
+  };
+
+  const [entries, setEntries] = useState<CalculationEntry[]>(calculator?.entries || initialEntries);
+  const [companyInfo, setCompanyInfo] = useLocalStorage<CompanyInfo>('company-info', initialCompanyInfo);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(initialCustomerInfo);
+  const [calculationSettings, setCalculationSettings] = useLocalStorage<CalculationSettings>('calculation-settings', initialSettings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [summary, setSummary] = useState<CalculationSummary>({
+    totalSum: 0,
+    fortjeneste: 0,
+    timerTotalt: 0,
+    bidrag: 0,
+    totalKostprisTimer: 0
+  });
+
+  // Update customer info when customer changes
+  useEffect(() => {
+    if (customer) {
+      setCustomerInfo({
+        kunde: customer.name,
+        adresse: customer.address,
+        epost: customer.email,
+        tlf: customer.phone
+      });
+    }
+  }, [customer]);
+
+  useEffect(() => {
+    setSummary(calculateSummary(entries));
+  }, [entries]);
+
+  // Auto-save calculator
+  useEffect(() => {
+    if (projectId && entries.length > 0) {
+      const saveTimer = setTimeout(() => {
+        const calculatorData = {
+          projectId,
+          name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
+          description: calculator?.description,
+          entries,
+          summary
+        };
+
+        if (calculatorId && calculator) {
+          updateCalculator({
+            ...calculator,
+            ...calculatorData
+          });
+        } else if (!calculatorId) {
+          // Create new calculator and redirect
+          const newCalculator = addCalculator(calculatorData);
+          // Note: In a real implementation, addCalculator would return the created calculator
+          // For now, we'll just stay on the current page
+        }
+      }, 2000);
+
+      return () => clearTimeout(saveTimer);
+    }
+  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator]);
+
+  if (!project) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-text-primary mb-2">Prosjekt ikke funnet</h2>
+        <p className="text-text-muted mb-4">Det forespurte prosjektet eksisterer ikke.</p>
+        <Link to="/projects" className="btn-primary">
+          Tilbake til prosjekter
+        </Link>
+      </div>
+    );
+  }
+
+  const handleUpdateEntry = (id: string, field: keyof CalculationEntry, value: any) => {
+    setEntries(prevEntries => {
+      const updated = prevEntries.map(entry => {
+        if (entry.id === id) {
+          const updatedEntry = { ...entry, [field]: value };
+          return calculateRow(updatedEntry);
+        }
+        return entry;
+      });
+      return updated;
+    });
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+  };
+
+  const handleAddEntry = () => {
+    const newEntry: CalculationEntry = {
+      id: uuidv4(),
+      post: '',
+      beskrivelse: '',
+      antall: 1,
+      kostMateriell: 0,
+      timer: 0,
+      kostpris: calculationSettings.defaultKostpris,
+      timepris: calculationSettings.defaultTimepris,
+      paslagMateriell: calculationSettings.defaultPaslag,
+      enhetspris: 0,
+      sum: 0,
+      kommentar: ''
+    };
+    
+    const calculatedEntry = calculateRow(newEntry);
+    setEntries(prevEntries => [...prevEntries, calculatedEntry]);
+  };
+
+  const handleDuplicateEntry = (entry: CalculationEntry) => {
+    const duplicatedEntry: CalculationEntry = {
+      ...entry,
+      id: uuidv4(),
+      post: `${entry.post}-kopi`,
+      beskrivelse: `${entry.beskrivelse} (Kopi)`
+    };
+    
+    setEntries(prevEntries => {
+      const newEntries = [...prevEntries];
+      const index = prevEntries.findIndex(e => e.id === entry.id);
+      newEntries.splice(index + 1, 0, duplicatedEntry);
+      return newEntries;
+    });
+  };
+
+  const handleReorderEntries = (startIndex: number, endIndex: number) => {
+    setEntries(prevEntries => {
+      if (
+        startIndex < 0 || 
+        endIndex < 0 || 
+        startIndex >= prevEntries.length || 
+        endIndex >= prevEntries.length || 
+        startIndex === endIndex
+      ) {
+        return prevEntries;
+      }
+
+      const newEntries = [...prevEntries];
+      const [entryToMove] = newEntries.splice(startIndex, 1);
+      newEntries.splice(endIndex, 0, entryToMove);
+      
+      return newEntries;
+    });
+  };
+
+  const handleExport = () => {
+    const exportData = {
+      entries,
+      summary,
+      companyInfo,
+      customerInfo,
+      calculationSettings
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+    
+    const exportFileDefaultName = `kalkyle-${project.name}-${new Date().toISOString().slice(0, 10)}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.xlsx,.xls';
+    
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (!target.files?.length) return;
+      
+      const file = target.files[0];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const reader = new FileReader();
+      
+      if (fileExtension === 'json') {
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target?.result as string);
+            if (data.entries && Array.isArray(data.entries)) {
+              setEntries(data.entries);
+            }
+            if (data.customerInfo) {
+              setCustomerInfo(data.customerInfo);
+            }
+            if (data.calculationSettings) {
+              setCalculationSettings(data.calculationSettings);
+            }
+          } catch (error) {
+            console.error('Failed to import JSON data:', error);
+            alert('Feil ved import av JSON-data. Kontroller at filen er i gyldig JSON-format.');
+          }
+        };
+        reader.readAsText(file);
+      } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+        reader.onload = (event) => {
+          try {
+            const data = new Uint8Array(event.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const excelData = XLSX.utils.sheet_to_json(worksheet);
+            
+            const importedEntries: CalculationEntry[] = excelData.map((row: any) => ({
+              id: uuidv4(),
+              post: row.post || '',
+              beskrivelse: row.beskrivelse || '',
+              antall: Number(row.antall) || 1,
+              kostMateriell: Number(row.kostMateriell) || 0,
+              timer: Number(row.timer) || 0,
+              kostpris: Number(row.kostpris) || calculationSettings.defaultKostpris,
+              timepris: Number(row.timepris) || calculationSettings.defaultTimepris,
+              paslagMateriell: Number(row.paslagMateriell) || calculationSettings.defaultPaslag,
+              enhetspris: Number(row.enhetspris) || 0,
+              sum: Number(row.sum) || 0,
+              kommentar: row.kommentar || ''
+            }));
+            
+            setEntries(importedEntries.map(entry => calculateRow(entry)));
+          } catch (error) {
+            console.error('Failed to import Excel data:', error);
+            alert('Feil ved import av Excel-data. Kontroller at filen er i gyldig Excel-format.');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert('Ugyldig filformat. Vennligst velg en .json eller .xlsx/.xls fil.');
+      }
+    };
+    
+    input.click();
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link
+          to={`/projects/${project.id}`}
+          className="p-2 rounded-lg bg-background-lighter border border-border hover:bg-background transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-text-primary">
+            {calculator?.name || 'Ny kalkyle'}
+          </h1>
+          <p className="text-text-muted mt-1">{project.name} - {customer?.name}</p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-wrap gap-2"
+      >
+        <button 
+          onClick={handleImport}
+          className="btn-secondary flex items-center gap-2"
+          title="Importer data"
+        >
+          <Upload size={16} />
+          <span>Importer</span>
+        </button>
+        
+        <button 
+          onClick={handleExport}
+          className="btn-secondary flex items-center gap-2"
+          title="Eksporter data"
+        >
+          <Download size={16} />
+          <span>Eksporter</span>
+        </button>
+
+        <button 
+          onClick={() => exportToExcel(entries, summary)}
+          className="btn-secondary flex items-center gap-2"
+          title="Eksporter til Excel"
+        >
+          <FileSpreadsheet size={16} />
+          <span>Excel</span>
+        </button>
+
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <Settings size={16} />
+          <span>Innstillinger</span>
+        </button>
+
+        <PDFDownloadLink
+          document={<QuotePDF entries={entries} companyInfo={companyInfo} customerInfo={customerInfo} />}
+          fileName={`tilbud-${project.name}-${new Date().toISOString().slice(0, 10)}.pdf`}
+        >
+          {({ loading }) => (
+            <button className="btn-secondary flex items-center gap-2">
+              <FileText size={16} />
+              <span>{loading ? 'Laster...' : 'Last ned tilbud'}</span>
+            </button>
+          )}
+        </PDFDownloadLink>
+      </motion.div>
+
+      {/* Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <SummaryCard summary={summary} />
+      </motion.div>
+
+      {/* Calculation Table */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <CalculationTable 
+          entries={entries}
+          onUpdateEntry={handleUpdateEntry}
+          onDeleteEntry={handleDeleteEntry}
+          onAddEntry={handleAddEntry}
+          onReorderEntries={handleReorderEntries}
+          onDuplicateEntry={handleDuplicateEntry}
+        />
+      </motion.div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        companyInfo={companyInfo}
+        customerInfo={customerInfo}
+        calculationSettings={calculationSettings}
+        onUpdateCompanyInfo={setCompanyInfo}
+        onUpdateCustomerInfo={setCustomerInfo}
+        onUpdateCalculationSettings={setCalculationSettings}
+      />
+    </div>
+  );
+};
+
+export default CalculatorPage;
