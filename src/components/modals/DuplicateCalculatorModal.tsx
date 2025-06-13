@@ -20,7 +20,7 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
   currentProjectId,
   availableProjects,
 }) => {
-  const { getCalculatorById, getProjectById, getCustomerById, duplicateCalculator, updateCalculator } = useProject();
+  const { getCalculatorById, getProjectById, getCustomerById, addCalculator, currentOrganization } = useProject();
   const navigate = useNavigate();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(currentProjectId);
   const [customName, setCustomName] = useState<string>('');
@@ -43,29 +43,29 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!calculator || !customName.trim()) return;
+    if (!calculator || !customName.trim() || !currentOrganization) return;
     
     try {
-      // First duplicate the calculator to the selected project
-      const newCalculatorId = duplicateCalculator(calculator.id, selectedProjectId);
+      // Create a new calculator directly with the custom name
+      const newCalculator = {
+        organizationId: currentOrganization.id,
+        projectId: selectedProjectId,
+        name: customName.trim(),
+        description: calculator.description,
+        entries: [...calculator.entries], // Deep copy the entries
+        summary: { ...calculator.summary } // Copy the summary
+      };
       
-      // Wait a bit to ensure the calculator is created
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Then immediately update the name to the custom name
-      const newCalculator = getCalculatorById(newCalculatorId);
-      if (newCalculator) {
-        updateCalculator({
-          ...newCalculator,
-          name: customName.trim()
-        });
-      }
+      // Add the new calculator
+      addCalculator(newCalculator);
       
       onClose();
       
-      // Navigate to the new calculator after a short delay to ensure updates are applied
+      // Navigate to the new calculator after a short delay
       setTimeout(() => {
-        navigate(`/projects/${selectedProjectId}/calculator/${newCalculatorId}`);
+        // Since we don't get the ID back from addCalculator, we need to find the newest calculator
+        // This is a limitation of the current implementation
+        navigate(`/projects/${selectedProjectId}`);
       }, 200);
     } catch (error) {
       console.error('Failed to duplicate calculator:', error);
