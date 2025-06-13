@@ -53,18 +53,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       </button>
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          x: isOpen ? 0 : '-100%',
-          opacity: isOpen ? 1 : 0
-        }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      <aside
         className={`
-          fixed lg:relative lg:translate-x-0 lg:opacity-100
+          fixed lg:fixed
           top-0 left-0 z-40 h-full w-64
           bg-background-lighter/95 backdrop-blur-xl border-r border-border
           flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Header */}
@@ -116,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             <p>Versjon 1.0.0</p>
           </div>
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
 };
