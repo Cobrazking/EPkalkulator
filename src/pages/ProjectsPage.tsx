@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
@@ -10,7 +10,8 @@ import {
   User, 
   Calendar,
   Calculator,
-  ArrowRight
+  ArrowRight,
+  Copy
 } from 'lucide-react';
 import { useProject, Project } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
@@ -19,10 +20,12 @@ const ProjectsPage: React.FC = () => {
   const { 
     getCurrentOrganizationProjects, 
     deleteProject, 
+    duplicateProject,
     getCustomerById, 
     getCalculatorsByProject,
     currentOrganization
   } = useProject();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,6 +48,23 @@ const ProjectsPage: React.FC = () => {
   const handleDelete = (project: Project) => {
     if (window.confirm(`Er du sikker på at du vil slette prosjektet "${project.name}"?`)) {
       deleteProject(project.id);
+    }
+  };
+
+  const handleDuplicate = (project: Project) => {
+    const calculatorCount = getCalculatorsByProject(project.id).length;
+    const confirmMessage = calculatorCount > 0 
+      ? `Vil du duplisere prosjektet "${project.name}" med ${calculatorCount} kalkyle${calculatorCount !== 1 ? 'r' : ''}?`
+      : `Vil du duplisere prosjektet "${project.name}"?`;
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        const newProjectId = duplicateProject(project.id);
+        navigate(`/projects/${newProjectId}`);
+      } catch (error) {
+        console.error('Failed to duplicate project:', error);
+        alert('Feil ved duplisering av prosjekt. Prøv igjen.');
+      }
     }
   };
 
@@ -157,20 +177,33 @@ const ProjectsPage: React.FC = () => {
               </div>
               
               <div className="flex gap-1">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleDuplicate(project)}
+                  className="p-2 text-text-muted hover:text-blue-400 transition-colors rounded-lg hover:bg-background-darker/50"
+                  title="Dupliser prosjekt"
+                >
+                  <Copy size={16} />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleEdit(project)}
-                  className="p-2 text-text-muted hover:text-primary-400 transition-colors"
+                  className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-lg hover:bg-background-darker/50"
                   title="Rediger prosjekt"
                 >
                   <Edit size={16} />
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleDelete(project)}
-                  className="p-2 text-text-muted hover:text-red-400 transition-colors"
+                  className="p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-background-darker/50"
                   title="Slett prosjekt"
                 >
                   <Trash2 size={16} />
-                </button>
+                </motion.button>
               </div>
             </div>
 

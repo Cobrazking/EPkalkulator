@@ -71,6 +71,7 @@ type ProjectAction =
   | { type: 'ADD_PROJECT'; payload: Project }
   | { type: 'UPDATE_PROJECT'; payload: Project }
   | { type: 'DELETE_PROJECT'; payload: string }
+  | { type: 'DUPLICATE_PROJECT'; payload: { project: Project; calculators: Calculator[] } }
   | { type: 'ADD_CALCULATOR'; payload: Calculator }
   | { type: 'UPDATE_CALCULATOR'; payload: Calculator }
   | { type: 'DELETE_CALCULATOR'; payload: string }
@@ -157,6 +158,13 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: state.calculators.filter(calculator => calculator.projectId !== action.payload)
       };
     
+    case 'DUPLICATE_PROJECT':
+      return {
+        ...state,
+        projects: [...state.projects, action.payload.project],
+        calculators: [...state.calculators, ...action.payload.calculators]
+      };
+    
     case 'ADD_CALCULATOR':
       return { ...state, calculators: [...state.calculators, action.payload] };
     
@@ -192,6 +200,7 @@ interface ProjectContextType {
   addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateProject: (project: Project) => void;
   deleteProject: (id: string) => void;
+  duplicateProject: (projectId: string) => void;
   addCalculator: (calculator: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCalculator: (calculator: Calculator) => void;
   deleteCalculator: (id: string) => void;
@@ -334,6 +343,48 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dispatch({ type: 'DELETE_PROJECT', payload: id });
   };
 
+  const duplicateProject = (projectId: string) => {
+    const originalProject = state.projects.find(p => p.id === projectId);
+    if (!originalProject) {
+      throw new Error('Project not found');
+    }
+
+    const originalCalculators = state.calculators.filter(c => c.projectId === projectId);
+    
+    // Create new project with updated name and dates
+    const newProjectId = uuidv4();
+    const duplicatedProject: Project = {
+      ...originalProject,
+      id: newProjectId,
+      name: `${originalProject.name} (Kopi)`,
+      status: 'planning', // Reset status to planning
+      startDate: new Date().toISOString().split('T')[0], // Set to today
+      endDate: undefined, // Clear end date
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Create new calculators for the duplicated project
+    const duplicatedCalculators: Calculator[] = originalCalculators.map(calc => ({
+      ...calc,
+      id: uuidv4(),
+      projectId: newProjectId,
+      name: `${calc.name} (Kopi)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }));
+
+    dispatch({ 
+      type: 'DUPLICATE_PROJECT', 
+      payload: { 
+        project: duplicatedProject, 
+        calculators: duplicatedCalculators 
+      } 
+    });
+
+    return newProjectId;
+  };
+
   const addCalculator = (calculatorData: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => {
     // Ensure organizationId is included
     if (!calculatorData.organizationId) {
@@ -392,6 +443,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addProject,
       updateProject,
       deleteProject,
+      duplicateProject,
       addCalculator,
       updateCalculator,
       deleteCalculator,

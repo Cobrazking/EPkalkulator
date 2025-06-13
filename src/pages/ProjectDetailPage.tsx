@@ -10,7 +10,8 @@ import {
   User, 
   Calendar,
   FileText,
-  Settings
+  Settings,
+  Copy
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
@@ -20,7 +21,14 @@ import { formatNumber } from '../utils/calculations';
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { getProjectById, getCustomerById, getCalculatorsByProject, deleteProject, deleteCalculator } = useProject();
+  const { 
+    getProjectById, 
+    getCustomerById, 
+    getCalculatorsByProject, 
+    deleteProject, 
+    deleteCalculator,
+    duplicateProject
+  } = useProject();
   
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
@@ -45,6 +53,22 @@ const ProjectDetailPage: React.FC = () => {
     if (window.confirm(`Er du sikker på at du vil slette prosjektet "${project.name}"?`)) {
       deleteProject(project.id);
       navigate('/projects');
+    }
+  };
+
+  const handleDuplicateProject = () => {
+    const confirmMessage = calculators.length > 0 
+      ? `Vil du duplisere prosjektet "${project.name}" med ${calculators.length} kalkyle${calculators.length !== 1 ? 'r' : ''}?`
+      : `Vil du duplisere prosjektet "${project.name}"?`;
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        const newProjectId = duplicateProject(project.id);
+        navigate(`/projects/${newProjectId}`);
+      } catch (error) {
+        console.error('Failed to duplicate project:', error);
+        alert('Feil ved duplisering av prosjekt. Prøv igjen.');
+      }
     }
   };
 
@@ -93,20 +117,33 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDuplicateProject}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Copy size={16} />
+            Dupliser
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsProjectModalOpen(true)}
             className="btn-secondary flex items-center gap-2"
           >
             <Edit size={16} />
             Rediger
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleDeleteProject}
             className="btn-danger flex items-center gap-2"
           >
             <Trash2 size={16} />
             Slett
-          </button>
+          </motion.button>
         </div>
       </div>
 
