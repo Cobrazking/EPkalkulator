@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -42,6 +42,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
     return location.pathname.startsWith(path);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.org-dropdown-container')) {
+        setIsOrgDropdownOpen(false);
+      }
+    };
+
+    if (isOrgDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOrgDropdownOpen]);
 
   const handleOrganizationChange = (orgId: string) => {
     setCurrentOrganization(orgId);
@@ -96,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       >
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg">
               <Building2 className="w-6 h-6 text-white" />
             </div>
@@ -107,62 +122,85 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           </div>
 
           {/* Organization Selector */}
-          <div className="relative">
+          <div className="relative org-dropdown-container">
             <button
               onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-              className="w-full flex items-center justify-between p-3 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors group"
             >
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <Building2 size={16} className="text-primary-400 flex-shrink-0" />
-                <span className="text-sm font-medium text-text-primary truncate">
-                  {currentOrganization?.name || 'Velg organisasjon'}
-                </span>
+                <div className="min-w-0 flex-1 text-left">
+                  <div className="text-sm font-medium text-text-primary truncate">
+                    {currentOrganization?.name || 'Velg organisasjon'}
+                  </div>
+                  {currentOrganization?.description && (
+                    <div className="text-xs text-text-muted truncate">
+                      {currentOrganization.description}
+                    </div>
+                  )}
+                </div>
               </div>
               <ChevronDown 
                 size={16} 
-                className={`text-text-muted transition-transform flex-shrink-0 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} 
+                className={`text-text-muted transition-transform flex-shrink-0 group-hover:text-text-primary ${
+                  isOrgDropdownOpen ? 'rotate-180' : ''
+                }`} 
               />
             </button>
 
             {isOrgDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-50">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-background-lighter border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+              >
                 <div className="p-2">
-                  {state.organizations.map((org) => (
-                    <div key={org.id} className="flex items-center">
-                      <button
-                        onClick={() => handleOrganizationChange(org.id)}
-                        className={`flex-1 text-left p-2 rounded-md transition-colors ${
-                          currentOrganization?.id === org.id
-                            ? 'bg-primary-500/20 text-primary-400'
-                            : 'hover:bg-background-darker/50 text-text-primary'
-                        }`}
-                      >
-                        <div className="font-medium truncate">{org.name}</div>
-                        {org.description && (
-                          <div className="text-xs text-text-muted truncate">{org.description}</div>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleEditOrganization(org)}
-                        className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-md"
-                        title="Rediger organisasjon"
-                      >
-                        <Edit size={14} />
-                      </button>
+                  {state.organizations.length > 0 ? (
+                    state.organizations.map((org) => (
+                      <div key={org.id} className="flex items-center group">
+                        <button
+                          onClick={() => handleOrganizationChange(org.id)}
+                          className={`flex-1 text-left p-3 rounded-md transition-colors ${
+                            currentOrganization?.id === org.id
+                              ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                              : 'hover:bg-background-darker/50 text-text-primary'
+                          }`}
+                        >
+                          <div className="font-medium truncate">{org.name}</div>
+                          {org.description && (
+                            <div className="text-xs text-text-muted truncate mt-1">
+                              {org.description}
+                            </div>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEditOrganization(org)}
+                          className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-md opacity-0 group-hover:opacity-100"
+                          title="Rediger organisasjon"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-text-muted">
+                      <Building2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Ingen organisasjoner</p>
                     </div>
-                  ))}
+                  )}
                   
                   <div className="border-t border-border mt-2 pt-2">
                     <button
                       onClick={handleNewOrganization}
-                      className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-primary-400 flex items-center gap-2"
+                      className="w-full text-left p-3 rounded-md hover:bg-background-darker/50 text-primary-400 flex items-center gap-2 transition-colors"
                     >
                       <Plus size={14} />
-                      <span className="text-sm">Ny organisasjon</span>
+                      <span className="text-sm font-medium">Ny organisasjon</span>
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
