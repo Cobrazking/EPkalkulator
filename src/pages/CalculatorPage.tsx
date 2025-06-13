@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy } from 'lucide-react';
+import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy, Edit } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 
@@ -12,6 +12,7 @@ import CalculationTable from '../components/CalculationTable';
 import QuotePDF from '../components/QuotePDF';
 import SettingsModal from '../components/SettingsModal';
 import DuplicateCalculatorModal from '../components/modals/DuplicateCalculatorModal';
+import EditCalculatorModal from '../components/modals/EditCalculatorModal';
 import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 import { calculateRow, calculateSummary } from '../utils/calculations';
 import { exportToExcel } from '../utils/excel';
@@ -94,6 +95,7 @@ const CalculatorPage: React.FC = () => {
   const [calculationSettings, setCalculationSettings] = useLocalStorage<CalculationSettings>('calculation-settings', initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -253,6 +255,14 @@ const CalculatorPage: React.FC = () => {
     setIsDuplicateModalOpen(true);
   };
 
+  const handleEditCalculator = () => {
+    if (!calculatorId) {
+      alert('Du må lagre kalkylen først før du kan redigere den.');
+      return;
+    }
+    setIsEditModalOpen(true);
+  };
+
   const handleExport = () => {
     const exportData = {
       entries,
@@ -398,6 +408,16 @@ const CalculatorPage: React.FC = () => {
         </button>
 
         <button
+          onClick={handleEditCalculator}
+          className="btn-secondary flex items-center gap-2"
+          disabled={!calculatorId}
+          title={!calculatorId ? "Lagre kalkylen først for å redigere" : "Rediger kalkyle"}
+        >
+          <Edit size={16} />
+          <span>Rediger</span>
+        </button>
+
+        <button
           onClick={handleDuplicateCalculator}
           className="btn-secondary flex items-center gap-2"
           disabled={!calculatorId}
@@ -470,6 +490,12 @@ const CalculatorPage: React.FC = () => {
         calculatorId={calculatorId}
         currentProjectId={project.id}
         availableProjects={availableProjects}
+      />
+
+      <EditCalculatorModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        calculator={calculator}
       />
     </div>
   );

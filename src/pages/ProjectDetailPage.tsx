@@ -11,12 +11,14 @@ import {
   Calendar,
   FileText,
   Settings,
-  Copy
+  Copy,
+  MoreVertical
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
 import CalculatorModal from '../components/modals/CalculatorModal';
 import DuplicateCalculatorModal from '../components/modals/DuplicateCalculatorModal';
+import EditCalculatorModal from '../components/modals/EditCalculatorModal';
 import { formatNumber } from '../utils/calculations';
 
 const ProjectDetailPage: React.FC = () => {
@@ -36,7 +38,9 @@ const ProjectDetailPage: React.FC = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCalculatorId, setSelectedCalculatorId] = useState<string | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const project = projectId ? getProjectById(projectId) : null;
   const customer = project ? getCustomerById(project.customerId) : null;
@@ -87,6 +91,13 @@ const ProjectDetailPage: React.FC = () => {
   const handleDuplicateCalculator = (calculatorId: string) => {
     setSelectedCalculatorId(calculatorId);
     setIsDuplicateModalOpen(true);
+    setOpenDropdownId(null);
+  };
+
+  const handleEditCalculator = (calculatorId: string) => {
+    setSelectedCalculatorId(calculatorId);
+    setIsEditModalOpen(true);
+    setOpenDropdownId(null);
   };
 
   const handleQuickDuplicate = (calculatorId: string) => {
@@ -281,35 +292,66 @@ const ProjectDetailPage: React.FC = () => {
                 className="p-4 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
                     <Calculator className="w-4 h-4 text-primary-400" />
-                    <h3 className="font-medium text-text-primary">{calculator.name}</h3>
+                    <h3 className="font-medium text-text-primary truncate">{calculator.name}</h3>
                   </div>
                   
-                  <div className="flex gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDuplicateCalculator(calculator.id)}
-                      className="p-1 text-text-muted hover:text-blue-400 transition-colors rounded"
-                      title="Dupliser kalkyle"
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenDropdownId(openDropdownId === calculator.id ? null : calculator.id)}
+                      className="p-1 text-text-muted hover:text-text-primary transition-colors rounded"
+                      title="Flere alternativer"
                     >
-                      <Copy size={14} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDeleteCalculator(calculator.id, calculator.name)}
-                      className="p-1 text-text-muted hover:text-red-400 transition-colors rounded"
-                      title="Slett kalkyle"
-                    >
-                      <Trash2 size={14} />
-                    </motion.button>
+                      <MoreVertical size={14} />
+                    </button>
+
+                    {openDropdownId === calculator.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
+                        <div className="p-1">
+                          <button
+                            onClick={() => handleEditCalculator(calculator.id)}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                          >
+                            <Edit size={14} />
+                            Rediger
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateCalculator(calculator.id)}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                          >
+                            <Copy size={14} />
+                            Dupliser til...
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleQuickDuplicate(calculator.id);
+                              setOpenDropdownId(null);
+                            }}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                          >
+                            <Copy size={14} />
+                            Dupliser her
+                          </button>
+                          <div className="border-t border-border my-1"></div>
+                          <button
+                            onClick={() => {
+                              handleDeleteCalculator(calculator.id, calculator.name);
+                              setOpenDropdownId(null);
+                            }}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-red-400 flex items-center gap-2 text-sm"
+                          >
+                            <Trash2 size={14} />
+                            Slett
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {calculator.description && (
-                  <p className="text-sm text-text-muted mb-3">{calculator.description}</p>
+                  <p className="text-sm text-text-muted mb-3 line-clamp-2">{calculator.description}</p>
                 )}
 
                 <div className="flex items-center justify-between mb-3">
@@ -324,23 +366,12 @@ const ProjectDetailPage: React.FC = () => {
                   <span>{new Date(calculator.updatedAt).toLocaleDateString('nb-NO')}</span>
                 </div>
 
-                <div className="flex gap-2">
-                  <Link
-                    to={`/projects/${project.id}/calculator/${calculator.id}`}
-                    className="flex-1 text-center py-2 px-4 bg-primary-500/20 text-primary-400 rounded-md hover:bg-primary-500/30 transition-colors text-sm"
-                  >
-                    Åpne
-                  </Link>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleQuickDuplicate(calculator.id)}
-                    className="py-2 px-3 bg-background-darker text-text-muted rounded-md hover:bg-background hover:text-text-primary transition-colors text-sm"
-                    title="Dupliser til samme prosjekt"
-                  >
-                    <Copy size={14} />
-                  </motion.button>
-                </div>
+                <Link
+                  to={`/projects/${project.id}/calculator/${calculator.id}`}
+                  className="block w-full text-center py-2 px-4 bg-primary-500/20 text-primary-400 rounded-md hover:bg-primary-500/30 transition-colors"
+                >
+                  Åpne kalkyle
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -360,6 +391,14 @@ const ProjectDetailPage: React.FC = () => {
         )}
       </div>
 
+      {/* Click outside to close dropdown */}
+      {openDropdownId && (
+        <div 
+          className="fixed inset-0 z-5" 
+          onClick={() => setOpenDropdownId(null)}
+        />
+      )}
+
       <ProjectModal
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
@@ -378,6 +417,12 @@ const ProjectDetailPage: React.FC = () => {
         calculatorId={selectedCalculatorId}
         currentProjectId={project.id}
         availableProjects={availableProjects}
+      />
+
+      <EditCalculatorModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        calculator={selectedCalculatorId ? getCalculatorsByProject(project.id).find(c => c.id === selectedCalculatorId) || null : null}
       />
     </div>
   );

@@ -76,6 +76,7 @@ type ProjectAction =
   | { type: 'UPDATE_CALCULATOR'; payload: Calculator }
   | { type: 'DELETE_CALCULATOR'; payload: string }
   | { type: 'DUPLICATE_CALCULATOR'; payload: Calculator }
+  | { type: 'MOVE_CALCULATOR'; payload: { calculatorId: string; newProjectId: string } }
   | { type: 'LOAD_DATA'; payload: ProjectState };
 
 const initialState: ProjectState = {
@@ -189,6 +190,16 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: [...state.calculators, action.payload]
       };
     
+    case 'MOVE_CALCULATOR':
+      return {
+        ...state,
+        calculators: state.calculators.map(calculator =>
+          calculator.id === action.payload.calculatorId 
+            ? { ...calculator, projectId: action.payload.newProjectId, updatedAt: new Date().toISOString() }
+            : calculator
+        )
+      };
+    
     default:
       return state;
   }
@@ -212,6 +223,7 @@ interface ProjectContextType {
   updateCalculator: (calculator: Calculator) => void;
   deleteCalculator: (id: string) => void;
   duplicateCalculator: (calculatorId: string, targetProjectId?: string) => string;
+  moveCalculator: (calculatorId: string, newProjectId: string) => void;
   getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
@@ -437,6 +449,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newCalculatorId;
   };
 
+  const moveCalculator = (calculatorId: string, newProjectId: string) => {
+    dispatch({ type: 'MOVE_CALCULATOR', payload: { calculatorId, newProjectId } });
+  };
+
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
@@ -476,6 +492,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateCalculator,
       deleteCalculator,
       duplicateCalculator,
+      moveCalculator,
       getOrganizationById,
       getCustomerById,
       getProjectById,
