@@ -37,19 +37,25 @@ const Dashboard: React.FC = () => {
     ? allProjects 
     : allProjects.filter(project => project.status === statusFilter);
 
+  // Get calculators for filtered projects only
+  const filteredCalculators = calculators.filter(calc => 
+    filteredProjects.some(project => project.id === calc.projectId)
+  );
+
   const stats = {
     totalCustomers: customers.length,
     totalProjects: allProjects.length,
     activeProjects: allProjects.filter(p => p.status === 'active').length,
     totalCalculators: calculators.length,
-    totalValue: calculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
+    // Use filtered calculators for total value
+    totalValue: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
   };
 
   const recentProjects = filteredProjects
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
-  const recentCalculators = calculators
+  const recentCalculators = filteredCalculators
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
@@ -112,6 +118,11 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-text-muted mt-1">
             Oversikt for {currentOrganization.name}
+            {statusFilter !== 'all' && (
+              <span className="ml-2 px-2 py-1 bg-primary-500/20 text-primary-400 rounded-full text-xs">
+                Filtrert: {getStatusText(statusFilter)}
+              </span>
+            )}
           </p>
         </div>
         
@@ -199,7 +210,14 @@ const Dashboard: React.FC = () => {
             <DollarSign className="w-8 h-8 text-amber-400" />
             <div>
               <p className="text-2xl font-bold text-text-primary">{formatNumber(stats.totalValue)}</p>
-              <p className="text-sm text-amber-200/80">Total verdi</p>
+              <p className="text-sm text-amber-200/80">
+                Total verdi
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -334,7 +352,14 @@ const Dashboard: React.FC = () => {
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-text-primary">Siste kalkyler</h2>
+            <h2 className="text-xl font-semibold text-text-primary">
+              Siste kalkyler
+              {statusFilter !== 'all' && (
+                <span className="block text-sm text-text-muted font-normal">
+                  Fra {getStatusText(statusFilter).toLowerCase()} prosjekter
+                </span>
+              )}
+            </h2>
             <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-sm">
               Se alle <ArrowRight size={14} />
             </Link>
@@ -367,10 +392,24 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="text-center py-8 text-text-muted">
                 <Calculator className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Ingen kalkyler ennå</p>
-                <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
-                  Opprett din første kalkyle
-                </Link>
+                <p>
+                  {statusFilter === 'all' 
+                    ? 'Ingen kalkyler ennå' 
+                    : `Ingen kalkyler for ${getStatusText(statusFilter).toLowerCase()} prosjekter`
+                  }
+                </p>
+                {statusFilter === 'all' ? (
+                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
+                    Opprett din første kalkyle
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => setStatusFilter('all')}
+                    className="text-primary-400 hover:text-primary-300 text-sm"
+                  >
+                    Vis alle kalkyler
+                  </button>
+                )}
               </div>
             )}
           </div>
