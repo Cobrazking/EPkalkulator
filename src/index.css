@@ -45,18 +45,20 @@
 @layer components {
   .btn-primary {
     @apply bg-gradient-to-r from-primary-500 to-purple-600 text-white 
-           hover:from-primary-600 hover:to-purple-700 focus:ring-primary-500;
+           hover:from-primary-600 hover:to-purple-700 focus:ring-primary-500
+           shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200;
   }
   
   .btn-secondary {
-    @apply bg-background-lighter/50 text-text-primary border border-border 
-           hover:bg-background/70 focus:ring-primary-400
-           backdrop-blur-sm;
+    @apply bg-background-lighter/80 text-text-primary border border-border 
+           hover:bg-background-lighter hover:border-border-light focus:ring-primary-400
+           backdrop-blur-sm shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200;
   }
   
   .btn-danger {
     @apply bg-gradient-to-r from-red-500 to-rose-600 text-white 
-           hover:from-red-600 hover:to-rose-700 focus:ring-red-500;
+           hover:from-red-600 hover:to-rose-700 focus:ring-red-500
+           shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200;
   }
   
   .card {
