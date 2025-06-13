@@ -46,10 +46,10 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
     if (!calculator || !customName.trim()) return;
     
     try {
-      // Duplicate the calculator to the selected project
+      // First duplicate the calculator to the selected project
       const newCalculatorId = duplicateCalculator(calculator.id, selectedProjectId);
       
-      // Always update with the custom name
+      // Then immediately update the name to the custom name
       const newCalculator = getCalculatorById(newCalculatorId);
       if (newCalculator) {
         updateCalculator({
@@ -142,9 +142,10 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
                       onChange={(e) => setCustomName(e.target.value)}
                       className="w-full"
                       placeholder={`${calculator.name} (Kopi)`}
+                      autoFocus
                     />
                     <p className="text-xs text-text-muted mt-1">
-                      Skriv inn navnet på den nye kalkylen
+                      Dette navnet vil bli brukt på den nye kalkylen
                     </p>
                   </div>
 
@@ -191,6 +192,19 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
                       </div>
                     </div>
                   )}
+
+                  {/* Preview of what will happen */}
+                  <div className="p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg">
+                    <div className="text-sm">
+                      <div className="font-medium text-primary-400 mb-1">Forhåndsvisning:</div>
+                      <div className="text-text-muted">
+                        Ny kalkyle: <span className="text-text-primary font-medium">"{customName || `${calculator.name} (Kopi)`}"</span>
+                      </div>
+                      <div className="text-text-muted">
+                        I prosjekt: <span className="text-text-primary font-medium">{selectedProject?.name}</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="flex justify-end gap-2 pt-4">
                     <button
