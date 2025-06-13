@@ -28,6 +28,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     }
   }, [user, loading, navigate, location]);
 
+  // Show loading screen while checking authentication
   if (loading || isChecking) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center">
@@ -56,10 +57,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
+  // Don't render anything if user is not authenticated (will redirect)
   if (!user) {
-    return null; // Will redirect to login
+    return null;
   }
 
+  // User is authenticated, render the protected content
   return <>{children}</>;
 };
 

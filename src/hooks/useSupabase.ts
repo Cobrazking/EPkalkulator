@@ -5,41 +5,48 @@ import type { Database } from '../lib/supabase';
 type Tables = Database['public']['Tables'];
 
 export function useSupabase() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if Supabase is properly configured
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey || 
-        supabaseUrl.includes('placeholder') || 
-        supabaseAnonKey.includes('placeholder') ||
-        supabaseUrl === 'your_supabase_url_here' || 
-        supabaseAnonKey === 'your_supabase_anon_key_here') {
-      // If Supabase is not configured, redirect to login
-      console.warn('Supabase not configured properly');
-      setUser(null);
-      setLoading(false);
-      return;
-    }
+    let mounted = true;
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+      async (event, session) => {
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Organizations
@@ -284,7 +291,15 @@ export function useSupabase() {
     return data;
   };
 
-  // Auth methods with Google support
+  // Auth methods
+  const signIn = async (email: string, password: string) => {
+    return await supabase.auth.signInWithPassword({ email, password });
+  };
+
+  const signUp = async (email: string, password: string) => {
+    return await supabase.auth.signUp({ email, password });
+  };
+
   const signInWithGoogle = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -295,6 +310,14 @@ export function useSupabase() {
     
     if (error) throw error;
     return data;
+  };
+
+  const signOut = async () => {
+    return await supabase.auth.signOut();
+  };
+
+  const resetPassword = async (email: string) => {
+    return await supabase.auth.resetPasswordForEmail(email);
   };
 
   return {
@@ -329,10 +352,10 @@ export function useSupabase() {
     getUserSettings,
     upsertUserSettings,
     // Auth
-    signIn: (email: string, password: string) => supabase.auth.signInWithPassword({ email, password }),
-    signUp: (email: string, password: string) => supabase.auth.signUp({ email, password }),
+    signIn,
+    signUp,
     signInWithGoogle,
-    signOut: () => supabase.auth.signOut(),
-    resetPassword: (email: string) => supabase.auth.resetPasswordForEmail(email),
+    signOut,
+    resetPassword,
   };
 }
