@@ -1,10 +1,10 @@
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Add error boundary for better debugging
-class ErrorBoundary extends React.Component {
+// Simple error boundary
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -19,7 +19,7 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    if ((this.state as any).hasError) {
+    if (this.state.hasError) {
       return (
         <div style={{ 
           padding: '20px', 
@@ -47,11 +47,14 @@ class ErrorBoundary extends React.Component {
           >
             Last inn på nytt
           </button>
+          <pre style={{ marginTop: '20px', fontSize: '12px', color: '#ccc' }}>
+            {this.state.error?.toString()}
+          </pre>
         </div>
       );
     }
 
-    return (this.props as any).children;
+    return this.props.children;
   }
 }
 
@@ -69,6 +72,7 @@ if (!rootElement) {
   `;
 } else {
   try {
+    console.log('Starting app...');
     createRoot(rootElement).render(
       <StrictMode>
         <ErrorBoundary>
@@ -76,6 +80,7 @@ if (!rootElement) {
         </ErrorBoundary>
       </StrictMode>
     );
+    console.log('App rendered successfully');
   } catch (error) {
     console.error('Failed to render app:', error);
     rootElement.innerHTML = `
@@ -86,6 +91,7 @@ if (!rootElement) {
           <button onclick="window.location.reload()" style="padding: 10px 20px; background: #6366F1; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px;">
             Last inn på nytt
           </button>
+          <pre style="margin-top: 20px; font-size: 12px; color: #ccc;">${error}</pre>
         </div>
       </div>
     `;

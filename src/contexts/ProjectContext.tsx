@@ -14,19 +14,6 @@ export interface Organization {
   updatedAt: string;
 }
 
-export interface User {
-  id: string;
-  organizationId: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: 'admin' | 'manager' | 'user';
-  isActive: boolean;
-  avatar?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Customer {
   id: string;
   organizationId: string;
@@ -67,7 +54,6 @@ export interface Calculator {
 
 interface ProjectState {
   organizations: Organization[];
-  users: User[];
   customers: Customer[];
   projects: Project[];
   calculators: Calculator[];
@@ -79,9 +65,6 @@ type ProjectAction =
   | { type: 'UPDATE_ORGANIZATION'; payload: Organization }
   | { type: 'DELETE_ORGANIZATION'; payload: string }
   | { type: 'SET_CURRENT_ORGANIZATION'; payload: string }
-  | { type: 'ADD_USER'; payload: User }
-  | { type: 'UPDATE_USER'; payload: User }
-  | { type: 'DELETE_USER'; payload: string }
   | { type: 'ADD_CUSTOMER'; payload: Customer }
   | { type: 'UPDATE_CUSTOMER'; payload: Customer }
   | { type: 'DELETE_CUSTOMER'; payload: string }
@@ -98,7 +81,6 @@ type ProjectAction =
 
 const initialState: ProjectState = {
   organizations: [],
-  users: [],
   customers: [],
   projects: [],
   calculators: [],
@@ -133,7 +115,6 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
       return {
         ...state,
         organizations: state.organizations.filter(org => org.id !== action.payload),
-        users: state.users.filter(user => user.organizationId !== action.payload),
         customers: state.customers.filter(customer => customer.organizationId !== action.payload),
         projects: state.projects.filter(project => project.organizationId !== action.payload),
         calculators: state.calculators.filter(calculator => calculator.organizationId !== action.payload),
@@ -142,23 +123,6 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
     
     case 'SET_CURRENT_ORGANIZATION':
       return { ...state, currentOrganizationId: action.payload };
-    
-    case 'ADD_USER':
-      return { ...state, users: [...state.users, action.payload] };
-    
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        users: state.users.map(user =>
-          user.id === action.payload.id ? action.payload : user
-        )
-      };
-    
-    case 'DELETE_USER':
-      return {
-        ...state,
-        users: state.users.filter(user => user.id !== action.payload)
-      };
     
     case 'ADD_CUSTOMER':
       return { ...state, customers: [...state.customers, action.payload] };
@@ -248,9 +212,6 @@ interface ProjectContextType {
   updateOrganization: (organization: Organization) => void;
   deleteOrganization: (id: string) => void;
   setCurrentOrganization: (id: string) => void;
-  addUser: (user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateUser: (user: User) => void;
-  deleteUser: (id: string) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCustomer: (customer: Customer) => void;
   deleteCustomer: (id: string) => void;
@@ -264,17 +225,14 @@ interface ProjectContextType {
   duplicateCalculator: (calculatorId: string, targetProjectId?: string) => string;
   moveCalculator: (calculatorId: string, newProjectId: string) => void;
   getOrganizationById: (id: string) => Organization | undefined;
-  getUserById: (id: string) => User | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
   getCalculatorById: (id: string) => Calculator | undefined;
-  getCurrentOrganizationUsers: () => User[];
   getCurrentOrganizationCustomers: () => Customer[];
   getCurrentOrganizationProjects: () => Project[];
   getCurrentOrganizationCalculators: () => Calculator[];
   getProjectsByCustomer: (customerId: string) => Project[];
   getCalculatorsByProject: (projectId: string) => Calculator[];
-  getUsersByOrganization: (organizationId: string) => User[];
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -300,7 +258,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           const migratedData = {
             organizations: [defaultOrg],
-            users: parsedData.users || [],
             customers: (parsedData.customers || []).map((customer: any) => ({
               ...customer,
               organizationId: defaultOrg.id
@@ -318,16 +275,48 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           dispatch({ type: 'LOAD_DATA', payload: migratedData });
         } else {
-          // Ensure users array exists
-          const dataWithUsers = {
-            ...parsedData,
-            users: parsedData.users || []
-          };
-          dispatch({ type: 'LOAD_DATA', payload: dataWithUsers });
+          dispatch({ type: 'LOAD_DATA', payload: parsedData });
         }
       } catch (error) {
         console.error('Failed to load data from localStorage:', error);
+        // Create default organization if loading fails
+        const defaultOrg: Organization = {
+          id: uuidv4(),
+          name: 'Min organisasjon',
+          description: 'Standard organisasjon',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        const defaultData = {
+          organizations: [defaultOrg],
+          customers: [],
+          projects: [],
+          calculators: [],
+          currentOrganizationId: defaultOrg.id
+        };
+        
+        dispatch({ type: 'LOAD_DATA', payload: defaultData });
       }
+    } else {
+      // Create default organization for new users
+      const defaultOrg: Organization = {
+        id: uuidv4(),
+        name: 'Min organisasjon',
+        description: 'Standard organisasjon',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const defaultData = {
+        organizations: [defaultOrg],
+        customers: [],
+        projects: [],
+        calculators: [],
+        currentOrganizationId: defaultOrg.id
+      };
+      
+      dispatch({ type: 'LOAD_DATA', payload: defaultData });
     }
   }, []);
 
@@ -361,29 +350,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const setCurrentOrganization = (id: string) => {
     dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: id });
-  };
-
-  const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (!userData.organizationId) {
-      throw new Error('organizationId is required when adding a user');
-    }
-    
-    const user: User = {
-      ...userData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: 'ADD_USER', payload: user });
-  };
-
-  const updateUser = (user: User) => {
-    const updatedUser = { ...user, updatedAt: new Date().toISOString() };
-    dispatch({ type: 'UPDATE_USER', payload: updatedUser });
-  };
-
-  const deleteUser = (id: string) => {
-    dispatch({ type: 'DELETE_USER', payload: id });
   };
 
   const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -525,13 +491,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
-  const getUserById = (id: string) => state.users.find(user => user.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
   const getCalculatorById = (id: string) => state.calculators.find(calculator => calculator.id === id);
-  
-  const getCurrentOrganizationUsers = () => 
-    state.users.filter(user => user.organizationId === state.currentOrganizationId);
   
   const getCurrentOrganizationCustomers = () => 
     state.customers.filter(customer => customer.organizationId === state.currentOrganizationId);
@@ -548,9 +510,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCalculatorsByProject = (projectId: string) => 
     state.calculators.filter(calculator => calculator.projectId === projectId);
 
-  const getUsersByOrganization = (organizationId: string) => 
-    state.users.filter(user => user.organizationId === organizationId);
-
   return (
     <ProjectContext.Provider value={{
       state,
@@ -559,9 +518,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateOrganization,
       deleteOrganization,
       setCurrentOrganization,
-      addUser,
-      updateUser,
-      deleteUser,
       addCustomer,
       updateCustomer,
       deleteCustomer,
@@ -575,17 +531,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       duplicateCalculator,
       moveCalculator,
       getOrganizationById,
-      getUserById,
       getCustomerById,
       getProjectById,
       getCalculatorById,
-      getCurrentOrganizationUsers,
       getCurrentOrganizationCustomers,
       getCurrentOrganizationProjects,
       getCurrentOrganizationCalculators,
       getProjectsByCustomer,
-      getCalculatorsByProject,
-      getUsersByOrganization
+      getCalculatorsByProject
     }}>
       {children}
     </ProjectContext.Provider>
