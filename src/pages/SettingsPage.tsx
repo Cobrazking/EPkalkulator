@@ -1,10 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, User, Calculator, Building2, Palette } from 'lucide-react';
+import { 
+  Settings, 
+  User, 
+  Calculator, 
+  Building2, 
+  Palette, 
+  Edit, 
+  Trash2, 
+  Plus,
+  Upload,
+  X
+} from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { CompanyInfo, CalculationSettings } from '../types';
+import { useProject } from '../contexts/ProjectContext';
+import OrganizationModal from '../components/modals/OrganizationModal';
 
 const SettingsPage: React.FC = () => {
+  const { 
+    state, 
+    currentOrganization, 
+    updateOrganization, 
+    deleteOrganization, 
+    setCurrentOrganization 
+  } = useProject();
+  
+  const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [editingOrganization, setEditingOrganization] = useState(null);
+
   const initialCompanyInfo: CompanyInfo = {
     firma: '',
     navn: '',
@@ -50,24 +74,152 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleEditOrganization = (org: any) => {
+    setEditingOrganization(org);
+    setIsOrgModalOpen(true);
+  };
+
+  const handleDeleteOrganization = (org: any) => {
+    if (state.organizations.length <= 1) {
+      alert('Du kan ikke slette den siste organisasjonen.');
+      return;
+    }
+
+    const confirmMessage = `Er du sikker på at du vil slette organisasjonen "${org.name}"?\n\nDette vil også slette alle tilhørende kunder, prosjekter og kalkyler. Denne handlingen kan ikke angres.`;
+    
+    if (window.confirm(confirmMessage)) {
+      deleteOrganization(org.id);
+    }
+  };
+
+  const handleNewOrganization = () => {
+    setEditingOrganization(null);
+    setIsOrgModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsOrgModalOpen(false);
+    setEditingOrganization(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-text-primary">Innstillinger</h1>
-        <p className="text-text-muted mt-1">Administrer dine globale innstillinger</p>
+        <p className="text-text-muted mt-1">Administrer dine globale innstillinger og organisasjoner</p>
       </div>
+
+      {/* Organization Management */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Building2 className="w-6 h-6 text-primary-400" />
+            <h2 className="text-xl font-semibold text-text-primary">Organisasjoner</h2>
+          </div>
+          <button
+            onClick={handleNewOrganization}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Ny organisasjon
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {state.organizations.map((org) => (
+            <div 
+              key={org.id} 
+              className={`p-4 rounded-lg border transition-all duration-200 ${
+                currentOrganization?.id === org.id
+                  ? 'border-primary-500/50 bg-gradient-to-r from-primary-500/10 to-purple-600/10'
+                  : 'border-border bg-background-darker/30 hover:bg-background-darker/50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {org.logo ? (
+                    <img 
+                      src={org.logo} 
+                      alt={`${org.name} logo`}
+                      className="w-10 h-10 object-contain rounded-lg border border-border bg-background-darker/50"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Building2 size={20} className="text-white" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-text-primary truncate">{org.name}</h3>
+                      {currentOrganization?.id === org.id && (
+                        <span className="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded-full border border-primary-500/30">
+                          Aktiv
+                        </span>
+                      )}
+                    </div>
+                    {org.description && (
+                      <p className="text-sm text-text-muted truncate">{org.description}</p>
+                    )}
+                    <div className="flex items-center gap-4 mt-1 text-xs text-text-muted">
+                      {org.email && <span>{org.email}</span>}
+                      {org.phone && <span>{org.phone}</span>}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {currentOrganization?.id !== org.id && (
+                    <button
+                      onClick={() => setCurrentOrganization(org.id)}
+                      className="px-3 py-1.5 text-sm bg-background-darker/50 hover:bg-background-darker text-text-muted hover:text-text-primary rounded-lg transition-colors"
+                    >
+                      Velg
+                    </button>
+                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleEditOrganization(org)}
+                    className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-lg hover:bg-background-darker/50"
+                    title="Rediger organisasjon"
+                  >
+                    <Edit size={16} />
+                  </motion.button>
+                  
+                  {state.organizations.length > 1 && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleDeleteOrganization(org)}
+                      className="p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-background-darker/50"
+                      title="Slett organisasjon"
+                    >
+                      <Trash2 size={16} />
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Information */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2 }}
           className="card p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <Building2 className="w-6 h-6 text-primary-400" />
+            <User className="w-6 h-6 text-primary-400" />
             <h2 className="text-xl font-semibold text-text-primary">Firmaopplysninger</h2>
           </div>
 
@@ -98,7 +250,7 @@ const SettingsPage: React.FC = () => {
                       className="absolute -top-2 -right-2 p-1 bg-background-lighter rounded-full border border-border hover:bg-background text-red-400"
                       title="Fjern logo"
                     >
-                      ×
+                      <X size={12} />
                     </button>
                   </div>
                 ) : (
@@ -109,7 +261,10 @@ const SettingsPage: React.FC = () => {
                       onChange={handleLogoUpload}
                       className="hidden"
                     />
-                    <span className="text-text-muted text-sm">Last opp logo</span>
+                    <div className="text-center">
+                      <Upload size={16} className="mx-auto mb-1 text-text-muted" />
+                      <span className="text-text-muted text-xs">Last opp logo</span>
+                    </div>
                   </label>
                 )}
               </div>
@@ -176,7 +331,7 @@ const SettingsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
           className="card p-6"
         >
           <div className="flex items-center gap-3 mb-6">
@@ -260,7 +415,7 @@ const SettingsPage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.4 }}
         className="card p-6"
       >
         <div className="flex items-center gap-3 mb-4">
@@ -285,6 +440,12 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      <OrganizationModal
+        isOpen={isOrgModalOpen}
+        onClose={handleCloseModal}
+        organization={editingOrganization}
+      />
     </div>
   );
 };

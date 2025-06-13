@@ -12,8 +12,6 @@ import {
   Building2,
   ChevronDown,
   Plus,
-  Edit,
-  Trash2,
   Check
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
@@ -26,10 +24,9 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const { state, currentOrganization, setCurrentOrganization, deleteOrganization } = useProject();
+  const { state, currentOrganization, setCurrentOrganization } = useProject();
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
-  const [editingOrganization, setEditingOrganization] = useState(null);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -65,38 +62,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     setIsOrgDropdownOpen(false);
   };
 
-  const handleEditOrganization = (org: any, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setEditingOrganization(org);
-    setIsOrgModalOpen(true);
-    setIsOrgDropdownOpen(false);
-  };
-
-  const handleDeleteOrganization = (org: any, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    if (state.organizations.length <= 1) {
-      alert('Du kan ikke slette den siste organisasjonen.');
-      return;
-    }
-
-    const confirmMessage = `Er du sikker på at du vil slette organisasjonen "${org.name}"?\n\nDette vil også slette alle tilhørende kunder, prosjekter og kalkyler. Denne handlingen kan ikke angres.`;
-    
-    if (window.confirm(confirmMessage)) {
-      deleteOrganization(org.id);
-      setIsOrgDropdownOpen(false);
-    }
-  };
-
   const handleNewOrganization = () => {
-    setEditingOrganization(null);
     setIsOrgModalOpen(true);
     setIsOrgDropdownOpen(false);
   };
 
   const handleCloseModal = () => {
     setIsOrgModalOpen(false);
-    setEditingOrganization(null);
   };
 
   return (
@@ -121,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       <aside
         className={`
           fixed lg:fixed
-          top-0 left-0 z-40 h-full w-72
+          top-0 left-0 z-40 h-full w-80
           bg-background-lighter/95 backdrop-blur-xl border-r border-border
           flex flex-col
           transform transition-transform duration-300 ease-in-out
@@ -186,7 +158,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     {/* Header */}
                     <div className="px-3 py-2 border-b border-border mb-2">
                       <h3 className="text-sm font-semibold text-text-primary">Organisasjoner</h3>
-                      <p className="text-xs text-text-muted">Velg eller administrer organisasjoner</p>
+                      <p className="text-xs text-text-muted">Velg organisasjon</p>
                     </div>
 
                     {/* Organizations List */}
@@ -199,75 +171,41 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                             whileHover={{ scale: 1.02 }}
                             transition={{ duration: 0.1 }}
                           >
-                            <div className={`flex items-stretch rounded-lg overflow-hidden border transition-all duration-200 ${
-                              currentOrganization?.id === org.id
-                                ? 'border-primary-500/50 bg-gradient-to-r from-primary-500/20 to-purple-600/20 shadow-md'
-                                : 'border-transparent hover:border-border-light hover:bg-background-darker/50'
-                            }`}>
-                              <button
-                                onClick={() => handleOrganizationChange(org.id)}
-                                className="flex-1 text-left p-3 transition-colors min-w-0 rounded-l-lg"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={`p-1.5 rounded-lg ${
-                                    currentOrganization?.id === org.id
-                                      ? 'bg-primary-500/30 border border-primary-500/50'
-                                      : 'bg-background-darker/50'
+                            <button
+                              onClick={() => handleOrganizationChange(org.id)}
+                              className={`w-full text-left p-3 rounded-lg transition-all duration-200 border ${
+                                currentOrganization?.id === org.id
+                                  ? 'border-primary-500/50 bg-gradient-to-r from-primary-500/20 to-purple-600/20 shadow-md'
+                                  : 'border-transparent hover:border-border-light hover:bg-background-darker/50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`p-1.5 rounded-lg ${
+                                  currentOrganization?.id === org.id
+                                    ? 'bg-primary-500/30 border border-primary-500/50'
+                                    : 'bg-background-darker/50'
+                                }`}>
+                                  <Building2 size={14} className={
+                                    currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-muted'
+                                  } />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className={`font-medium truncate flex items-center gap-2 ${
+                                    currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-primary'
                                   }`}>
-                                    <Building2 size={14} className={
-                                      currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-muted'
-                                    } />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className={`font-medium truncate flex items-center gap-2 ${
-                                      currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-primary'
-                                    }`}>
-                                      {org.name}
-                                      {currentOrganization?.id === org.id && (
-                                        <Check size={12} className="text-primary-400 flex-shrink-0" />
-                                      )}
-                                    </div>
-                                    {org.description && (
-                                      <div className="text-xs text-text-muted truncate mt-0.5">
-                                        {org.description}
-                                      </div>
+                                    {org.name}
+                                    {currentOrganization?.id === org.id && (
+                                      <Check size={12} className="text-primary-400 flex-shrink-0" />
                                     )}
                                   </div>
+                                  {org.description && (
+                                    <div className="text-xs text-text-muted truncate mt-0.5">
+                                      {org.description}
+                                    </div>
+                                  )}
                                 </div>
-                              </button>
-                              
-                              <div className="flex border-l border-border/50">
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={(e) => handleEditOrganization(org, e)}
-                                  className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors ${
-                                    currentOrganization?.id === org.id
-                                      ? 'text-primary-400 hover:bg-primary-500/20'
-                                      : 'text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
-                                  }`}
-                                  title="Rediger organisasjon"
-                                >
-                                  <Edit size={12} />
-                                </motion.button>
-                                
-                                {state.organizations.length > 1 && (
-                                  <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={(e) => handleDeleteOrganization(org, e)}
-                                    className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors rounded-r-lg ${
-                                      currentOrganization?.id === org.id
-                                        ? 'text-red-400 hover:bg-red-500/20'
-                                        : 'text-text-muted hover:text-red-400 hover:bg-red-500/10'
-                                    }`}
-                                    title="Slett organisasjon"
-                                  >
-                                    <Trash2 size={12} />
-                                  </motion.button>
-                                )}
                               </div>
-                            </div>
+                            </button>
                           </motion.div>
                         ))
                       ) : (
@@ -344,7 +282,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       <OrganizationModal
         isOpen={isOrgModalOpen}
         onClose={handleCloseModal}
-        organization={editingOrganization}
+        organization={null}
       />
     </>
   );
