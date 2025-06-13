@@ -9,37 +9,49 @@ import {
   Clock,
   DollarSign,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { formatNumber } from '../utils/calculations';
 
 const Dashboard: React.FC = () => {
-  const { state } = useProject();
+  const { 
+    getCurrentOrganizationCustomers, 
+    getCurrentOrganizationProjects, 
+    getCurrentOrganizationCalculators,
+    currentOrganization,
+    getCustomerById,
+    getProjectById
+  } = useProject();
+
+  const customers = getCurrentOrganizationCustomers();
+  const projects = getCurrentOrganizationProjects();
+  const calculators = getCurrentOrganizationCalculators();
 
   const stats = {
-    totalCustomers: state.customers.length,
-    totalProjects: state.projects.length,
-    activeProjects: state.projects.filter(p => p.status === 'active').length,
-    totalCalculators: state.calculators.length,
-    totalValue: state.calculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
+    totalCustomers: customers.length,
+    totalProjects: projects.length,
+    activeProjects: projects.filter(p => p.status === 'active').length,
+    totalCalculators: calculators.length,
+    totalValue: calculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
   };
 
-  const recentProjects = state.projects
+  const recentProjects = projects
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
-  const recentCalculators = state.calculators
+  const recentCalculators = calculators
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
   const getCustomerName = (customerId: string) => {
-    const customer = state.customers.find(c => c.id === customerId);
+    const customer = getCustomerById(customerId);
     return customer?.name || 'Ukjent kunde';
   };
 
   const getProjectName = (projectId: string) => {
-    const project = state.projects.find(p => p.id === projectId);
+    const project = getProjectById(projectId);
     return project?.name || 'Ukjent prosjekt';
   };
 
@@ -63,13 +75,32 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  if (!currentOrganization) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Building2 className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-50" />
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Ingen organisasjon valgt</h2>
+          <p className="text-text-muted mb-4">
+            Du må velge eller opprette en organisasjon for å komme i gang.
+          </p>
+          <p className="text-sm text-text-muted">
+            Bruk organisasjonsvelgeren i sidemenyen for å velge eller opprette en organisasjon.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
-          <p className="text-text-muted mt-1">Oversikt over dine prosjekter og kalkyler</p>
+          <p className="text-text-muted mt-1">
+            Oversikt for {currentOrganization.name}
+          </p>
         </div>
         
         <div className="flex gap-3">

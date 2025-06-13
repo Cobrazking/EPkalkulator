@@ -1,8 +1,22 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+export interface Organization {
+  id: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Customer {
   id: string;
+  organizationId: string;
   name: string;
   email: string;
   phone: string;
@@ -14,6 +28,7 @@ export interface Customer {
 
 export interface Project {
   id: string;
+  organizationId: string;
   name: string;
   description: string;
   customerId: string;
@@ -27,6 +42,7 @@ export interface Project {
 
 export interface Calculator {
   id: string;
+  organizationId: string;
   projectId: string;
   name: string;
   description?: string;
@@ -37,12 +53,18 @@ export interface Calculator {
 }
 
 interface ProjectState {
+  organizations: Organization[];
   customers: Customer[];
   projects: Project[];
   calculators: Calculator[];
+  currentOrganizationId: string | null;
 }
 
 type ProjectAction =
+  | { type: 'ADD_ORGANIZATION'; payload: Organization }
+  | { type: 'UPDATE_ORGANIZATION'; payload: Organization }
+  | { type: 'DELETE_ORGANIZATION'; payload: string }
+  | { type: 'SET_CURRENT_ORGANIZATION'; payload: string }
   | { type: 'ADD_CUSTOMER'; payload: Customer }
   | { type: 'UPDATE_CUSTOMER'; payload: Customer }
   | { type: 'DELETE_CUSTOMER'; payload: string }
@@ -55,15 +77,49 @@ type ProjectAction =
   | { type: 'LOAD_DATA'; payload: ProjectState };
 
 const initialState: ProjectState = {
+  organizations: [],
   customers: [],
   projects: [],
-  calculators: []
+  calculators: [],
+  currentOrganizationId: null
 };
 
 const projectReducer = (state: ProjectState, action: ProjectAction): ProjectState => {
   switch (action.type) {
     case 'LOAD_DATA':
       return action.payload;
+    
+    case 'ADD_ORGANIZATION':
+      return { 
+        ...state, 
+        organizations: [...state.organizations, action.payload],
+        currentOrganizationId: state.currentOrganizationId || action.payload.id
+      };
+    
+    case 'UPDATE_ORGANIZATION':
+      return {
+        ...state,
+        organizations: state.organizations.map(org =>
+          org.id === action.payload.id ? action.payload : org
+        )
+      };
+    
+    case 'DELETE_ORGANIZATION':
+      const newCurrentOrgId = state.currentOrganizationId === action.payload 
+        ? state.organizations.find(org => org.id !== action.payload)?.id || null
+        : state.currentOrganizationId;
+      
+      return {
+        ...state,
+        organizations: state.organizations.filter(org => org.id !== action.payload),
+        customers: state.customers.filter(customer => customer.organizationId !== action.payload),
+        projects: state.projects.filter(project => project.organizationId !== action.payload),
+        calculators: state.calculators.filter(calculator => calculator.organizationId !== action.payload),
+        currentOrganizationId: newCurrentOrgId
+      };
+    
+    case 'SET_CURRENT_ORGANIZATION':
+      return { ...state, currentOrganizationId: action.payload };
     
     case 'ADD_CUSTOMER':
       return { ...state, customers: [...state.customers, action.payload] };
@@ -125,6 +181,11 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
 
 interface ProjectContextType {
   state: ProjectState;
+  currentOrganization: Organization | null;
+  addOrganization: (organization: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateOrganization: (organization: Organization) => void;
+  deleteOrganization: (id: string) => void;
+  setCurrentOrganization: (id: string) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCustomer: (customer: Customer) => void;
   deleteCustomer: (id: string) => void;
@@ -134,9 +195,13 @@ interface ProjectContextType {
   addCalculator: (calculator: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCalculator: (calculator: Calculator) => void;
   deleteCalculator: (id: string) => void;
+  getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
   getCalculatorById: (id: string) => Calculator | undefined;
+  getCurrentOrganizationCustomers: () => Customer[];
+  getCurrentOrganizationProjects: () => Project[];
+  getCurrentOrganizationCalculators: () => Calculator[];
   getProjectsByCustomer: (customerId: string) => Project[];
   getCalculatorsByProject: (projectId: string) => Calculator[];
 }
@@ -148,11 +213,41 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('project-management-data');
+    const savedData = localStorage.getItem('epkalk-data');
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        dispatch({ type: 'LOAD_DATA', payload: parsedData });
+        // Migrate old data if needed
+        if (!parsedData.organizations) {
+          const defaultOrg: Organization = {
+            id: uuidv4(),
+            name: 'Min organisasjon',
+            description: 'Standard organisasjon',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          const migratedData = {
+            organizations: [defaultOrg],
+            customers: (parsedData.customers || []).map((customer: any) => ({
+              ...customer,
+              organizationId: defaultOrg.id
+            })),
+            projects: (parsedData.projects || []).map((project: any) => ({
+              ...project,
+              organizationId: defaultOrg.id
+            })),
+            calculators: (parsedData.calculators || []).map((calculator: any) => ({
+              ...calculator,
+              organizationId: defaultOrg.id
+            })),
+            currentOrganizationId: defaultOrg.id
+          };
+          
+          dispatch({ type: 'LOAD_DATA', payload: migratedData });
+        } else {
+          dispatch({ type: 'LOAD_DATA', payload: parsedData });
+        }
       } catch (error) {
         console.error('Failed to load data from localStorage:', error);
       }
@@ -161,8 +256,35 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Save data to localStorage whenever state changes
   useEffect(() => {
-    localStorage.setItem('project-management-data', JSON.stringify(state));
+    localStorage.setItem('epkalk-data', JSON.stringify(state));
   }, [state]);
+
+  const currentOrganization = state.currentOrganizationId 
+    ? state.organizations.find(org => org.id === state.currentOrganizationId) || null
+    : null;
+
+  const addOrganization = (organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const organization: Organization = {
+      ...organizationData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    dispatch({ type: 'ADD_ORGANIZATION', payload: organization });
+  };
+
+  const updateOrganization = (organization: Organization) => {
+    const updatedOrganization = { ...organization, updatedAt: new Date().toISOString() };
+    dispatch({ type: 'UPDATE_ORGANIZATION', payload: updatedOrganization });
+  };
+
+  const deleteOrganization = (id: string) => {
+    dispatch({ type: 'DELETE_ORGANIZATION', payload: id });
+  };
+
+  const setCurrentOrganization = (id: string) => {
+    dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: id });
+  };
 
   const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
     const customer: Customer = {
@@ -221,15 +343,34 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dispatch({ type: 'DELETE_CALCULATOR', payload: id });
   };
 
+  const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
   const getCalculatorById = (id: string) => state.calculators.find(calculator => calculator.id === id);
-  const getProjectsByCustomer = (customerId: string) => state.projects.filter(project => project.customerId === customerId);
-  const getCalculatorsByProject = (projectId: string) => state.calculators.filter(calculator => calculator.projectId === projectId);
+  
+  const getCurrentOrganizationCustomers = () => 
+    state.customers.filter(customer => customer.organizationId === state.currentOrganizationId);
+  
+  const getCurrentOrganizationProjects = () => 
+    state.projects.filter(project => project.organizationId === state.currentOrganizationId);
+  
+  const getCurrentOrganizationCalculators = () => 
+    state.calculators.filter(calculator => calculator.organizationId === state.currentOrganizationId);
+  
+  const getProjectsByCustomer = (customerId: string) => 
+    state.projects.filter(project => project.customerId === customerId);
+  
+  const getCalculatorsByProject = (projectId: string) => 
+    state.calculators.filter(calculator => calculator.projectId === projectId);
 
   return (
     <ProjectContext.Provider value={{
       state,
+      currentOrganization,
+      addOrganization,
+      updateOrganization,
+      deleteOrganization,
+      setCurrentOrganization,
       addCustomer,
       updateCustomer,
       deleteCustomer,
@@ -239,9 +380,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addCalculator,
       updateCalculator,
       deleteCalculator,
+      getOrganizationById,
       getCustomerById,
       getProjectById,
       getCalculatorById,
+      getCurrentOrganizationCustomers,
+      getCurrentOrganizationProjects,
+      getCurrentOrganizationCalculators,
       getProjectsByCustomer,
       getCalculatorsByProject
     }}>

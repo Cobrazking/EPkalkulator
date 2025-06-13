@@ -15,7 +15,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
   onClose,
   customer,
 }) => {
-  const { addCustomer, updateCustomer } = useProject();
+  const { addCustomer, updateCustomer, currentOrganization } = useProject();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -47,13 +47,21 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!currentOrganization) {
+      alert('Du må velge en organisasjon først');
+      return;
+    }
+    
     if (customer) {
       updateCustomer({
         ...customer,
         ...formData
       });
     } else {
-      addCustomer(formData);
+      addCustomer({
+        ...formData,
+        organizationId: currentOrganization.id
+      });
     }
     
     onClose();
@@ -96,6 +104,14 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                   </button>
                 </Dialog.Title>
 
+                {!currentOrganization && (
+                  <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-yellow-400 text-sm">
+                      Du må velge en organisasjon før du kan legge til kunder.
+                    </p>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="input-label">Navn *</label>
@@ -106,6 +122,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full"
                       placeholder="Kundens navn"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -117,6 +134,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       className="w-full"
                       placeholder="Firmanavn (valgfritt)"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -128,6 +146,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full"
                       placeholder="kunde@eksempel.no"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -139,6 +158,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full"
                       placeholder="+47 123 45 678"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -149,6 +169,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className="w-full h-20 resize-none"
                       placeholder="Kundens adresse"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -163,6 +184,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                     <button
                       type="submit"
                       className="btn-primary"
+                      disabled={!currentOrganization}
                     >
                       {customer ? 'Oppdater' : 'Opprett'}
                     </button>

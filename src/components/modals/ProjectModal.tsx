@@ -15,7 +15,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   project,
 }) => {
-  const { state, addProject, updateProject } = useProject();
+  const { addProject, updateProject, getCurrentOrganizationCustomers, currentOrganization } = useProject();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -25,6 +25,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     endDate: '',
     budget: ''
   });
+
+  const customers = getCurrentOrganizationCustomers();
 
   useEffect(() => {
     if (project) {
@@ -53,6 +55,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!currentOrganization) {
+      alert('Du må velge en organisasjon først');
+      return;
+    }
+    
     const projectData = {
       name: formData.name,
       description: formData.description,
@@ -69,7 +76,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         ...projectData
       });
     } else {
-      addProject(projectData);
+      addProject({
+        ...projectData,
+        organizationId: currentOrganization.id
+      });
     }
     
     onClose();
@@ -112,6 +122,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   </button>
                 </Dialog.Title>
 
+                {!currentOrganization && (
+                  <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-yellow-400 text-sm">
+                      Du må velge en organisasjon før du kan legge til prosjekter.
+                    </p>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="input-label">Prosjektnavn *</label>
@@ -122,6 +140,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full"
                       placeholder="Navn på prosjektet"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -132,6 +151,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full h-20 resize-none"
                       placeholder="Kort beskrivelse av prosjektet"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -142,14 +162,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       value={formData.customerId}
                       onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
                       className="w-full"
+                      disabled={!currentOrganization}
                     >
                       <option value="">Velg kunde</option>
-                      {state.customers.map((customer) => (
+                      {customers.map((customer) => (
                         <option key={customer.id} value={customer.id}>
                           {customer.name} {customer.company && `(${customer.company})`}
                         </option>
                       ))}
                     </select>
+                    {customers.length === 0 && currentOrganization && (
+                      <p className="text-xs text-text-muted mt-1">
+                        Du må legge til kunder først før du kan opprette prosjekter.
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -159,6 +185,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                         className="w-full"
+                        disabled={!currentOrganization}
                       >
                         <option value="planning">Planlegging</option>
                         <option value="active">Aktiv</option>
@@ -177,6 +204,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         placeholder="0"
                         min="0"
                         step="1000"
+                        disabled={!currentOrganization}
                       />
                     </div>
                   </div>
@@ -190,6 +218,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         value={formData.startDate}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                         className="w-full"
+                        disabled={!currentOrganization}
                       />
                     </div>
 
@@ -201,6 +230,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                         className="w-full"
                         min={formData.startDate}
+                        disabled={!currentOrganization}
                       />
                     </div>
                   </div>
@@ -216,6 +246,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                     <button
                       type="submit"
                       className="btn-primary"
+                      disabled={!currentOrganization || customers.length === 0}
                     >
                       {project ? 'Oppdater' : 'Opprett'}
                     </button>

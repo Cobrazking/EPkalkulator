@@ -15,7 +15,7 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
   onClose,
   projectId,
 }) => {
-  const { addCalculator } = useProject();
+  const { addCalculator, currentOrganization } = useProject();
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -24,7 +24,13 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!currentOrganization) {
+      alert('Du må velge en organisasjon først');
+      return;
+    }
+    
     addCalculator({
+      organizationId: currentOrganization.id,
       projectId,
       name: formData.name,
       description: formData.description,
@@ -79,6 +85,14 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
                   </button>
                 </Dialog.Title>
 
+                {!currentOrganization && (
+                  <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-yellow-400 text-sm">
+                      Du må velge en organisasjon før du kan legge til kalkyler.
+                    </p>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="input-label">Navn *</label>
@@ -89,6 +103,7 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full"
                       placeholder="Navn på kalkylen"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -99,6 +114,7 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full h-20 resize-none"
                       placeholder="Kort beskrivelse av kalkylen (valgfritt)"
+                      disabled={!currentOrganization}
                     />
                   </div>
 
@@ -113,6 +129,7 @@ const CalculatorModal: React.FC<CalculatorModalProps> = ({
                     <button
                       type="submit"
                       className="btn-primary"
+                      disabled={!currentOrganization}
                     >
                       Opprett
                     </button>

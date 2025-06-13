@@ -5,12 +5,14 @@ import { useProject, Customer } from '../contexts/ProjectContext';
 import CustomerModal from '../components/modals/CustomerModal';
 
 const CustomersPage: React.FC = () => {
-  const { state, deleteCustomer } = useProject();
+  const { getCurrentOrganizationCustomers, deleteCustomer, getProjectsByCustomer, currentOrganization } = useProject();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
-  const filteredCustomers = state.customers.filter(customer =>
+  const customers = getCurrentOrganizationCustomers();
+  
+  const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.company?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -33,8 +35,17 @@ const CustomersPage: React.FC = () => {
   };
 
   const getProjectCount = (customerId: string) => {
-    return state.projects.filter(project => project.customerId === customerId).length;
+    return getProjectsByCustomer(customerId).length;
   };
+
+  if (!currentOrganization) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-text-primary mb-2">Ingen organisasjon valgt</h2>
+        <p className="text-text-muted mb-4">Du må velge en organisasjon for å administrere kunder.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -42,7 +53,7 @@ const CustomersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Kunder</h1>
-          <p className="text-text-muted mt-1">Administrer dine kunder</p>
+          <p className="text-text-muted mt-1">Administrer kunder for {currentOrganization.name}</p>
         </div>
         
         <button

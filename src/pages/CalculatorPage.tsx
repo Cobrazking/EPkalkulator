@@ -19,7 +19,14 @@ import useLocalStorage from '../hooks/useLocalStorage';
 const CalculatorPage: React.FC = () => {
   const { projectId, calculatorId } = useParams<{ projectId: string; calculatorId?: string }>();
   const navigate = useNavigate();
-  const { getProjectById, getCustomerById, getCalculatorById, addCalculator, updateCalculator } = useProject();
+  const { 
+    getProjectById, 
+    getCustomerById, 
+    getCalculatorById, 
+    addCalculator, 
+    updateCalculator,
+    currentOrganization
+  } = useProject();
 
   const project = projectId ? getProjectById(projectId) : null;
   const customer = project ? getCustomerById(project.customerId) : null;
@@ -108,9 +115,10 @@ const CalculatorPage: React.FC = () => {
 
   // Auto-save calculator
   useEffect(() => {
-    if (projectId && entries.length > 0) {
+    if (projectId && entries.length > 0 && currentOrganization) {
       const saveTimer = setTimeout(() => {
         const calculatorData = {
+          organizationId: currentOrganization.id,
           projectId,
           name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
           description: calculator?.description,
@@ -133,7 +141,19 @@ const CalculatorPage: React.FC = () => {
 
       return () => clearTimeout(saveTimer);
     }
-  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator]);
+  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization]);
+
+  if (!currentOrganization) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-text-primary mb-2">Ingen organisasjon valgt</h2>
+        <p className="text-text-muted mb-4">Du må velge en organisasjon for å bruke kalkylatoren.</p>
+        <Link to="/projects" className="btn-primary">
+          Tilbake til prosjekter
+        </Link>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

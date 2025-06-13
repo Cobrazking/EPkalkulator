@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -9,8 +9,12 @@ import {
   Settings, 
   Menu,
   X,
-  Building2
+  Building2,
+  ChevronDown,
+  Plus
 } from 'lucide-react';
+import { useProject } from '../../contexts/ProjectContext';
+import OrganizationModal from '../modals/OrganizationModal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,6 +23,9 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
+  const { state, currentOrganization, setCurrentOrganization } = useProject();
+  const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
+  const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,6 +39,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       return location.pathname === '/';
     }
     return location.pathname.startsWith(path);
+  };
+
+  const handleOrganizationChange = (orgId: string) => {
+    setCurrentOrganization(orgId);
+    setIsOrgDropdownOpen(false);
   };
 
   return (
@@ -65,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       >
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg">
               <Building2 className="w-6 h-6 text-white" />
             </div>
@@ -73,6 +85,61 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               <h1 className="text-lg font-semibold text-text-primary">EPKalk</h1>
               <p className="text-xs text-text-muted">Kalkyleverktøy</p>
             </div>
+          </div>
+
+          {/* Organization Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
+              className="w-full flex items-center justify-between p-3 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Building2 size={16} className="text-primary-400" />
+                <span className="text-sm font-medium text-text-primary truncate">
+                  {currentOrganization?.name || 'Velg organisasjon'}
+                </span>
+              </div>
+              <ChevronDown 
+                size={16} 
+                className={`text-text-muted transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} 
+              />
+            </button>
+
+            {isOrgDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-50">
+                <div className="p-2">
+                  {state.organizations.map((org) => (
+                    <button
+                      key={org.id}
+                      onClick={() => handleOrganizationChange(org.id)}
+                      className={`w-full text-left p-2 rounded-md transition-colors ${
+                        currentOrganization?.id === org.id
+                          ? 'bg-primary-500/20 text-primary-400'
+                          : 'hover:bg-background-darker/50 text-text-primary'
+                      }`}
+                    >
+                      <div className="font-medium">{org.name}</div>
+                      {org.description && (
+                        <div className="text-xs text-text-muted">{org.description}</div>
+                      )}
+                    </button>
+                  ))}
+                  
+                  <div className="border-t border-border mt-2 pt-2">
+                    <button
+                      onClick={() => {
+                        setIsOrgModalOpen(true);
+                        setIsOrgDropdownOpen(false);
+                      }}
+                      className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-primary-400 flex items-center gap-2"
+                    >
+                      <Plus size={14} />
+                      <span className="text-sm">Ny organisasjon</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -113,6 +180,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           </div>
         </div>
       </aside>
+
+      <OrganizationModal
+        isOpen={isOrgModalOpen}
+        onClose={() => setIsOrgModalOpen(false)}
+      />
     </>
   );
 };

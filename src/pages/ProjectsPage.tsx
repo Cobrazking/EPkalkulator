@@ -16,13 +16,21 @@ import { useProject, Project } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
 
 const ProjectsPage: React.FC = () => {
-  const { state, deleteProject } = useProject();
+  const { 
+    getCurrentOrganizationProjects, 
+    deleteProject, 
+    getCustomerById, 
+    getCalculatorsByProject,
+    currentOrganization
+  } = useProject();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  const filteredProjects = state.projects.filter(project => {
+  const projects = getCurrentOrganizationProjects();
+  
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
@@ -46,12 +54,12 @@ const ProjectsPage: React.FC = () => {
   };
 
   const getCustomerName = (customerId: string) => {
-    const customer = state.customers.find(c => c.id === customerId);
+    const customer = getCustomerById(customerId);
     return customer?.name || 'Ukjent kunde';
   };
 
   const getCalculatorCount = (projectId: string) => {
-    return state.calculators.filter(calc => calc.projectId === projectId).length;
+    return getCalculatorsByProject(projectId).length;
   };
 
   const getStatusColor = (status: string) => {
@@ -74,13 +82,22 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
+  if (!currentOrganization) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-text-primary mb-2">Ingen organisasjon valgt</h2>
+        <p className="text-text-muted mb-4">Du må velge en organisasjon for å administrere prosjekter.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Prosjekter</h1>
-          <p className="text-text-muted mt-1">Administrer dine prosjekter</p>
+          <p className="text-text-muted mt-1">Administrer prosjekter for {currentOrganization.name}</p>
         </div>
         
         <button
