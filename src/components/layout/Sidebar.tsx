@@ -158,29 +158,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <div className="p-2">
                   {state.organizations.length > 0 ? (
                     state.organizations.map((org) => (
-                      <div key={org.id} className="flex items-center group">
-                        <button
-                          onClick={() => handleOrganizationChange(org.id)}
-                          className={`flex-1 text-left p-3 rounded-md transition-colors ${
-                            currentOrganization?.id === org.id
-                              ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                              : 'hover:bg-background-darker/50 text-text-primary'
-                          }`}
-                        >
-                          <div className="font-medium truncate">{org.name}</div>
-                          {org.description && (
-                            <div className="text-xs text-text-muted truncate mt-1">
-                              {org.description}
-                            </div>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleEditOrganization(org)}
-                          className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-md opacity-0 group-hover:opacity-100"
-                          title="Rediger organisasjon"
-                        >
-                          <Edit size={14} />
-                        </button>
+                      <div key={org.id} className="group">
+                        <div className="flex items-stretch rounded-md overflow-hidden">
+                          <button
+                            onClick={() => handleOrganizationChange(org.id)}
+                            className={`flex-1 text-left p-3 transition-colors min-w-0 ${
+                              currentOrganization?.id === org.id
+                                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                                : 'hover:bg-background-darker/50 text-text-primary'
+                            }`}
+                          >
+                            <div className="font-medium truncate">{org.name}</div>
+                            {org.description && (
+                              <div className="text-xs text-text-muted truncate mt-1 max-w-[180px]">
+                                {org.description}
+                              </div>
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditOrganization(org);
+                            }}
+                            className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors ${
+                              currentOrganization?.id === org.id
+                                ? 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30'
+                                : 'bg-background-darker/30 text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
+                            }`}
+                            title="Rediger organisasjon"
+                          >
+                            <Edit size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))
                   ) : (
