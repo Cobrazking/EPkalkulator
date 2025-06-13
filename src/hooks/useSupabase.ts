@@ -9,6 +9,20 @@ export function useSupabase() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if Supabase is properly configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl === 'your_supabase_url_here' || 
+        supabaseAnonKey === 'your_supabase_anon_key_here') {
+      // If Supabase is not configured, set a mock user to allow access
+      console.warn('Supabase not configured, running in demo mode');
+      setUser({ id: 'demo-user', email: 'demo@epkalk.no' } as any);
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
