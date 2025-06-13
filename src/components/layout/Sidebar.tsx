@@ -12,7 +12,8 @@ import {
   Building2,
   ChevronDown,
   Plus,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import OrganizationModal from '../modals/OrganizationModal';
@@ -24,7 +25,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const { state, currentOrganization, setCurrentOrganization } = useProject();
+  const { state, currentOrganization, setCurrentOrganization, deleteOrganization } = useProject();
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState(null);
@@ -63,10 +64,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     setIsOrgDropdownOpen(false);
   };
 
-  const handleEditOrganization = (org: any) => {
+  const handleEditOrganization = (org: any, event: React.MouseEvent) => {
+    event.stopPropagation();
     setEditingOrganization(org);
     setIsOrgModalOpen(true);
     setIsOrgDropdownOpen(false);
+  };
+
+  const handleDeleteOrganization = (org: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (state.organizations.length <= 1) {
+      alert('Du kan ikke slette den siste organisasjonen.');
+      return;
+    }
+
+    const confirmMessage = `Er du sikker på at du vil slette organisasjonen "${org.name}"?\n\nDette vil også slette alle tilhørende kunder, prosjekter og kalkyler. Denne handlingen kan ikke angres.`;
+    
+    if (window.confirm(confirmMessage)) {
+      deleteOrganization(org.id);
+      setIsOrgDropdownOpen(false);
+    }
   };
 
   const handleNewOrganization = () => {
@@ -158,37 +176,56 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <div className="p-2">
                   {state.organizations.length > 0 ? (
                     state.organizations.map((org) => (
-                      <div key={org.id} className="group">
-                        <div className="flex items-stretch rounded-md overflow-hidden">
+                      <div key={org.id} className="group mb-1">
+                        <div className="flex items-stretch rounded-lg overflow-hidden border border-transparent hover:border-border-light transition-colors">
                           <button
                             onClick={() => handleOrganizationChange(org.id)}
-                            className={`flex-1 text-left p-3 transition-colors min-w-0 ${
+                            className={`flex-1 text-left p-3 transition-colors min-w-0 rounded-l-lg ${
                               currentOrganization?.id === org.id
-                                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                                ? 'bg-primary-500/20 text-primary-400'
                                 : 'hover:bg-background-darker/50 text-text-primary'
                             }`}
                           >
-                            <div className="font-medium truncate">{org.name}</div>
-                            {org.description && (
-                              <div className="text-xs text-text-muted truncate mt-1 max-w-[180px]">
-                                {org.description}
+                            <div className="flex items-center gap-2">
+                              <Building2 size={14} className="flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium truncate">{org.name}</div>
+                                {org.description && (
+                                  <div className="text-xs text-text-muted truncate mt-0.5">
+                                    {org.description}
+                                  </div>
+                                )}
                               </div>
+                            </div>
+                          </button>
+                          
+                          <div className="flex">
+                            <button
+                              onClick={(e) => handleEditOrganization(org, e)}
+                              className={`flex-shrink-0 w-8 flex items-center justify-center transition-colors ${
+                                currentOrganization?.id === org.id
+                                  ? 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30'
+                                  : 'bg-background-darker/30 text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
+                              }`}
+                              title="Rediger organisasjon"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            
+                            {state.organizations.length > 1 && (
+                              <button
+                                onClick={(e) => handleDeleteOrganization(org, e)}
+                                className={`flex-shrink-0 w-8 flex items-center justify-center transition-colors rounded-r-lg ${
+                                  currentOrganization?.id === org.id
+                                    ? 'bg-primary-500/20 text-red-400 hover:bg-red-500/20'
+                                    : 'bg-background-darker/30 text-text-muted hover:text-red-400 hover:bg-red-500/10'
+                                }`}
+                                title="Slett organisasjon"
+                              >
+                                <Trash2 size={12} />
+                              </button>
                             )}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditOrganization(org);
-                            }}
-                            className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors ${
-                              currentOrganization?.id === org.id
-                                ? 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30'
-                                : 'bg-background-darker/30 text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
-                            }`}
-                            title="Rediger organisasjon"
-                          >
-                            <Edit size={14} />
-                          </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -202,7 +239,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   <div className="border-t border-border mt-2 pt-2">
                     <button
                       onClick={handleNewOrganization}
-                      className="w-full text-left p-3 rounded-md hover:bg-background-darker/50 text-primary-400 flex items-center gap-2 transition-colors"
+                      className="w-full text-left p-3 rounded-lg hover:bg-background-darker/50 text-primary-400 flex items-center gap-2 transition-colors"
                     >
                       <Plus size={14} />
                       <span className="text-sm font-medium">Ny organisasjon</span>
