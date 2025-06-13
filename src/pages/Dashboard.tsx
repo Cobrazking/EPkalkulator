@@ -72,9 +72,9 @@ const Dashboard: React.FC = () => {
           <p className="text-text-muted mt-1">Oversikt over dine prosjekter og kalkyler</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Link to="/customers" className="btn-secondary flex items-center gap-2">
-            <Plus size={16} />
+            <Users size={16} />
             Ny kunde
           </Link>
           <Link to="/projects" className="btn-primary flex items-center gap-2">
