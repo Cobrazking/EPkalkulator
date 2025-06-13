@@ -115,3 +115,12 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-border-light;
 }
+
+/* Debug styles */
+.debug-border {
+  border: 2px solid red !important;
+}
+
+.debug-bg {
+  background: rgba(255, 0, 0, 0.1) !important;
+}

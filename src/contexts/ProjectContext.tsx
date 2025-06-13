@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+console.log('ProjectContext loading...');
+
 export interface Organization {
   id: string;
   name: string;
@@ -88,8 +90,11 @@ const initialState: ProjectState = {
 };
 
 const projectReducer = (state: ProjectState, action: ProjectAction): ProjectState => {
+  console.log('ProjectReducer action:', action.type);
+  
   switch (action.type) {
     case 'LOAD_DATA':
+      console.log('Loading data:', action.payload);
       return action.payload;
     
     case 'ADD_ORGANIZATION':
@@ -240,14 +245,23 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(projectReducer, initialState);
 
+  console.log('ProjectProvider rendering, state:', state);
+
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('epkalk-data');
-    if (savedData) {
-      try {
+    console.log('Loading data from localStorage...');
+    
+    try {
+      const savedData = localStorage.getItem('epkalk-data');
+      console.log('Saved data:', savedData);
+      
+      if (savedData) {
         const parsedData = JSON.parse(savedData);
+        console.log('Parsed data:', parsedData);
+        
         // Migrate old data if needed
         if (!parsedData.organizations) {
+          console.log('Migrating old data...');
           const defaultOrg: Organization = {
             id: uuidv4(),
             name: 'Min organisasjon',
@@ -273,13 +287,15 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
             currentOrganizationId: defaultOrg.id
           };
           
+          console.log('Migrated data:', migratedData);
           dispatch({ type: 'LOAD_DATA', payload: migratedData });
         } else {
+          console.log('Loading existing data...');
           dispatch({ type: 'LOAD_DATA', payload: parsedData });
         }
-      } catch (error) {
-        console.error('Failed to load data from localStorage:', error);
-        // Create default organization if loading fails
+      } else {
+        console.log('No saved data, creating default organization...');
+        // Create default organization for new users
         const defaultOrg: Organization = {
           id: uuidv4(),
           name: 'Min organisasjon',
@@ -296,10 +312,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           currentOrganizationId: defaultOrg.id
         };
         
+        console.log('Default data:', defaultData);
         dispatch({ type: 'LOAD_DATA', payload: defaultData });
       }
-    } else {
-      // Create default organization for new users
+    } catch (error) {
+      console.error('Failed to load data from localStorage:', error);
+      // Create default organization if loading fails
       const defaultOrg: Organization = {
         id: uuidv4(),
         name: 'Min organisasjon',
@@ -316,18 +334,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         currentOrganizationId: defaultOrg.id
       };
       
+      console.log('Error fallback data:', defaultData);
       dispatch({ type: 'LOAD_DATA', payload: defaultData });
     }
   }, []);
 
   // Save data to localStorage whenever state changes
   useEffect(() => {
+    console.log('Saving state to localStorage:', state);
     localStorage.setItem('epkalk-data', JSON.stringify(state));
   }, [state]);
 
   const currentOrganization = state.currentOrganizationId 
     ? state.organizations.find(org => org.id === state.currentOrganizationId) || null
     : null;
+
+  console.log('Current organization:', currentOrganization);
 
   const addOrganization = (organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
     const organization: Organization = {
@@ -510,6 +532,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCalculatorsByProject = (projectId: string) => 
     state.calculators.filter(calculator => calculator.projectId === projectId);
 
+  console.log('ProjectProvider context value ready');
+
   return (
     <ProjectContext.Provider value={{
       state,
@@ -552,3 +576,5 @@ export const useProject = () => {
   }
   return context;
 };
+
+console.log('ProjectContext loaded');

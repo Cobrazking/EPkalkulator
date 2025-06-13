@@ -11,8 +11,12 @@ import CalculatorPage from './pages/CalculatorPage';
 import SettingsPage from './pages/SettingsPage';
 import { ProjectProvider } from './contexts/ProjectContext';
 
+console.log('App component loading...');
+
 const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  console.log('App component rendering...');
 
   return (
     <ProjectProvider>
@@ -44,5 +48,7 @@ const App: React.FC = () => {
     </ProjectProvider>
   );
 };
+
+console.log('App component loaded');
 
 export default App;

@@ -1,62 +1,9 @@
-import React, { StrictMode } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Simple error boundary
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error('App Error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ 
-          padding: '20px', 
-          color: 'white', 
-          backgroundColor: '#0A0A0F',
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column'
-        }}>
-          <h1>Noe gikk galt</h1>
-          <p>Appen kunne ikke lastes. Sjekk konsollen for mer informasjon.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6366F1',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              marginTop: '20px'
-            }}
-          >
-            Last inn på nytt
-          </button>
-          <pre style={{ marginTop: '20px', fontSize: '12px', color: '#ccc' }}>
-            {this.state.error?.toString()}
-          </pre>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
+console.log('Starting EPKalk application...');
 
 // Check if root element exists
 const rootElement = document.getElementById('root');
@@ -72,12 +19,10 @@ if (!rootElement) {
   `;
 } else {
   try {
-    console.log('Starting app...');
+    console.log('Rendering app...');
     createRoot(rootElement).render(
       <StrictMode>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
+        <App />
       </StrictMode>
     );
     console.log('App rendered successfully');
