@@ -10,12 +10,19 @@ import {
   Trash2, 
   Plus,
   Upload,
-  X
+  X,
+  Users,
+  Shield,
+  UserCheck,
+  UserX,
+  Crown,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { CompanyInfo, CalculationSettings } from '../types';
 import { useProject } from '../contexts/ProjectContext';
 import OrganizationModal from '../components/modals/OrganizationModal';
+import UserModal from '../components/modals/UserModal';
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -23,11 +30,17 @@ const SettingsPage: React.FC = () => {
     currentOrganization, 
     updateOrganization, 
     deleteOrganization, 
-    setCurrentOrganization 
+    setCurrentOrganization,
+    getCurrentOrganizationUsers,
+    deleteUser
   } = useProject();
   
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+
+  const users = getCurrentOrganizationUsers();
 
   const initialCompanyInfo: CompanyInfo = {
     firma: '',
@@ -102,15 +115,63 @@ const SettingsPage: React.FC = () => {
     setIsOrgModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseOrgModal = () => {
     setIsOrgModalOpen(false);
     setEditingOrganization(null);
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setIsUserModalOpen(true);
+  };
+
+  const handleDeleteUser = (user: any) => {
+    if (window.confirm(`Er du sikker på at du vil slette brukeren "${user.name}"?`)) {
+      deleteUser(user.id);
+    }
+  };
+
+  const handleNewUser = () => {
+    setEditingUser(null);
+    setIsUserModalOpen(true);
+  };
+
+  const handleCloseUserModal = () => {
+    setIsUserModalOpen(false);
+    setEditingUser(null);
   };
 
   const handleReset = () => {
     if (window.confirm('Er du sikker på at du vil tilbakestille alle innstillinger? Dette kan ikke angres.')) {
       localStorage.clear();
       window.location.reload();
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return <Crown size={16} className="text-yellow-400" />;
+      case 'manager': return <Shield size={16} className="text-blue-400" />;
+      case 'user': return <User size={16} className="text-green-400" />;
+      default: return <User size={16} className="text-text-muted" />;
+    }
+  };
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Administrator';
+      case 'manager': return 'Leder';
+      case 'user': return 'Bruker';
+      default: return role;
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
+      case 'manager': return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
+      case 'user': return 'text-green-400 bg-green-400/10 border-green-400/30';
+      default: return 'text-text-muted bg-background-darker border-border';
     }
   };
 
@@ -221,6 +282,115 @@ const SettingsPage: React.FC = () => {
           ))}
         </div>
       </motion.div>
+
+      {/* User Management */}
+      {currentOrganization && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Users className="w-6 h-6 text-primary-400" />
+              <div>
+                <h2 className="text-xl font-semibold text-text-primary">Brukere</h2>
+                <p className="text-sm text-text-muted">Administrer brukere for {currentOrganization.name}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleNewUser}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Ny bruker
+            </button>
+          </div>
+
+          {users.length > 0 ? (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div 
+                  key={user.id} 
+                  className="p-4 rounded-lg border border-border bg-background-darker/30 hover:bg-background-darker/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {user.avatar ? (
+                        <img 
+                          src={user.avatar} 
+                          alt={`${user.name} avatar`}
+                          className="w-10 h-10 object-cover rounded-full border border-border"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <User size={20} className="text-white" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-text-primary truncate">{user.name}</h3>
+                          <span className={`px-2 py-1 text-xs rounded-full border font-medium ${getRoleColor(user.role)}`}>
+                            <div className="flex items-center gap-1">
+                              {getRoleIcon(user.role)}
+                              {getRoleText(user.role)}
+                            </div>
+                          </span>
+                          {user.isActive ? (
+                            <UserCheck size={16} className="text-green-400" title="Aktiv bruker" />
+                          ) : (
+                            <UserX size={16} className="text-red-400" title="Inaktiv bruker" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-text-muted">
+                          <span>{user.email}</span>
+                          {user.phone && <span>{user.phone}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleEditUser(user)}
+                        className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-lg hover:bg-background-darker/50"
+                        title="Rediger bruker"
+                      >
+                        <Edit size={16} />
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeleteUser(user)}
+                        className="p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-background-darker/50"
+                        title="Slett bruker"
+                      >
+                        <Trash2 size={16} />
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 mx-auto mb-3 text-text-muted opacity-50" />
+              <h3 className="text-lg font-medium text-text-primary mb-2">Ingen brukere ennå</h3>
+              <p className="text-text-muted mb-4">Legg til brukere for å samarbeide i organisasjonen</p>
+              <button
+                onClick={handleNewUser}
+                className="btn-primary flex items-center gap-2 mx-auto"
+              >
+                <Plus size={16} />
+                Legg til bruker
+              </button>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Information */}
@@ -434,7 +604,7 @@ const SettingsPage: React.FC = () => {
         className="card p-6"
       >
         <div className="flex items-center gap-3 mb-4">
-          <Settings className="w-6 h-6 text-primary-400" />
+          <SettingsIcon className="w-6 h-6 text-primary-400" />
           <h2 className="text-xl font-semibold text-text-primary">Om EPKalk</h2>
         </div>
 
@@ -458,8 +628,14 @@ const SettingsPage: React.FC = () => {
 
       <OrganizationModal
         isOpen={isOrgModalOpen}
-        onClose={handleCloseModal}
+        onClose={handleCloseOrgModal}
         organization={editingOrganization}
+      />
+
+      <UserModal
+        isOpen={isUserModalOpen}
+        onClose={handleCloseUserModal}
+        user={editingUser}
       />
     </div>
   );
