@@ -14,11 +14,13 @@ export function useSupabase() {
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl.includes('placeholder') || 
+        supabaseAnonKey.includes('placeholder') ||
         supabaseUrl === 'your_supabase_url_here' || 
         supabaseAnonKey === 'your_supabase_anon_key_here') {
-      // If Supabase is not configured, set a mock user to allow access
-      console.warn('Supabase not configured, running in demo mode');
-      setUser({ id: 'demo-user', email: 'demo@epkalk.no' } as any);
+      // If Supabase is not configured, redirect to login
+      console.warn('Supabase not configured properly');
+      setUser(null);
       setLoading(false);
       return;
     }
