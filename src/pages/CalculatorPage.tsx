@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 
@@ -11,6 +11,7 @@ import SummaryCard from '../components/SummaryCard';
 import CalculationTable from '../components/CalculationTable';
 import QuotePDF from '../components/QuotePDF';
 import SettingsModal from '../components/SettingsModal';
+import DuplicateCalculatorModal from '../components/modals/DuplicateCalculatorModal';
 import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 import { calculateRow, calculateSummary } from '../utils/calculations';
 import { exportToExcel } from '../utils/excel';
@@ -25,12 +26,15 @@ const CalculatorPage: React.FC = () => {
     getCalculatorById, 
     addCalculator, 
     updateCalculator,
-    currentOrganization
+    currentOrganization,
+    duplicateCalculator,
+    getCurrentOrganizationProjects
   } = useProject();
 
   const project = projectId ? getProjectById(projectId) : null;
   const customer = project ? getCustomerById(project.customerId) : null;
   const calculator = calculatorId ? getCalculatorById(calculatorId) : null;
+  const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
 
   const initialSettings: CalculationSettings = {
     defaultKostpris: 700,
@@ -89,6 +93,7 @@ const CalculatorPage: React.FC = () => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(initialCustomerInfo);
   const [calculationSettings, setCalculationSettings] = useLocalStorage<CalculationSettings>('calculation-settings', initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -240,6 +245,14 @@ const CalculatorPage: React.FC = () => {
     });
   };
 
+  const handleDuplicateCalculator = () => {
+    if (!calculatorId) {
+      alert('Du må lagre kalkylen først før du kan duplisere den.');
+      return;
+    }
+    setIsDuplicateModalOpen(true);
+  };
+
   const handleExport = () => {
     const exportData = {
       entries,
@@ -385,6 +398,16 @@ const CalculatorPage: React.FC = () => {
         </button>
 
         <button
+          onClick={handleDuplicateCalculator}
+          className="btn-secondary flex items-center gap-2"
+          disabled={!calculatorId}
+          title={!calculatorId ? "Lagre kalkylen først for å duplisere" : "Dupliser kalkyle"}
+        >
+          <Copy size={16} />
+          <span>Dupliser</span>
+        </button>
+
+        <button
           onClick={() => setIsSettingsOpen(true)}
           className="btn-secondary flex items-center gap-2"
         >
@@ -439,6 +462,14 @@ const CalculatorPage: React.FC = () => {
         onUpdateCompanyInfo={setCompanyInfo}
         onUpdateCustomerInfo={setCustomerInfo}
         onUpdateCalculationSettings={setCalculationSettings}
+      />
+
+      <DuplicateCalculatorModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        calculatorId={calculatorId}
+        currentProjectId={project.id}
+        availableProjects={availableProjects}
       />
     </div>
   );

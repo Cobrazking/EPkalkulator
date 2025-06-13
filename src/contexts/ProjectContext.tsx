@@ -75,6 +75,7 @@ type ProjectAction =
   | { type: 'ADD_CALCULATOR'; payload: Calculator }
   | { type: 'UPDATE_CALCULATOR'; payload: Calculator }
   | { type: 'DELETE_CALCULATOR'; payload: string }
+  | { type: 'DUPLICATE_CALCULATOR'; payload: Calculator }
   | { type: 'LOAD_DATA'; payload: ProjectState };
 
 const initialState: ProjectState = {
@@ -182,6 +183,12 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: state.calculators.filter(calculator => calculator.id !== action.payload)
       };
     
+    case 'DUPLICATE_CALCULATOR':
+      return {
+        ...state,
+        calculators: [...state.calculators, action.payload]
+      };
+    
     default:
       return state;
   }
@@ -200,10 +207,11 @@ interface ProjectContextType {
   addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateProject: (project: Project) => void;
   deleteProject: (id: string) => void;
-  duplicateProject: (projectId: string) => void;
+  duplicateProject: (projectId: string) => string;
   addCalculator: (calculator: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCalculator: (calculator: Calculator) => void;
   deleteCalculator: (id: string) => void;
+  duplicateCalculator: (calculatorId: string, targetProjectId?: string) => string;
   getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
@@ -409,6 +417,26 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dispatch({ type: 'DELETE_CALCULATOR', payload: id });
   };
 
+  const duplicateCalculator = (calculatorId: string, targetProjectId?: string) => {
+    const originalCalculator = state.calculators.find(c => c.id === calculatorId);
+    if (!originalCalculator) {
+      throw new Error('Calculator not found');
+    }
+
+    const newCalculatorId = uuidv4();
+    const duplicatedCalculator: Calculator = {
+      ...originalCalculator,
+      id: newCalculatorId,
+      projectId: targetProjectId || originalCalculator.projectId, // Use target project or same project
+      name: `${originalCalculator.name} (Kopi)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    dispatch({ type: 'DUPLICATE_CALCULATOR', payload: duplicatedCalculator });
+    return newCalculatorId;
+  };
+
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
@@ -447,6 +475,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addCalculator,
       updateCalculator,
       deleteCalculator,
+      duplicateCalculator,
       getOrganizationById,
       getCustomerById,
       getProjectById,

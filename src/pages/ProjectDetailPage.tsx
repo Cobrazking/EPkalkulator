@@ -16,6 +16,7 @@ import {
 import { useProject } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
 import CalculatorModal from '../components/modals/CalculatorModal';
+import DuplicateCalculatorModal from '../components/modals/DuplicateCalculatorModal';
 import { formatNumber } from '../utils/calculations';
 
 const ProjectDetailPage: React.FC = () => {
@@ -27,15 +28,20 @@ const ProjectDetailPage: React.FC = () => {
     getCalculatorsByProject, 
     deleteProject, 
     deleteCalculator,
-    duplicateProject
+    duplicateProject,
+    duplicateCalculator,
+    getCurrentOrganizationProjects
   } = useProject();
   
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [selectedCalculatorId, setSelectedCalculatorId] = useState<string | null>(null);
 
   const project = projectId ? getProjectById(projectId) : null;
   const customer = project ? getCustomerById(project.customerId) : null;
   const calculators = projectId ? getCalculatorsByProject(projectId) : [];
+  const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
 
   if (!project) {
     return (
@@ -75,6 +81,22 @@ const ProjectDetailPage: React.FC = () => {
   const handleDeleteCalculator = (calculatorId: string, calculatorName: string) => {
     if (window.confirm(`Er du sikker på at du vil slette kalkylen "${calculatorName}"?`)) {
       deleteCalculator(calculatorId);
+    }
+  };
+
+  const handleDuplicateCalculator = (calculatorId: string) => {
+    setSelectedCalculatorId(calculatorId);
+    setIsDuplicateModalOpen(true);
+  };
+
+  const handleQuickDuplicate = (calculatorId: string) => {
+    try {
+      const newCalculatorId = duplicateCalculator(calculatorId);
+      // Optionally navigate to the new calculator
+      navigate(`/projects/${project.id}/calculator/${newCalculatorId}`);
+    } catch (error) {
+      console.error('Failed to duplicate calculator:', error);
+      alert('Feil ved duplisering av kalkyle. Prøv igjen.');
     }
   };
 
@@ -264,13 +286,26 @@ const ProjectDetailPage: React.FC = () => {
                     <h3 className="font-medium text-text-primary">{calculator.name}</h3>
                   </div>
                   
-                  <button
-                    onClick={() => handleDeleteCalculator(calculator.id, calculator.name)}
-                    className="p-1 text-text-muted hover:text-red-400 transition-colors"
-                    title="Slett kalkyle"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex gap-1">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleDuplicateCalculator(calculator.id)}
+                      className="p-1 text-text-muted hover:text-blue-400 transition-colors rounded"
+                      title="Dupliser kalkyle"
+                    >
+                      <Copy size={14} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleDeleteCalculator(calculator.id, calculator.name)}
+                      className="p-1 text-text-muted hover:text-red-400 transition-colors rounded"
+                      title="Slett kalkyle"
+                    >
+                      <Trash2 size={14} />
+                    </motion.button>
+                  </div>
                 </div>
 
                 {calculator.description && (
@@ -289,12 +324,23 @@ const ProjectDetailPage: React.FC = () => {
                   <span>{new Date(calculator.updatedAt).toLocaleDateString('nb-NO')}</span>
                 </div>
 
-                <Link
-                  to={`/projects/${project.id}/calculator/${calculator.id}`}
-                  className="block w-full text-center py-2 px-4 bg-primary-500/20 text-primary-400 rounded-md hover:bg-primary-500/30 transition-colors"
-                >
-                  Åpne kalkyle
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    to={`/projects/${project.id}/calculator/${calculator.id}`}
+                    className="flex-1 text-center py-2 px-4 bg-primary-500/20 text-primary-400 rounded-md hover:bg-primary-500/30 transition-colors text-sm"
+                  >
+                    Åpne
+                  </Link>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleQuickDuplicate(calculator.id)}
+                    className="py-2 px-3 bg-background-darker text-text-muted rounded-md hover:bg-background hover:text-text-primary transition-colors text-sm"
+                    title="Dupliser til samme prosjekt"
+                  >
+                    <Copy size={14} />
+                  </motion.button>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -324,6 +370,14 @@ const ProjectDetailPage: React.FC = () => {
         isOpen={isCalculatorModalOpen}
         onClose={() => setIsCalculatorModalOpen(false)}
         projectId={project.id}
+      />
+
+      <DuplicateCalculatorModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        calculatorId={selectedCalculatorId}
+        currentProjectId={project.id}
+        availableProjects={availableProjects}
       />
     </div>
   );
