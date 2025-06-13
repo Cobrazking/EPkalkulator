@@ -287,6 +287,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // Ensure organizationId is included
+    if (!customerData.organizationId) {
+      throw new Error('organizationId is required when adding a customer');
+    }
+    
     const customer: Customer = {
       ...customerData,
       id: uuidv4(),
@@ -306,6 +311,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProject = (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // Ensure organizationId is included
+    if (!projectData.organizationId) {
+      throw new Error('organizationId is required when adding a project');
+    }
+    
     const project: Project = {
       ...projectData,
       id: uuidv4(),
@@ -325,6 +335,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addCalculator = (calculatorData: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // Ensure organizationId is included
+    if (!calculatorData.organizationId) {
+      throw new Error('organizationId is required when adding a calculator');
+    }
+    
     const calculator: Calculator = {
       ...calculatorData,
       id: uuidv4(),
