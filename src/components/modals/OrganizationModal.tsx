@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, Edit } from 'lucide-react';
 import { useProject, Organization } from '../../contexts/ProjectContext';
 
 interface OrganizationModalProps {
@@ -114,7 +114,10 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
             >
               <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-xl bg-background-lighter border border-border p-6 shadow-xl transition-all">
                 <Dialog.Title className="text-lg font-semibold mb-4 text-white flex justify-between items-center">
-                  <span>{organization ? 'Rediger organisasjon' : 'Ny organisasjon'}</span>
+                  <div className="flex items-center gap-2">
+                    {organization ? <Edit size={20} className="text-primary-400" /> : <Upload size={20} className="text-primary-400" />}
+                    <span>{organization ? 'Rediger organisasjon' : 'Ny organisasjon'}</span>
+                  </div>
                   <button
                     onClick={onClose}
                     className="text-text-muted hover:text-text-primary transition-colors"
@@ -125,15 +128,19 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="input-label">Navn *</label>
+                    <label className="input-label">Organisasjonsnavn *</label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full"
-                      placeholder="Organisasjonsnavn"
+                      placeholder="Navn på organisasjonen"
+                      autoFocus
                     />
+                    <p className="text-xs text-text-muted mt-1">
+                      Dette navnet vises i organisasjonsvelgeren og på alle dokumenter
+                    </p>
                   </div>
 
                   <div>
@@ -142,8 +149,11 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full h-20 resize-none"
-                      placeholder="Kort beskrivelse av organisasjonen"
+                      placeholder="Kort beskrivelse av organisasjonen (valgfritt)"
                     />
+                    <p className="text-xs text-text-muted mt-1">
+                      Beskrivelsen vises under organisasjonsnavnet i velgeren
+                    </p>
                   </div>
 
                   <div>
@@ -166,17 +176,21 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
                           </button>
                         </div>
                       ) : (
-                        <label className="flex items-center justify-center w-32 h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
+                        <label className="flex flex-col items-center justify-center w-32 h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
                           <input
                             type="file"
                             accept="image/*"
                             onChange={handleLogoUpload}
                             className="hidden"
                           />
-                          <Upload size={20} className="text-text-muted" />
+                          <Upload size={20} className="text-text-muted mb-1" />
+                          <span className="text-xs text-text-muted">Last opp</span>
                         </label>
                       )}
                     </div>
+                    <p className="text-xs text-text-muted mt-1">
+                      Logoen brukes på tilbud og andre dokumenter
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -234,8 +248,9 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
                     </button>
                     <button
                       type="submit"
-                      className="btn-primary"
+                      className="btn-primary flex items-center gap-2"
                     >
+                      {organization ? <Edit size={16} /> : <Upload size={16} />}
                       {organization ? 'Oppdater' : 'Opprett'}
                     </button>
                   </div>

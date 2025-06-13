@@ -11,7 +11,8 @@ import {
   X,
   Building2,
   ChevronDown,
-  Plus
+  Plus,
+  Edit
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import OrganizationModal from '../modals/OrganizationModal';
@@ -26,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const { state, currentOrganization, setCurrentOrganization } = useProject();
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [editingOrganization, setEditingOrganization] = useState(null);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -44,6 +46,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const handleOrganizationChange = (orgId: string) => {
     setCurrentOrganization(orgId);
     setIsOrgDropdownOpen(false);
+  };
+
+  const handleEditOrganization = (org: any) => {
+    setEditingOrganization(org);
+    setIsOrgModalOpen(true);
+    setIsOrgDropdownOpen(false);
+  };
+
+  const handleNewOrganization = () => {
+    setEditingOrganization(null);
+    setIsOrgModalOpen(true);
+    setIsOrgDropdownOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsOrgModalOpen(false);
+    setEditingOrganization(null);
   };
 
   return (
@@ -93,15 +112,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
               className="w-full flex items-center justify-between p-3 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors"
             >
-              <div className="flex items-center gap-2">
-                <Building2 size={16} className="text-primary-400" />
+              <div className="flex items-center gap-2 min-w-0">
+                <Building2 size={16} className="text-primary-400 flex-shrink-0" />
                 <span className="text-sm font-medium text-text-primary truncate">
                   {currentOrganization?.name || 'Velg organisasjon'}
                 </span>
               </div>
               <ChevronDown 
                 size={16} 
-                className={`text-text-muted transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} 
+                className={`text-text-muted transition-transform flex-shrink-0 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} 
               />
             </button>
 
@@ -109,28 +128,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               <div className="absolute top-full left-0 right-0 mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-50">
                 <div className="p-2">
                   {state.organizations.map((org) => (
-                    <button
-                      key={org.id}
-                      onClick={() => handleOrganizationChange(org.id)}
-                      className={`w-full text-left p-2 rounded-md transition-colors ${
-                        currentOrganization?.id === org.id
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'hover:bg-background-darker/50 text-text-primary'
-                      }`}
-                    >
-                      <div className="font-medium">{org.name}</div>
-                      {org.description && (
-                        <div className="text-xs text-text-muted">{org.description}</div>
-                      )}
-                    </button>
+                    <div key={org.id} className="flex items-center">
+                      <button
+                        onClick={() => handleOrganizationChange(org.id)}
+                        className={`flex-1 text-left p-2 rounded-md transition-colors ${
+                          currentOrganization?.id === org.id
+                            ? 'bg-primary-500/20 text-primary-400'
+                            : 'hover:bg-background-darker/50 text-text-primary'
+                        }`}
+                      >
+                        <div className="font-medium truncate">{org.name}</div>
+                        {org.description && (
+                          <div className="text-xs text-text-muted truncate">{org.description}</div>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleEditOrganization(org)}
+                        className="p-2 text-text-muted hover:text-primary-400 transition-colors rounded-md"
+                        title="Rediger organisasjon"
+                      >
+                        <Edit size={14} />
+                      </button>
+                    </div>
                   ))}
                   
                   <div className="border-t border-border mt-2 pt-2">
                     <button
-                      onClick={() => {
-                        setIsOrgModalOpen(true);
-                        setIsOrgDropdownOpen(false);
-                      }}
+                      onClick={handleNewOrganization}
                       className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-primary-400 flex items-center gap-2"
                     >
                       <Plus size={14} />
@@ -183,7 +207,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
       <OrganizationModal
         isOpen={isOrgModalOpen}
-        onClose={() => setIsOrgModalOpen(false)}
+        onClose={handleCloseModal}
+        organization={editingOrganization}
       />
     </>
   );
