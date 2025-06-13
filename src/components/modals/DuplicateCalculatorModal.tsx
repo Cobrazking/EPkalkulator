@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { X, Copy, Calculator } from 'lucide-react';
@@ -29,24 +29,33 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
   const selectedProject = getProjectById(selectedProjectId);
   const selectedCustomer = selectedProject ? getCustomerById(selectedProject.customerId) : null;
 
+  // Reset form when modal opens/closes or calculator changes
+  useEffect(() => {
+    if (isOpen && calculator) {
+      setSelectedProjectId(currentProjectId);
+      setCustomName(`${calculator.name} (Kopi)`);
+    } else if (!isOpen) {
+      setSelectedProjectId(currentProjectId);
+      setCustomName('');
+    }
+  }, [isOpen, calculator, currentProjectId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!calculator) return;
+    if (!calculator || !customName.trim()) return;
     
     try {
-      // Duplicate the calculator first
+      // Duplicate the calculator to the selected project
       const newCalculatorId = duplicateCalculator(calculator.id, selectedProjectId);
       
-      // If custom name is provided, update the calculator with the new name
-      if (customName.trim()) {
-        const newCalculator = getCalculatorById(newCalculatorId);
-        if (newCalculator) {
-          updateCalculator({
-            ...newCalculator,
-            name: customName.trim()
-          });
-        }
+      // Always update with the custom name
+      const newCalculator = getCalculatorById(newCalculatorId);
+      if (newCalculator) {
+        updateCalculator({
+          ...newCalculator,
+          name: customName.trim()
+        });
       }
       
       onClose();
@@ -125,6 +134,21 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
+                    <label className="input-label">Nytt navn *</label>
+                    <input
+                      type="text"
+                      required
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      className="w-full"
+                      placeholder={`${calculator.name} (Kopi)`}
+                    />
+                    <p className="text-xs text-text-muted mt-1">
+                      Skriv inn navnet på den nye kalkylen
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="input-label">Målprosjekt *</label>
                     <select
                       required
@@ -168,21 +192,6 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
                     </div>
                   )}
 
-                  <div>
-                    <label className="input-label">Nytt navn *</label>
-                    <input
-                      type="text"
-                      required
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      className="w-full"
-                      placeholder={`${calculator.name} (Kopi)`}
-                    />
-                    <p className="text-xs text-text-muted mt-1">
-                      Skriv inn navnet på den nye kalkylen
-                    </p>
-                  </div>
-
                   <div className="flex justify-end gap-2 pt-4">
                     <button
                       type="button"
@@ -194,6 +203,7 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
                     <button
                       type="submit"
                       className="btn-primary flex items-center gap-2"
+                      disabled={!customName.trim()}
                     >
                       <Copy size={16} />
                       Dupliser
