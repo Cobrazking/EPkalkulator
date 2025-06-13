@@ -268,6 +268,19 @@ export function useSupabase() {
     return data;
   };
 
+  // Auth methods with Google support
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    
+    if (error) throw error;
+    return data;
+  };
+
   return {
     user,
     loading,
@@ -302,6 +315,8 @@ export function useSupabase() {
     // Auth
     signIn: (email: string, password: string) => supabase.auth.signInWithPassword({ email, password }),
     signUp: (email: string, password: string) => supabase.auth.signUp({ email, password }),
+    signInWithGoogle,
     signOut: () => supabase.auth.signOut(),
+    resetPassword: (email: string) => supabase.auth.resetPasswordForEmail(email),
   };
 }
