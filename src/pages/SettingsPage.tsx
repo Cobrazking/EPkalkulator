@@ -5,26 +5,16 @@ import {
   User, 
   Calculator, 
   Building2, 
-  Palette, 
-  Edit, 
-  Trash2, 
-  Plus,
   Upload,
-  X,
-  Database
+  X
 } from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { CompanyInfo, CalculationSettings } from '../types';
 import { useProject } from '../contexts/ProjectContext';
-import TestSupabase from '../components/TestSupabase';
 
 const SettingsPage: React.FC = () => {
   const { 
-    state, 
-    currentOrganization, 
-    updateOrganization, 
-    deleteOrganization, 
-    setCurrentOrganization
+    currentOrganization
   } = useProject();
 
   const initialCompanyInfo: CompanyInfo = {
@@ -92,26 +82,12 @@ const SettingsPage: React.FC = () => {
         <p className="text-text-muted mt-1">Administrer dine globale innstillinger og organisasjoner</p>
       </div>
 
-      {/* Supabase Test */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="card p-6"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <Database className="w-6 h-6 text-primary-400" />
-          <h2 className="text-xl font-semibold text-text-primary">Database Status</h2>
-        </div>
-        <TestSupabase />
-      </motion.div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Information */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
           className="card p-6"
         >
           <div className="flex items-center gap-3 mb-6">
@@ -230,7 +206,7 @@ const SettingsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.2 }}
           className="card p-6"
         >
           <div className="flex items-center gap-3 mb-6">
@@ -314,7 +290,7 @@ const SettingsPage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.3 }}
         className="card p-6"
       >
         <div className="flex items-center gap-3 mb-4">
@@ -338,6 +314,21 @@ const SettingsPage: React.FC = () => {
             <p className="text-text-muted">Ingen data sendes til eksterne servere</p>
           </div>
         </div>
+
+        {currentOrganization && (
+          <div className="mt-6 pt-6 border-t border-border">
+            <h3 className="font-medium text-text-primary mb-2">Aktiv organisasjon</h3>
+            <div className="flex items-center gap-3 p-3 bg-background-darker/50 rounded-lg">
+              <Building2 className="w-5 h-5 text-primary-400" />
+              <div>
+                <p className="font-medium text-text-primary">{currentOrganization.name}</p>
+                {currentOrganization.description && (
+                  <p className="text-sm text-text-muted">{currentOrganization.description}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );
