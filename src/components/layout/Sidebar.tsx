@@ -70,8 +70,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-text-primary">ProsjektHub</h1>
-              <p className="text-xs text-text-muted">Prosjektverktøy</p>
+              <h1 className="text-lg font-semibold text-text-primary">EPKalk</h1>
+              <p className="text-xs text-text-muted">Kalkyleverktøy</p>
             </div>
           </div>
         </div>
@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         {/* Footer */}
         <div className="p-4 border-t border-border">
           <div className="text-xs text-text-muted text-center">
-            <p>© 2025 ProsjektHub</p>
+            <p>© 2025 EPKalk</p>
             <p>Versjon 1.0.0</p>
           </div>
         </div>

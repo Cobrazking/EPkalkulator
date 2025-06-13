@@ -265,7 +265,7 @@ const SettingsPage: React.FC = () => {
       >
         <div className="flex items-center gap-3 mb-4">
           <Settings className="w-6 h-6 text-primary-400" />
-          <h2 className="text-xl font-semibold text-text-primary">Om ProsjektHub</h2>
+          <h2 className="text-xl font-semibold text-text-primary">Om EPKalk</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
