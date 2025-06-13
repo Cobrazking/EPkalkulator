@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -47,6 +47,21 @@ const ProjectDetailPage: React.FC = () => {
   const calculators = projectId ? getCalculatorsByProject(projectId) : [];
   const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    if (openDropdownId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openDropdownId]);
+
   if (!project) {
     return (
       <div className="text-center py-12">
@@ -86,6 +101,7 @@ const ProjectDetailPage: React.FC = () => {
     if (window.confirm(`Er du sikker på at du vil slette kalkylen "${calculatorName}"?`)) {
       deleteCalculator(calculatorId);
     }
+    setOpenDropdownId(null);
   };
 
   const handleDuplicateCalculator = (calculatorId: string) => {
@@ -109,6 +125,13 @@ const ProjectDetailPage: React.FC = () => {
       console.error('Failed to duplicate calculator:', error);
       alert('Feil ved duplisering av kalkyle. Prøv igjen.');
     }
+    setOpenDropdownId(null);
+  };
+
+  const toggleDropdown = (calculatorId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setOpenDropdownId(openDropdownId === calculatorId ? null : calculatorId);
   };
 
   const getStatusColor = (status: string) => {
@@ -289,57 +312,51 @@ const ProjectDetailPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
-                className="p-4 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors"
+                className="p-4 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors relative"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Calculator className="w-4 h-4 text-primary-400" />
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Calculator className="w-4 h-4 text-primary-400 flex-shrink-0" />
                     <h3 className="font-medium text-text-primary truncate">{calculator.name}</h3>
                   </div>
                   
-                  <div className="relative">
+                  <div className="relative dropdown-container">
                     <button
-                      onClick={() => setOpenDropdownId(openDropdownId === calculator.id ? null : calculator.id)}
-                      className="p-1 text-text-muted hover:text-text-primary transition-colors rounded"
+                      onClick={(e) => toggleDropdown(calculator.id, e)}
+                      className="p-1 text-text-muted hover:text-text-primary transition-colors rounded hover:bg-background-darker/50 flex-shrink-0"
                       title="Flere alternativer"
                     >
                       <MoreVertical size={14} />
                     </button>
 
                     {openDropdownId === calculator.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
+                      <div className="absolute right-0 top-full mt-1 bg-background-lighter border border-border rounded-lg shadow-lg z-50 min-w-[160px]">
                         <div className="p-1">
                           <button
                             onClick={() => handleEditCalculator(calculator.id)}
-                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm transition-colors"
                           >
                             <Edit size={14} />
                             Rediger
                           </button>
                           <button
                             onClick={() => handleDuplicateCalculator(calculator.id)}
-                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm transition-colors"
                           >
                             <Copy size={14} />
                             Dupliser til...
                           </button>
                           <button
-                            onClick={() => {
-                              handleQuickDuplicate(calculator.id);
-                              setOpenDropdownId(null);
-                            }}
-                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm"
+                            onClick={() => handleQuickDuplicate(calculator.id)}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-text-primary flex items-center gap-2 text-sm transition-colors"
                           >
                             <Copy size={14} />
                             Dupliser her
                           </button>
                           <div className="border-t border-border my-1"></div>
                           <button
-                            onClick={() => {
-                              handleDeleteCalculator(calculator.id, calculator.name);
-                              setOpenDropdownId(null);
-                            }}
-                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-red-400 flex items-center gap-2 text-sm"
+                            onClick={() => handleDeleteCalculator(calculator.id, calculator.name)}
+                            className="w-full text-left p-2 rounded-md hover:bg-background-darker/50 text-red-400 flex items-center gap-2 text-sm transition-colors"
                           >
                             <Trash2 size={14} />
                             Slett
@@ -391,14 +408,6 @@ const ProjectDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* Click outside to close dropdown */}
-      {openDropdownId && (
-        <div 
-          className="fixed inset-0 z-5" 
-          onClick={() => setOpenDropdownId(null)}
-        />
-      )}
-
       <ProjectModal
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
@@ -422,7 +431,7 @@ const ProjectDetailPage: React.FC = () => {
       <EditCalculatorModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        calculator={selectedCalculatorId ? getCalculatorsByProject(project.id).find(c => c.id === selectedCalculatorId) || null : null}
+        calculator={selectedCalculatorId ? calculators.find(c => c.id === selectedCalculatorId) || null : null}
       />
     </div>
   );
