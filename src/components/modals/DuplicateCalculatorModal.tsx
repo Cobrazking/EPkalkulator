@@ -49,6 +49,9 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
       // First duplicate the calculator to the selected project
       const newCalculatorId = duplicateCalculator(calculator.id, selectedProjectId);
       
+      // Wait a bit to ensure the calculator is created
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Then immediately update the name to the custom name
       const newCalculator = getCalculatorById(newCalculatorId);
       if (newCalculator) {
@@ -60,8 +63,10 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
       
       onClose();
       
-      // Navigate to the new calculator
-      navigate(`/projects/${selectedProjectId}/calculator/${newCalculatorId}`);
+      // Navigate to the new calculator after a short delay to ensure updates are applied
+      setTimeout(() => {
+        navigate(`/projects/${selectedProjectId}/calculator/${newCalculatorId}`);
+      }, 200);
     } catch (error) {
       console.error('Failed to duplicate calculator:', error);
       alert('Feil ved duplisering av kalkyle. Prøv igjen.');
