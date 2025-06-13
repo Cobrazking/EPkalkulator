@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -10,7 +10,8 @@ import {
   DollarSign,
   Plus,
   ArrowRight,
-  Building2
+  Building2,
+  Filter
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { formatNumber } from '../utils/calculations';
@@ -25,19 +26,26 @@ const Dashboard: React.FC = () => {
     getProjectById
   } = useProject();
 
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
   const customers = getCurrentOrganizationCustomers();
-  const projects = getCurrentOrganizationProjects();
+  const allProjects = getCurrentOrganizationProjects();
   const calculators = getCurrentOrganizationCalculators();
+
+  // Filter projects by status
+  const filteredProjects = statusFilter === 'all' 
+    ? allProjects 
+    : allProjects.filter(project => project.status === statusFilter);
 
   const stats = {
     totalCustomers: customers.length,
-    totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'active').length,
+    totalProjects: allProjects.length,
+    activeProjects: allProjects.filter(p => p.status === 'active').length,
     totalCalculators: calculators.length,
     totalValue: calculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
   };
 
-  const recentProjects = projects
+  const recentProjects = filteredProjects
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
@@ -73,6 +81,10 @@ const Dashboard: React.FC = () => {
       case 'planning': return 'Planlegging';
       default: return status;
     }
+  };
+
+  const getStatusCount = (status: string) => {
+    return allProjects.filter(project => project.status === status).length;
   };
 
   if (!currentOrganization) {
@@ -195,7 +207,7 @@ const Dashboard: React.FC = () => {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Projects */}
+        {/* Recent Projects with Status Filter */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -207,6 +219,66 @@ const Dashboard: React.FC = () => {
             <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-sm">
               Se alle <ArrowRight size={14} />
             </Link>
+          </div>
+
+          {/* Status Filter */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter size={16} className="text-text-muted" />
+              <span className="text-sm text-text-muted">Filtrer etter status:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  statusFilter === 'all'
+                    ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                    : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                }`}
+              >
+                Alle ({allProjects.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('planning')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  statusFilter === 'planning'
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                }`}
+              >
+                Planlegging ({getStatusCount('planning')})
+              </button>
+              <button
+                onClick={() => setStatusFilter('active')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  statusFilter === 'active'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                }`}
+              >
+                Aktiv ({getStatusCount('active')})
+              </button>
+              <button
+                onClick={() => setStatusFilter('on-hold')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  statusFilter === 'on-hold'
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                }`}
+              >
+                På vent ({getStatusCount('on-hold')})
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  statusFilter === 'completed'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                }`}
+              >
+                Fullført ({getStatusCount('completed')})
+              </button>
+            </div>
           </div>
           
           <div className="space-y-3">
@@ -231,10 +303,24 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="text-center py-8 text-text-muted">
                 <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Ingen prosjekter ennå</p>
-                <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
-                  Opprett ditt første prosjekt
-                </Link>
+                <p>
+                  {statusFilter === 'all' 
+                    ? 'Ingen prosjekter ennå' 
+                    : `Ingen prosjekter med status "${getStatusText(statusFilter)}"`
+                  }
+                </p>
+                {statusFilter === 'all' ? (
+                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
+                    Opprett ditt første prosjekt
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => setStatusFilter('all')}
+                    className="text-primary-400 hover:text-primary-300 text-sm"
+                  >
+                    Vis alle prosjekter
+                  </button>
+                )}
               </div>
             )}
           </div>
