@@ -8,11 +8,15 @@ const TestSupabase: React.FC = () => {
   useEffect(() => {
     const testConnection = async () => {
       try {
+        console.log('Testing Supabase connection...');
+        
         // Test basic connection
         const { data, error } = await supabase
           .from('organizations')
           .select('count')
           .limit(1);
+
+        console.log('Supabase test result:', { data, error });
 
         if (error) {
           throw error;
@@ -20,7 +24,9 @@ const TestSupabase: React.FC = () => {
 
         setStatus('success');
         setMessage('Supabase tilkobling fungerer!');
+        console.log('Supabase connection successful');
       } catch (error: any) {
+        console.error('Supabase connection failed:', error);
         setStatus('error');
         setMessage(`Feil: ${error.message}`);
       }
@@ -39,6 +45,12 @@ const TestSupabase: React.FC = () => {
       }`}>
         {status === 'loading' && 'Tester tilkobling...'}
         {status !== 'loading' && message}
+      </div>
+      
+      {/* Debug info */}
+      <div className="mt-2 text-xs text-text-muted">
+        <div>URL: {import.meta.env.VITE_SUPABASE_URL}</div>
+        <div>Key: {import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Configured' : 'Missing'}</div>
       </div>
     </div>
   );

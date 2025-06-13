@@ -20,6 +20,10 @@ if (!rootElement) {
 } else {
   try {
     console.log('Rendering app...');
+    
+    // Clear loading content
+    rootElement.innerHTML = '';
+    
     createRoot(rootElement).render(
       <StrictMode>
         <App />
@@ -36,7 +40,7 @@ if (!rootElement) {
           <button onclick="window.location.reload()" style="padding: 10px 20px; background: #6366F1; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px;">
             Last inn på nytt
           </button>
-          <pre style="margin-top: 20px; font-size: 12px; color: #ccc;">${error}</pre>
+          <pre style="margin-top: 20px; font-size: 12px; color: #ccc; text-align: left; max-width: 600px;">${error}</pre>
         </div>
       </div>
     `;
