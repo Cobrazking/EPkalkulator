@@ -16,10 +16,10 @@ import {
 import { useProject } from '../contexts/ProjectContext';
 import { formatNumber } from '../utils/calculations';
 
-console.log('Dashboard component loading...');
+console.log('📊 Dashboard component loading...');
 
 const Dashboard: React.FC = () => {
-  console.log('Dashboard component rendering...');
+  console.log('🎨 Dashboard component rendering...');
   
   const { 
     getCurrentOrganizationCustomers, 
@@ -32,15 +32,15 @@ const Dashboard: React.FC = () => {
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  console.log('Dashboard - currentOrganization:', currentOrganization);
+  console.log('🏢 Dashboard - currentOrganization:', currentOrganization);
 
   const customers = getCurrentOrganizationCustomers();
   const allProjects = getCurrentOrganizationProjects();
   const calculators = getCurrentOrganizationCalculators();
 
-  console.log('Dashboard - customers:', customers.length);
-  console.log('Dashboard - projects:', allProjects.length);
-  console.log('Dashboard - calculators:', calculators.length);
+  console.log('📈 Dashboard - customers:', customers.length);
+  console.log('📈 Dashboard - projects:', allProjects.length);
+  console.log('📈 Dashboard - calculators:', calculators.length);
 
   // Filter projects by status
   const filteredProjects = statusFilter === 'all' 
@@ -103,10 +103,10 @@ const Dashboard: React.FC = () => {
     return allProjects.filter(project => project.status === status).length;
   };
 
-  console.log('Dashboard rendering with currentOrganization:', currentOrganization);
+  console.log('🎯 Dashboard rendering with currentOrganization:', currentOrganization);
 
   if (!currentOrganization) {
-    console.log('Dashboard - No current organization, showing fallback');
+    console.log('⚠️ Dashboard - No current organization, showing fallback');
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -123,7 +123,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  console.log('Dashboard - Rendering main content');
+  console.log('✅ Dashboard - Rendering main content');
 
   return (
     <div className="space-y-6">
@@ -434,6 +434,6 @@ const Dashboard: React.FC = () => {
   );
 };
 
-console.log('Dashboard component loaded');
+console.log('✅ Dashboard component loaded');
 
 export default Dashboard;

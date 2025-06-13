@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-console.log('ProjectContext loading...');
+console.log('🗂️ ProjectContext loading...');
 
 export interface Organization {
   id: string;
@@ -90,11 +90,11 @@ const initialState: ProjectState = {
 };
 
 const projectReducer = (state: ProjectState, action: ProjectAction): ProjectState => {
-  console.log('ProjectReducer action:', action.type);
+  console.log('🔄 ProjectReducer action:', action.type);
   
   switch (action.type) {
     case 'LOAD_DATA':
-      console.log('Loading data:', action.payload);
+      console.log('📥 Loading data:', action.payload);
       return action.payload;
     
     case 'ADD_ORGANIZATION':
@@ -243,25 +243,26 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('🏗️ ProjectProvider initializing...');
   const [state, dispatch] = useReducer(projectReducer, initialState);
 
-  console.log('ProjectProvider rendering, state:', state);
+  console.log('📊 ProjectProvider state:', state);
 
   // Load data from localStorage on mount
   useEffect(() => {
-    console.log('Loading data from localStorage...');
+    console.log('💾 Loading data from localStorage...');
     
     try {
       const savedData = localStorage.getItem('epkalk-data');
-      console.log('Saved data:', savedData);
+      console.log('📄 Saved data found:', !!savedData);
       
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log('Parsed data:', parsedData);
+        console.log('📋 Parsed data:', parsedData);
         
         // Migrate old data if needed
         if (!parsedData.organizations) {
-          console.log('Migrating old data...');
+          console.log('🔄 Migrating old data format...');
           const defaultOrg: Organization = {
             id: uuidv4(),
             name: 'Min organisasjon',
@@ -287,15 +288,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
             currentOrganizationId: defaultOrg.id
           };
           
-          console.log('Migrated data:', migratedData);
+          console.log('✅ Migrated data:', migratedData);
           dispatch({ type: 'LOAD_DATA', payload: migratedData });
         } else {
-          console.log('Loading existing data...');
+          console.log('✅ Loading existing data structure...');
           dispatch({ type: 'LOAD_DATA', payload: parsedData });
         }
       } else {
-        console.log('No saved data, creating default organization...');
-        // Create default organization for new users
+        console.log('🆕 No saved data, creating default organization...');
         const defaultOrg: Organization = {
           id: uuidv4(),
           name: 'Min organisasjon',
@@ -312,11 +312,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           currentOrganizationId: defaultOrg.id
         };
         
-        console.log('Default data:', defaultData);
+        console.log('✅ Default data created:', defaultData);
         dispatch({ type: 'LOAD_DATA', payload: defaultData });
       }
     } catch (error) {
-      console.error('Failed to load data from localStorage:', error);
+      console.error('❌ Failed to load data from localStorage:', error);
       // Create default organization if loading fails
       const defaultOrg: Organization = {
         id: uuidv4(),
@@ -334,14 +334,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         currentOrganizationId: defaultOrg.id
       };
       
-      console.log('Error fallback data:', defaultData);
+      console.log('🔧 Error fallback data:', defaultData);
       dispatch({ type: 'LOAD_DATA', payload: defaultData });
     }
   }, []);
 
   // Save data to localStorage whenever state changes
   useEffect(() => {
-    console.log('Saving state to localStorage:', state);
+    console.log('💾 Saving state to localStorage...');
     localStorage.setItem('epkalk-data', JSON.stringify(state));
   }, [state]);
 
@@ -349,7 +349,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     ? state.organizations.find(org => org.id === state.currentOrganizationId) || null
     : null;
 
-  console.log('Current organization:', currentOrganization);
+  console.log('🏢 Current organization:', currentOrganization);
 
   const addOrganization = (organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
     const organization: Organization = {
@@ -375,7 +375,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
-    // Ensure organizationId is included
     if (!customerData.organizationId) {
       throw new Error('organizationId is required when adding a customer');
     }
@@ -399,7 +398,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProject = (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
-    // Ensure organizationId is included
     if (!projectData.organizationId) {
       throw new Error('organizationId is required when adding a project');
     }
@@ -430,20 +428,18 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const originalCalculators = state.calculators.filter(c => c.projectId === projectId);
     
-    // Create new project with updated name and dates
     const newProjectId = uuidv4();
     const duplicatedProject: Project = {
       ...originalProject,
       id: newProjectId,
       name: `${originalProject.name} (Kopi)`,
-      status: 'planning', // Reset status to planning
-      startDate: new Date().toISOString().split('T')[0], // Set to today
-      endDate: undefined, // Clear end date
+      status: 'planning',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    // Create new calculators for the duplicated project
     const duplicatedCalculators: Calculator[] = originalCalculators.map(calc => ({
       ...calc,
       id: uuidv4(),
@@ -465,7 +461,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addCalculator = (calculatorData: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => {
-    // Ensure organizationId is included
     if (!calculatorData.organizationId) {
       throw new Error('organizationId is required when adding a calculator');
     }
@@ -498,7 +493,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const duplicatedCalculator: Calculator = {
       ...originalCalculator,
       id: newCalculatorId,
-      projectId: targetProjectId || originalCalculator.projectId, // Use target project or same project
+      projectId: targetProjectId || originalCalculator.projectId,
       name: `${originalCalculator.name} (Kopi)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -532,7 +527,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCalculatorsByProject = (projectId: string) => 
     state.calculators.filter(calculator => calculator.projectId === projectId);
 
-  console.log('ProjectProvider context value ready');
+  console.log('✅ ProjectProvider context value ready');
 
   return (
     <ProjectContext.Provider value={{
@@ -577,4 +572,4 @@ export const useProject = () => {
   return context;
 };
 
-console.log('ProjectContext loaded');
+console.log('✅ ProjectContext loaded');
