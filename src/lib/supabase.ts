@@ -5,20 +5,40 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dpqrzlxsfurcjr
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcXJ6bHhzZnVyY2pya3VoY2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDIzODUsImV4cCI6MjA2NTQxODM4NX0.tMeB3LxgTF7RwCmanUzXy9wWJfiVpH2QInlm52_ftgE';
 
 // Validate that we have proper Supabase configuration
-if (!supabaseUrl || !supabaseAnonKey || 
-    supabaseUrl.includes('placeholder') || 
-    supabaseAnonKey.includes('placeholder')) {
-  console.error('Supabase configuration is missing or invalid');
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase configuration is missing');
 }
 
-// Create Supabase client
+// Create Supabase client with better error handling
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'epkalk-web'
+    }
   }
 });
+
+// Test connection function
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('organizations').select('count').limit(1);
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return false;
+    }
+    console.log('Supabase connection successful');
+    return true;
+  } catch (error) {
+    console.error('Supabase connection error:', error);
+    return false;
+  }
+};
 
 // Database types
 export interface Database {

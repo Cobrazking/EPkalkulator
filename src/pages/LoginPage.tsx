@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
@@ -10,13 +10,15 @@ import {
   Building2,
   ArrowRight,
   Chrome,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useSupabase } from '../hooks/useSupabase';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn } = useSupabase();
+  const location = useLocation();
+  const { signIn, connectionError } = useSupabase();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -24,6 +26,10 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Get any message from URL params or location state
+  const urlParams = new URLSearchParams(location.search);
+  const message = urlParams.get('message') || (location.state as any)?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,11 +39,20 @@ const LoginPage: React.FC = () => {
     try {
       const { error } = await signIn(formData.email, formData.password);
       if (error) {
-        setError(error.message);
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Ugyldig e-post eller passord. Sjekk opplysningene og prøv igjen.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('E-posten din er ikke bekreftet. Sjekk innboksen din og klikk på bekreftelseslenken.');
+        } else {
+          setError(error.message);
+        }
       } else {
-        navigate('/');
+        // Redirect to the page they were trying to access, or dashboard
+        const from = (location.state as any)?.from || '/';
+        navigate(from, { replace: true });
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('En uventet feil oppstod. Prøv igjen.');
     } finally {
       setLoading(false);
@@ -89,6 +104,33 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="card p-8"
         >
+          {/* Success message */}
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg"
+            >
+              <p className="text-green-400 text-sm">{message}</p>
+            </motion.div>
+          )}
+
+          {/* Connection error */}
+          {connectionError && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3"
+            >
+              <AlertCircle size={20} className="text-red-400 flex-shrink-0" />
+              <div>
+                <p className="text-red-400 text-sm font-medium">Tilkoblingsfeil</p>
+                <p className="text-red-400 text-xs">{connectionError}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Form error */}
           {error && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -112,7 +154,7 @@ const LoginPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full pl-11 pr-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
                   placeholder="din@epost.no"
-                  disabled={loading}
+                  disabled={loading || !!connectionError}
                 />
               </div>
             </div>
@@ -129,13 +171,13 @@ const LoginPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full pl-11 pr-11 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
                   placeholder="Ditt passord"
-                  disabled={loading}
+                  disabled={loading || !!connectionError}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
-                  disabled={loading}
+                  disabled={loading || !!connectionError}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -154,11 +196,11 @@ const LoginPage: React.FC = () => {
 
             {/* Login Button */}
             <motion.button
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
+              whileHover={{ scale: loading || connectionError ? 1 : 1.02 }}
+              whileTap={{ scale: loading || connectionError ? 1 : 0.98 }}
               type="submit"
-              disabled={loading}
-              className="w-full btn-primary flex items-center justify-center gap-2 py-3"
+              disabled={loading || !!connectionError}
+              className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 size={20} className="animate-spin" />
@@ -180,11 +222,11 @@ const LoginPage: React.FC = () => {
 
           {/* Google Sign In */}
           <motion.button
-            whileHover={{ scale: loading ? 1 : 1.02 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
+            whileHover={{ scale: loading || connectionError ? 1 : 1.02 }}
+            whileTap={{ scale: loading || connectionError ? 1 : 0.98 }}
             onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full btn-secondary flex items-center justify-center gap-3 py-3"
+            disabled={loading || !!connectionError}
+            className="w-full btn-secondary flex items-center justify-center gap-3 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Chrome size={20} className="text-text-muted" />
             <span>Fortsett med Google</span>
