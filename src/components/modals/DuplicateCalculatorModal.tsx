@@ -20,7 +20,7 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
   currentProjectId,
   availableProjects,
 }) => {
-  const { getCalculatorById, getProjectById, getCustomerById, duplicateCalculator } = useProject();
+  const { getCalculatorById, getProjectById, getCustomerById, duplicateCalculator, updateCalculator } = useProject();
   const navigate = useNavigate();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(currentProjectId);
   const [customName, setCustomName] = useState<string>('');
@@ -29,16 +29,25 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
   const selectedProject = getProjectById(selectedProjectId);
   const selectedCustomer = selectedProject ? getCustomerById(selectedProject.customerId) : null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!calculator) return;
     
     try {
+      // Duplicate the calculator first
       const newCalculatorId = duplicateCalculator(calculator.id, selectedProjectId);
       
-      // If custom name is provided, we would need to update the calculator
-      // For now, we'll just use the default "(Kopi)" suffix
+      // If custom name is provided, update the calculator with the new name
+      if (customName.trim()) {
+        const newCalculator = getCalculatorById(newCalculatorId);
+        if (newCalculator) {
+          updateCalculator({
+            ...newCalculator,
+            name: customName.trim()
+          });
+        }
+      }
       
       onClose();
       
@@ -160,16 +169,17 @@ const DuplicateCalculatorModal: React.FC<DuplicateCalculatorModalProps> = ({
                   )}
 
                   <div>
-                    <label className="input-label">Tilpasset navn (valgfritt)</label>
+                    <label className="input-label">Nytt navn *</label>
                     <input
                       type="text"
+                      required
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
                       className="w-full"
                       placeholder={`${calculator.name} (Kopi)`}
                     />
                     <p className="text-xs text-text-muted mt-1">
-                      La stå tom for å bruke standardnavn med "(Kopi)" suffix
+                      Skriv inn navnet på den nye kalkylen
                     </p>
                   </div>
 
