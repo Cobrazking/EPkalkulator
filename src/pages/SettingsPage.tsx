@@ -49,6 +49,18 @@ const SettingsPage: React.FC = () => {
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Bildet er for stort. Maksimal størrelse er 5MB.');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        alert('Kun bildefiler er tillatt.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setCompanyInfo({
@@ -65,13 +77,6 @@ const SettingsPage: React.FC = () => {
       ...companyInfo,
       logo: undefined
     });
-  };
-
-  const handleReset = () => {
-    if (window.confirm('Er du sikker på at du vil tilbakestille alle innstillinger? Dette kan ikke angres.')) {
-      localStorage.clear();
-      window.location.reload();
-    }
   };
 
   const handleEditOrganization = (org: any) => {
@@ -100,6 +105,13 @@ const SettingsPage: React.FC = () => {
   const handleCloseModal = () => {
     setIsOrgModalOpen(false);
     setEditingOrganization(null);
+  };
+
+  const handleReset = () => {
+    if (window.confirm('Er du sikker på at du vil tilbakestille alle innstillinger? Dette kan ikke angres.')) {
+      localStorage.clear();
+      window.location.reload();
+    }
   };
 
   return (
@@ -268,6 +280,9 @@ const SettingsPage: React.FC = () => {
                   </label>
                 )}
               </div>
+              <p className="text-xs text-text-muted mt-1">
+                Maksimal filstørrelse: 5MB. Kun bildefiler er tillatt.
+              </p>
             </div>
 
             <div>
