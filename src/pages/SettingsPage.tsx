@@ -10,11 +10,13 @@ import {
   Trash2, 
   Plus,
   Upload,
-  X
+  X,
+  Database
 } from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { CompanyInfo, CalculationSettings } from '../types';
 import { useProject } from '../contexts/ProjectContext';
+import TestSupabase from '../components/TestSupabase';
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -89,6 +91,20 @@ const SettingsPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-text-primary">Innstillinger</h1>
         <p className="text-text-muted mt-1">Administrer dine globale innstillinger og organisasjoner</p>
       </div>
+
+      {/* Supabase Test */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card p-6"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <Database className="w-6 h-6 text-primary-400" />
+          <h2 className="text-xl font-semibold text-text-primary">Database Status</h2>
+        </div>
+        <TestSupabase />
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Information */}
