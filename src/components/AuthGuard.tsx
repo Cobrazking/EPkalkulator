@@ -13,6 +13,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    // Show fallback after 5 seconds if still loading
+    const fallbackTimer = setTimeout(() => {
+      if (loading || isChecking) {
+        setShowFallback(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [loading, isChecking]);
 
   useEffect(() => {
     if (!loading) {
@@ -97,10 +109,24 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <Loader2 size={24} className="animate-spin text-primary-400" />
-            <span className="text-text-muted">Laster...</span>
+            <span className="text-text-muted">Laster autentisering...</span>
           </div>
+
+          {showFallback && (
+            <div className="mt-6 p-4 bg-background-lighter/50 rounded-lg border border-border">
+              <p className="text-xs text-text-muted mb-3">
+                Tar det lang tid? Prøv å laste siden på nytt.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="btn-secondary text-sm px-4 py-2"
+              >
+                Last inn på nytt
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     );

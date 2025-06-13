@@ -15,13 +15,24 @@ export function useSupabase() {
     // Test Supabase connection first
     const initializeAuth = async () => {
       try {
-        // Test connection
-        const isConnected = await testSupabaseConnection();
+        console.log('Initializing Supabase auth...');
+        
+        // Test connection with timeout
+        const connectionPromise = testSupabaseConnection();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 10000)
+        );
+        
+        const isConnected = await Promise.race([connectionPromise, timeoutPromise]);
+        
         if (!isConnected && mounted) {
+          console.error('Supabase connection failed');
           setConnectionError('Kunne ikke koble til databasen. Sjekk nettverksforbindelsen.');
           setLoading(false);
           return;
         }
+
+        console.log('Supabase connection successful, getting session...');
 
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -33,6 +44,7 @@ export function useSupabase() {
         }
         
         if (mounted) {
+          console.log('Session retrieved:', session?.user?.id || 'No user');
           setUser(session?.user ?? null);
           setLoading(false);
           setConnectionError(null);
@@ -133,7 +145,9 @@ export function useSupabase() {
   // Auth methods with better error handling
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign in for:', email);
       const result = await supabase.auth.signInWithPassword({ email, password });
+      console.log('Sign in result:', result.error ? 'Error' : 'Success');
       return result;
     } catch (error) {
       console.error('Sign in error:', error);
@@ -143,6 +157,7 @@ export function useSupabase() {
 
   const signUp = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign up for:', email);
       const result = await supabase.auth.signUp({ 
         email, 
         password,
@@ -150,6 +165,7 @@ export function useSupabase() {
           emailRedirectTo: `${window.location.origin}/login`
         }
       });
+      console.log('Sign up result:', result.error ? 'Error' : 'Success');
       return result;
     } catch (error) {
       console.error('Sign up error:', error);
@@ -176,7 +192,9 @@ export function useSupabase() {
 
   const signOut = async () => {
     try {
+      console.log('Signing out...');
       const result = await supabase.auth.signOut();
+      console.log('Sign out result:', result.error ? 'Error' : 'Success');
       return result;
     } catch (error) {
       console.error('Sign out error:', error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -18,6 +18,42 @@ import { ProjectProvider } from './contexts/ProjectContext';
 
 const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Add a small delay to ensure everything is loaded
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading screen while app initializes
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="p-4 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-text-primary">EPKalk</h1>
+              <p className="text-sm text-text-muted">Profesjonelt kalkyleverktøy</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-text-muted">Starter app...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
