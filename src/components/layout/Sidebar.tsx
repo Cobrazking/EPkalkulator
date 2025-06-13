@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Check
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import OrganizationModal from '../modals/OrganizationModal';
@@ -111,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       {/* Mobile menu button */}
       <button
         onClick={onToggle}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-md bg-background-lighter border border-border text-text-primary hover:bg-background transition-colors"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-xl bg-background-lighter border border-border text-text-primary hover:bg-background transition-colors shadow-lg"
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -120,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       <aside
         className={`
           fixed lg:fixed
-          top-0 left-0 z-40 h-full w-64
+          top-0 left-0 z-40 h-full w-72
           bg-background-lighter/95 backdrop-blur-xl border-r border-border
           flex flex-col
           transform transition-transform duration-300 ease-in-out
@@ -130,11 +131,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         {/* Header */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg">
+            <div className="p-3 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl shadow-lg">
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-text-primary">EPKalk</h1>
+              <h1 className="text-xl font-bold text-text-primary">EPKalk</h1>
               <p className="text-xs text-text-muted">Kalkyleverktøy</p>
             </div>
           </div>
@@ -143,111 +144,162 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           <div className="relative org-dropdown-container">
             <button
               onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-              className="w-full flex items-center justify-between p-3 bg-background-darker/50 rounded-lg border border-border hover:border-border-light transition-colors group"
+              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-background-darker/80 to-background-darker/60 rounded-xl border border-border hover:border-primary-500/50 transition-all duration-200 group shadow-md hover:shadow-lg"
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <Building2 size={16} className="text-primary-400 flex-shrink-0" />
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="p-2 bg-primary-500/20 rounded-lg border border-primary-500/30">
+                  <Building2 size={16} className="text-primary-400" />
+                </div>
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="text-sm font-medium text-text-primary truncate">
+                  <div className="text-sm font-semibold text-text-primary truncate">
                     {currentOrganization?.name || 'Velg organisasjon'}
                   </div>
-                  {currentOrganization?.description && (
-                    <div className="text-xs text-text-muted truncate">
+                  {currentOrganization?.description ? (
+                    <div className="text-xs text-text-muted truncate mt-0.5">
                       {currentOrganization.description}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-text-muted">
+                      {currentOrganization ? 'Ingen beskrivelse' : 'Klikk for å velge'}
                     </div>
                   )}
                 </div>
               </div>
               <ChevronDown 
                 size={16} 
-                className={`text-text-muted transition-transform flex-shrink-0 group-hover:text-text-primary ${
-                  isOrgDropdownOpen ? 'rotate-180' : ''
+                className={`text-text-muted transition-all duration-200 flex-shrink-0 group-hover:text-primary-400 ${
+                  isOrgDropdownOpen ? 'rotate-180 text-primary-400' : ''
                 }`} 
               />
             </button>
 
-            {isOrgDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-background-lighter border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
-              >
-                <div className="p-2">
-                  {state.organizations.length > 0 ? (
-                    state.organizations.map((org) => (
-                      <div key={org.id} className="group mb-1">
-                        <div className="flex items-stretch rounded-lg overflow-hidden border border-transparent hover:border-border-light transition-colors">
-                          <button
-                            onClick={() => handleOrganizationChange(org.id)}
-                            className={`flex-1 text-left p-3 transition-colors min-w-0 rounded-l-lg ${
-                              currentOrganization?.id === org.id
-                                ? 'bg-primary-500/20 text-primary-400'
-                                : 'hover:bg-background-darker/50 text-text-primary'
-                            }`}
+            <AnimatePresence>
+              {isOrgDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-background-lighter/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 max-h-80 overflow-hidden"
+                >
+                  <div className="p-3">
+                    {/* Header */}
+                    <div className="px-3 py-2 border-b border-border mb-2">
+                      <h3 className="text-sm font-semibold text-text-primary">Organisasjoner</h3>
+                      <p className="text-xs text-text-muted">Velg eller administrer organisasjoner</p>
+                    </div>
+
+                    {/* Organizations List */}
+                    <div className="max-h-48 overflow-y-auto space-y-1">
+                      {state.organizations.length > 0 ? (
+                        state.organizations.map((org) => (
+                          <motion.div 
+                            key={org.id} 
+                            className="group"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.1 }}
                           >
-                            <div className="flex items-center gap-2">
-                              <Building2 size={14} className="flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="font-medium truncate">{org.name}</div>
-                                {org.description && (
-                                  <div className="text-xs text-text-muted truncate mt-0.5">
-                                    {org.description}
+                            <div className={`flex items-stretch rounded-lg overflow-hidden border transition-all duration-200 ${
+                              currentOrganization?.id === org.id
+                                ? 'border-primary-500/50 bg-gradient-to-r from-primary-500/20 to-purple-600/20 shadow-md'
+                                : 'border-transparent hover:border-border-light hover:bg-background-darker/50'
+                            }`}>
+                              <button
+                                onClick={() => handleOrganizationChange(org.id)}
+                                className="flex-1 text-left p-3 transition-colors min-w-0 rounded-l-lg"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-1.5 rounded-lg ${
+                                    currentOrganization?.id === org.id
+                                      ? 'bg-primary-500/30 border border-primary-500/50'
+                                      : 'bg-background-darker/50'
+                                  }`}>
+                                    <Building2 size={14} className={
+                                      currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-muted'
+                                    } />
                                   </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className={`font-medium truncate flex items-center gap-2 ${
+                                      currentOrganization?.id === org.id ? 'text-primary-400' : 'text-text-primary'
+                                    }`}>
+                                      {org.name}
+                                      {currentOrganization?.id === org.id && (
+                                        <Check size={12} className="text-primary-400 flex-shrink-0" />
+                                      )}
+                                    </div>
+                                    {org.description && (
+                                      <div className="text-xs text-text-muted truncate mt-0.5">
+                                        {org.description}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                              
+                              <div className="flex border-l border-border/50">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={(e) => handleEditOrganization(org, e)}
+                                  className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors ${
+                                    currentOrganization?.id === org.id
+                                      ? 'text-primary-400 hover:bg-primary-500/20'
+                                      : 'text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
+                                  }`}
+                                  title="Rediger organisasjon"
+                                >
+                                  <Edit size={12} />
+                                </motion.button>
+                                
+                                {state.organizations.length > 1 && (
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={(e) => handleDeleteOrganization(org, e)}
+                                    className={`flex-shrink-0 w-10 flex items-center justify-center transition-colors rounded-r-lg ${
+                                      currentOrganization?.id === org.id
+                                        ? 'text-red-400 hover:bg-red-500/20'
+                                        : 'text-text-muted hover:text-red-400 hover:bg-red-500/10'
+                                    }`}
+                                    title="Slett organisasjon"
+                                  >
+                                    <Trash2 size={12} />
+                                  </motion.button>
                                 )}
                               </div>
                             </div>
-                          </button>
-                          
-                          <div className="flex">
-                            <button
-                              onClick={(e) => handleEditOrganization(org, e)}
-                              className={`flex-shrink-0 w-8 flex items-center justify-center transition-colors ${
-                                currentOrganization?.id === org.id
-                                  ? 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30'
-                                  : 'bg-background-darker/30 text-text-muted hover:text-primary-400 hover:bg-background-darker/50'
-                              }`}
-                              title="Rediger organisasjon"
-                            >
-                              <Edit size={12} />
-                            </button>
-                            
-                            {state.organizations.length > 1 && (
-                              <button
-                                onClick={(e) => handleDeleteOrganization(org, e)}
-                                className={`flex-shrink-0 w-8 flex items-center justify-center transition-colors rounded-r-lg ${
-                                  currentOrganization?.id === org.id
-                                    ? 'bg-primary-500/20 text-red-400 hover:bg-red-500/20'
-                                    : 'bg-background-darker/30 text-text-muted hover:text-red-400 hover:bg-red-500/10'
-                                }`}
-                                title="Slett organisasjon"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            )}
-                          </div>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <div className="p-6 text-center text-text-muted">
+                          <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-sm font-medium mb-1">Ingen organisasjoner</p>
+                          <p className="text-xs">Opprett din første organisasjon</p>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-3 text-center text-text-muted">
-                      <Building2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Ingen organisasjoner</p>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className="border-t border-border mt-2 pt-2">
-                    <button
-                      onClick={handleNewOrganization}
-                      className="w-full text-left p-3 rounded-lg hover:bg-background-darker/50 text-primary-400 flex items-center gap-2 transition-colors"
-                    >
-                      <Plus size={14} />
-                      <span className="text-sm font-medium">Ny organisasjon</span>
-                    </button>
+                    
+                    {/* Add New Organization Button */}
+                    <div className="border-t border-border mt-3 pt-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleNewOrganization}
+                        className="w-full text-left p-3 rounded-lg bg-gradient-to-r from-primary-500/10 to-purple-600/10 border border-primary-500/30 hover:from-primary-500/20 hover:to-purple-600/20 text-primary-400 flex items-center gap-3 transition-all duration-200 group"
+                      >
+                        <div className="p-1.5 bg-primary-500/20 rounded-lg border border-primary-500/30 group-hover:bg-primary-500/30">
+                          <Plus size={14} className="text-primary-400" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold">Ny organisasjon</div>
+                          <div className="text-xs text-primary-400/70">Opprett en ny organisasjon</div>
+                        </div>
+                      </motion.button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -264,15 +316,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     to={item.path}
                     onClick={() => window.innerWidth < 1024 && onToggle()}
                     className={`
-                      flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
                       ${active 
-                        ? 'bg-gradient-to-r from-primary-500/20 to-purple-600/20 text-primary-400 border border-primary-500/30' 
-                        : 'text-text-secondary hover:text-text-primary hover:bg-background/50'
+                        ? 'bg-gradient-to-r from-primary-500/20 to-purple-600/20 text-primary-400 border border-primary-500/30 shadow-md' 
+                        : 'text-text-secondary hover:text-text-primary hover:bg-background-darker/50 hover:shadow-md'
                       }
                     `}
                   >
-                    <Icon size={20} />
-                    <span className="font-medium">{item.label}</span>
+                    <Icon size={20} className={active ? 'text-primary-400' : 'group-hover:text-primary-400 transition-colors'} />
+                    <span className="font-semibold">{item.label}</span>
                   </Link>
                 </li>
               );
@@ -282,8 +334,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
         {/* Footer */}
         <div className="p-4 border-t border-border">
-          <div className="text-xs text-text-muted text-center">
-            <p>© 2025 EPKalk</p>
+          <div className="text-xs text-text-muted text-center space-y-1">
+            <p className="font-semibold">© 2025 EPKalk</p>
             <p>Versjon 1.0.0</p>
           </div>
         </div>
