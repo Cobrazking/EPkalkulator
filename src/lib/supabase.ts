@@ -3,8 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-console.log('Supabase URL:', supabaseUrl)
-console.log('Supabase Key exists:', !!supabaseAnonKey)
+console.log('Supabase configuration:')
+console.log('- URL:', supabaseUrl)
+console.log('- Key exists:', !!supabaseAnonKey)
+console.log('- Key length:', supabaseAnonKey?.length || 0)
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables')
@@ -16,12 +18,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Validate URL format
 try {
   new URL(supabaseUrl)
+  console.log('✓ Supabase URL is valid')
 } catch (error) {
-  console.error('Invalid Supabase URL:', supabaseUrl)
+  console.error('✗ Invalid Supabase URL:', supabaseUrl)
   throw new Error(`Invalid Supabase URL: ${supabaseUrl}`)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+console.log('Creating Supabase client...')
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false // For now, disable auth persistence
+  }
+})
+
+console.log('✓ Supabase client created successfully')
 
 // Database types (will be generated later)
 export type Database = {
