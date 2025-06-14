@@ -47,8 +47,10 @@ const AppContent: React.FC = () => {
         <div className="min-h-screen bg-background text-text-primary flex">
           <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
           
-          <div className="flex-1 flex flex-col overflow-hidden lg:ml-80">
-            <main className="flex-1 overflow-x-hidden overflow-y-auto">
+          {/* Main content with responsive margin */}
+          <div className="flex-1 flex flex-col overflow-hidden lg:ml-72 xl:ml-80">
+            {/* Content area with proper padding for mobile menu button */}
+            <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
