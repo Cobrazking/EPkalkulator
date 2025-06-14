@@ -288,8 +288,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     console.log('📥 Loading data from Supabase for user:', user.email);
     dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
+      console.log('🔍 Checking for existing user record...');
+      
       // First, get or create user record
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -308,13 +311,19 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: 'Standard organisasjon',
         };
 
+        console.log('🏢 Creating default organization...');
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
           .insert([defaultOrg])
           .select()
           .single();
 
-        if (orgError) throw orgError;
+        if (orgError) {
+          console.error('❌ Failed to create organization:', orgError);
+          throw orgError;
+        }
+
+        console.log('✅ Organization created:', orgData.id);
 
         const newUser = {
           organization_id: orgData.id,
@@ -324,15 +333,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           role: 'admin' as const
         };
 
+        console.log('👤 Creating user record...');
         const { data: newUserData, error: newUserError } = await supabase
           .from('users')
           .insert([newUser])
           .select()
           .single();
 
-        if (newUserError) throw newUserError;
+        if (newUserError) {
+          console.error('❌ Failed to create user:', newUserError);
+          throw newUserError;
+        }
+
+        console.log('✅ User created:', newUserData.id);
         currentUser = newUserData;
       } else if (userError) {
+        console.error('❌ Error fetching user:', userError);
         throw userError;
       }
 
@@ -340,7 +356,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Failed to get or create user');
       }
 
+      console.log('👤 Current user:', currentUser.id, 'Org:', currentUser.organization_id);
+
       // Load all data for user's organization
+      console.log('📊 Loading organization data...');
       const [orgsResult, customersResult, projectsResult, calculatorsResult] = await Promise.all([
         supabase.from('organizations').select('*'),
         supabase.from('customers').select('*').eq('organization_id', currentUser.organization_id),
@@ -348,10 +367,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         supabase.from('calculators').select('*').eq('organization_id', currentUser.organization_id)
       ]);
 
-      if (orgsResult.error) throw orgsResult.error;
-      if (customersResult.error) throw customersResult.error;
-      if (projectsResult.error) throw projectsResult.error;
-      if (calculatorsResult.error) throw calculatorsResult.error;
+      if (orgsResult.error) {
+        console.error('❌ Error loading organizations:', orgsResult.error);
+        throw orgsResult.error;
+      }
+      if (customersResult.error) {
+        console.error('❌ Error loading customers:', customersResult.error);
+        throw customersResult.error;
+      }
+      if (projectsResult.error) {
+        console.error('❌ Error loading projects:', projectsResult.error);
+        throw projectsResult.error;
+      }
+      if (calculatorsResult.error) {
+        console.error('❌ Error loading calculators:', calculatorsResult.error);
+        throw calculatorsResult.error;
+      }
 
       // Transform data to match our interfaces
       const organizations: Organization[] = orgsResult.data.map(org => ({
@@ -425,12 +456,19 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     } catch (error) {
       console.error('❌ Failed to load data from Supabase:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Kunne ikke laste data fra serveren' });
+      let errorMessage = 'Kunne ikke laste data fra serveren';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
     }
   };
 
   // Load data when user changes
   useEffect(() => {
+    console.log('🔄 User changed, loading data...');
     loadDataFromSupabase();
   }, [user]);
 
@@ -872,6 +910,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     state.calculators.filter(calculator => calculator.projectId === projectId);
 
   const refreshData = async () => {
+    console.log('🔄 Refreshing data...');
     await loadDataFromSupabase();
   };
 
