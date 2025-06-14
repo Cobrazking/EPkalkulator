@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Building2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Building2 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 
-console.log('📝 LoginForm component loading...');
-
 const LoginForm: React.FC = () => {
-  console.log('🎨 LoginForm component rendering...');
-  
-  const { signIn, signUp, loading, error: authError } = useAuth();
+  const { signIn, signUp, loading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,12 +12,8 @@ const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('🔐 LoginForm state:', { loading, authError, isSubmitting });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('📤 Form submitted:', { isSignUp, email });
-    
     setError('');
     setIsSubmitting(true);
 
@@ -31,26 +23,16 @@ const LoginForm: React.FC = () => {
         : await signIn(email, password);
 
       if (error) {
-        console.error('❌ Auth error:', error);
-        setError(error.message || 'En feil oppstod');
-      } else {
-        console.log('✅ Auth successful');
+        setError(error.message);
       }
     } catch (err) {
-      console.error('❌ Submit exception:', err);
       setError('En uventet feil oppstod');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleRetry = () => {
-    console.log('🔄 Retrying connection...');
-    window.location.reload();
-  };
-
   if (loading) {
-    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center">
         <div className="text-center">
@@ -60,42 +42,6 @@ const LoginForm: React.FC = () => {
       </div>
     );
   }
-
-  // Show connection error if there's an auth error
-  if (authError) {
-    console.log('❌ Showing auth error:', authError);
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="card p-8">
-            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-400" />
-            </div>
-            <h2 className="text-xl font-semibold text-text-primary mb-2">Tilkoblingsfeil</h2>
-            <p className="text-text-muted mb-4">
-              Kunne ikke koble til serveren. Sjekk internettforbindelsen din.
-            </p>
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
-              <p className="text-red-400 text-sm">{authError}</p>
-            </div>
-            <button
-              onClick={handleRetry}
-              className="btn-primary flex items-center gap-2 mx-auto"
-            >
-              <RefreshCw size={16} />
-              Prøv igjen
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  console.log('✅ Showing login form');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center p-4">
@@ -235,7 +181,5 @@ const LoginForm: React.FC = () => {
     </div>
   );
 };
-
-console.log('✅ LoginForm component loaded');
 
 export default LoginForm;

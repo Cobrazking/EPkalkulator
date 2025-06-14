@@ -1,25 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-console.log('🔧 Initializing Supabase client...');
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseUrl = 'https://dpqrzlxsfurcjrkuhcjo.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('🌐 Supabase URL:', supabaseUrl);
-console.log('🔑 Anon key available:', !!supabaseAnonKey);
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables');
-  console.error('📋 Available env vars:', Object.keys(import.meta.env));
-  throw new Error('Supabase URL and anon key are required');
+if (!supabaseAnonKey) {
+  console.error('❌ VITE_SUPABASE_ANON_KEY is not set in environment variables');
+  throw new Error('Supabase anon key is required');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Test connection
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('❌ Supabase connection error:', error);
+  } else {
+    console.log('✅ Supabase connected successfully');
+    console.log('👤 Current session:', data.session?.user?.email || 'No user logged in');
   }
 });
-
-console.log('✅ Supabase client created successfully');
