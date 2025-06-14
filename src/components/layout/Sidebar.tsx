@@ -12,9 +12,13 @@ import {
   Building2,
   ChevronDown,
   Plus,
-  Check
+  Check,
+  User,
+  LogOut,
+  ChevronUp
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
+import { useAuth } from '../auth/AuthProvider';
 import OrganizationModal from '../modals/OrganizationModal';
 
 interface SidebarProps {
@@ -25,7 +29,9 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const { state, currentOrganization, setCurrentOrganization } = useProject();
+  const { user, signOut } = useAuth();
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
 
   const menuItems = [
@@ -42,20 +48,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     return location.pathname.startsWith(path);
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.org-dropdown-container')) {
         setIsOrgDropdownOpen(false);
       }
+      if (!target.closest('.user-dropdown-container')) {
+        setIsUserDropdownOpen(false);
+      }
     };
 
-    if (isOrgDropdownOpen) {
+    if (isOrgDropdownOpen || isUserDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isOrgDropdownOpen]);
+  }, [isOrgDropdownOpen, isUserDropdownOpen]);
 
   const handleOrganizationChange = (orgId: string) => {
     setCurrentOrganization(orgId);
@@ -69,6 +78,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   const handleCloseModal = () => {
     setIsOrgModalOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsUserDropdownOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Get user's initials for avatar
+  const getUserInitials = (email: string) => {
+    return email.split('@')[0].substring(0, 2).toUpperCase();
+  };
+
+  // Get user display name (part before @)
+  const getUserDisplayName = (email: string) => {
+    return email.split('@')[0];
   };
 
   return (
@@ -269,6 +297,82 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             })}
           </ul>
         </nav>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-border">
+          <div className="relative user-dropdown-container">
+            <button
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-background-darker/50 hover:bg-background-darker transition-all duration-200 group"
+            >
+              {/* User Avatar */}
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                {user?.email ? getUserInitials(user.email) : <User size={16} />}
+              </div>
+              
+              {/* User Info */}
+              <div className="flex-1 text-left min-w-0">
+                <div className="font-medium text-text-primary truncate">
+                  {user?.email ? getUserDisplayName(user.email) : 'Bruker'}
+                </div>
+                <div className="text-xs text-text-muted truncate">
+                  {user?.email || 'Ikke innlogget'}
+                </div>
+              </div>
+              
+              {/* Dropdown Arrow */}
+              <ChevronUp 
+                size={16} 
+                className={`text-text-muted transition-all duration-200 group-hover:text-primary-400 ${
+                  isUserDropdownOpen ? 'rotate-180 text-primary-400' : ''
+                }`} 
+              />
+            </button>
+
+            {/* User Dropdown */}
+            <AnimatePresence>
+              {isUserDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute bottom-full left-0 right-0 mb-2 bg-background-lighter/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
+                >
+                  <div className="p-2">
+                    {/* User Info Header */}
+                    <div className="px-3 py-2 border-b border-border mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                          {user?.email ? getUserInitials(user.email) : <User size={12} />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-text-primary truncate text-sm">
+                            {user?.email ? getUserDisplayName(user.email) : 'Bruker'}
+                          </div>
+                          <div className="text-xs text-text-muted truncate">
+                            {user?.email || 'Ikke innlogget'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sign Out Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleSignOut}
+                      className="w-full text-left p-3 rounded-lg hover:bg-red-500/10 text-red-400 flex items-center gap-3 transition-all duration-200 group"
+                    >
+                      <LogOut size={16} className="text-red-400" />
+                      <span className="text-sm font-medium">Logg ut</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-border">
