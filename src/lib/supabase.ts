@@ -2,17 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 
 console.log('🔧 Initializing Supabase client...');
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dpqrzlxsfurcjrkuhcjo.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcXJ6bHhzZnVyY2pya3VoY2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDIzODUsImV4cCI6MjA2NTQxODM4NX0.tMeB3LxgTF7RwCmanUzXy9wWJfiVpH2QInlm52_ftgE';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 console.log('🌐 Supabase URL:', supabaseUrl);
 console.log('🔑 Anon key available:', !!supabaseAnonKey);
 console.log('🔑 Anon key length:', supabaseAnonKey?.length);
 
-if (!supabaseAnonKey) {
-  console.error('❌ VITE_SUPABASE_ANON_KEY is not set');
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Missing Supabase environment variables');
   console.error('📋 Available env vars:', Object.keys(import.meta.env));
-  throw new Error('Supabase anon key is required');
+  throw new Error('Supabase URL and anon key are required');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
