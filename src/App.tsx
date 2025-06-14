@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+import { AuthProvider, useAuth } from './components/auth/AuthProvider';
+import LoginForm from './components/auth/LoginForm';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import CustomersPage from './pages/CustomersPage';
@@ -13,9 +15,31 @@ import { ProjectProvider } from './contexts/ProjectContext';
 
 console.log('📱 App component loading...');
 
-const App: React.FC = () => {
-  console.log('🎨 App component rendering...');
+const AppContent: React.FC = () => {
+  console.log('🎨 AppContent component rendering...');
+  const { user, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  console.log('👤 Current user:', user?.email || 'No user');
+  console.log('⏳ Loading state:', loading);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-muted">Laster inn...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    console.log('🔐 No user found, showing login form');
+    return <LoginForm />;
+  }
+
+  console.log('✅ User authenticated, showing main app');
 
   return (
     <ProjectProvider>
@@ -45,6 +69,16 @@ const App: React.FC = () => {
         </div>
       </Router>
     </ProjectProvider>
+  );
+};
+
+const App: React.FC = () => {
+  console.log('🎨 App component rendering...');
+  
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 
