@@ -10,8 +10,6 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import CalculatorPage from './pages/CalculatorPage';
 import SettingsPage from './pages/SettingsPage';
 import { ProjectProvider } from './contexts/ProjectContext';
-import { AuthProvider } from './components/auth/AuthProvider';
-import AuthGuard from './components/auth/AuthGuard';
 
 console.log('📱 App component loading...');
 
@@ -20,37 +18,33 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <AuthProvider>
-      <AuthGuard>
-        <ProjectProvider>
-          <Router>
-            <div className="min-h-screen bg-background text-text-primary flex">
-              <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-              
-              <div className="flex-1 flex flex-col overflow-hidden lg:ml-80">
-                <main className="flex-1 overflow-x-hidden overflow-y-auto">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="container mx-auto px-4 py-6"
-                  >
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/customers" element={<CustomersPage />} />
-                      <Route path="/projects" element={<ProjectsPage />} />
-                      <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-                      <Route path="/projects/:projectId/calculator/:calculatorId?" element={<CalculatorPage />} />
-                      <Route path="/settings" element={<SettingsPage />} />
-                    </Routes>
-                  </motion.div>
-                </main>
-              </div>
-            </div>
-          </Router>
-        </ProjectProvider>
-      </AuthGuard>
-    </AuthProvider>
+    <ProjectProvider>
+      <Router>
+        <div className="min-h-screen bg-background text-text-primary flex">
+          <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+          
+          <div className="flex-1 flex flex-col overflow-hidden lg:ml-80">
+            <main className="flex-1 overflow-x-hidden overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="container mx-auto px-4 py-6"
+              >
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/customers" element={<CustomersPage />} />
+                  <Route path="/projects" element={<ProjectsPage />} />
+                  <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+                  <Route path="/projects/:projectId/calculator/:calculatorId?" element={<CalculatorPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Routes>
+              </motion.div>
+            </main>
+          </div>
+        </div>
+      </Router>
+    </ProjectProvider>
   );
 };
 

@@ -5,45 +5,6 @@ import './index.css';
 
 console.log('🚀 Starting EPKalk application...');
 
-// Simple error boundary component
-const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-  try {
-    return <>{children}</>;
-  } catch (error) {
-    console.error('Error in app:', error);
-    return (
-      <div style={{
-        padding: '20px',
-        color: 'white',
-        background: '#0A0A0F',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1>Feil ved lasting av app</h1>
-          <p>Noe gikk galt. Prøv å laste siden på nytt.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '10px 20px',
-              background: '#6366F1',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              marginTop: '20px'
-            }}
-          >
-            Last inn på nytt
-          </button>
-        </div>
-      </div>
-    );
-  }
-};
-
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   console.error('❌ Root element not found');
@@ -62,9 +23,7 @@ if (!rootElement) {
     const root = createRoot(rootElement);
     root.render(
       <StrictMode>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
+        <App />
       </StrictMode>
     );
     console.log('✅ App rendered successfully');
