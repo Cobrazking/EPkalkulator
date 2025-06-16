@@ -10,6 +10,7 @@ import CustomersPage from './pages/CustomersPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import CalculatorPage from './pages/CalculatorPage';
+import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
 import { ProjectProvider } from './contexts/ProjectContext';
 
@@ -63,6 +64,7 @@ const AppContent: React.FC = () => {
                   <Route path="/projects" element={<ProjectsPage />} />
                   <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
                   <Route path="/projects/:projectId/calculator/:calculatorId?" element={<CalculatorPage />} />
+                  <Route path="/users" element={<UsersPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </motion.div>

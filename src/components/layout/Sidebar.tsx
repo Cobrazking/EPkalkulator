@@ -16,7 +16,8 @@ import {
   User,
   LogOut,
   ChevronUp,
-  Loader2
+  Loader2,
+  UserCheck
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../auth/AuthProvider';
@@ -39,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/customers', icon: Users, label: 'Kunder' },
     { path: '/projects', icon: FolderOpen, label: 'Prosjekter' },
+    { path: '/users', icon: UserCheck, label: 'Brukere' },
     { path: '/settings', icon: Settings, label: 'Innstillinger' },
   ];
 

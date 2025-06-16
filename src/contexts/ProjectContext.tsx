@@ -56,11 +56,26 @@ export interface Calculator {
   updatedAt: string;
 }
 
+export interface OrganizationUser {
+  id: string;
+  organizationId: string;
+  authUserId?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'admin' | 'manager' | 'user';
+  isActive: boolean;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface ProjectState {
   organizations: Organization[];
   customers: Customer[];
   projects: Project[];
   calculators: Calculator[];
+  users: OrganizationUser[];
   currentOrganizationId: string | null;
   loading: boolean;
   error: string | null;
@@ -86,6 +101,10 @@ type ProjectAction =
   | { type: 'ADD_CALCULATOR'; payload: Calculator }
   | { type: 'UPDATE_CALCULATOR'; payload: Calculator }
   | { type: 'DELETE_CALCULATOR'; payload: string }
+  | { type: 'SET_USERS'; payload: OrganizationUser[] }
+  | { type: 'ADD_USER'; payload: OrganizationUser }
+  | { type: 'UPDATE_USER'; payload: OrganizationUser }
+  | { type: 'DELETE_USER'; payload: string }
   | { type: 'RESET_STATE' };
 
 const initialState: ProjectState = {
@@ -93,6 +112,7 @@ const initialState: ProjectState = {
   customers: [],
   projects: [],
   calculators: [],
+  users: [],
   currentOrganizationId: null,
   loading: false,
   error: null
@@ -169,6 +189,7 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         customers: state.customers.filter(customer => customer.organizationId !== action.payload),
         projects: state.projects.filter(project => project.organizationId !== action.payload),
         calculators: state.calculators.filter(calculator => calculator.organizationId !== action.payload),
+        users: state.users.filter(user => user.organizationId !== action.payload),
         currentOrganizationId: newCurrentOrgId
       };
     
@@ -237,6 +258,26 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: state.calculators.filter(calculator => calculator.id !== action.payload)
       };
     
+    case 'SET_USERS':
+      return { ...state, users: action.payload };
+    
+    case 'ADD_USER':
+      return { ...state, users: [...state.users, action.payload] };
+    
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        users: state.users.map(user =>
+          user.id === action.payload.id ? action.payload : user
+        )
+      };
+    
+    case 'DELETE_USER':
+      return {
+        ...state,
+        users: state.users.filter(user => user.id !== action.payload)
+      };
+    
     case 'RESET_STATE':
       return initialState;
     
@@ -264,13 +305,19 @@ interface ProjectContextType {
   deleteCalculator: (id: string) => Promise<void>;
   duplicateCalculator: (calculatorId: string, targetProjectId?: string) => Promise<string>;
   moveCalculator: (calculatorId: string, newProjectId: string) => Promise<void>;
+  addUser: (user: Omit<OrganizationUser, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateUser: (user: OrganizationUser) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  inviteUser: (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => Promise<void>;
   getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
   getCalculatorById: (id: string) => Calculator | undefined;
+  getUserById: (id: string) => OrganizationUser | undefined;
   getCurrentOrganizationCustomers: () => Customer[];
   getCurrentOrganizationProjects: () => Project[];
   getCurrentOrganizationCalculators: () => Calculator[];
+  getCurrentOrganizationUsers: () => OrganizationUser[];
   getProjectsByCustomer: (customerId: string) => Project[];
   getCalculatorsByProject: (projectId: string) => Calculator[];
   refreshData: () => Promise<void>;
@@ -387,6 +434,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.log('✅ Calculators loaded:', calculators?.length || 0);
         const camelCaseCalculators = toCamelCase(calculators || []);
         dispatch({ type: 'SET_CALCULATORS', payload: camelCaseCalculators });
+
+        // Load users
+        const { data: users, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .in('organization_id', organizations.map(org => org.id))
+          .order('created_at', { ascending: false });
+
+        if (userError) {
+          console.error('❌ Error loading users:', userError);
+          throw userError;
+        }
+
+        console.log('✅ Users loaded:', users?.length || 0);
+        const camelCaseUsers = toCamelCase(users || []);
+        dispatch({ type: 'SET_USERS', payload: camelCaseUsers });
       }
 
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -922,10 +985,120 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const addUser = async (userData: Omit<OrganizationUser, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!userData.organizationId) {
+      throw new Error('organizationId is required when adding a user');
+    }
+    
+    try {
+      console.log('👤 Adding user:', userData);
+      
+      const snakeCaseData = {
+        organization_id: userData.organizationId,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone || null,
+        role: userData.role,
+        is_active: userData.isActive,
+        avatar: userData.avatar || null
+      };
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([snakeCaseData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+
+      console.log('✅ User added:', data);
+      const camelCaseUser = toCamelCase(data);
+      dispatch({ type: 'ADD_USER', payload: camelCaseUser });
+    } catch (error) {
+      console.error('❌ Failed to add user:', error);
+      throw error;
+    }
+  };
+
+  const updateUser = async (user: OrganizationUser) => {
+    try {
+      const snakeCaseData = {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        is_active: user.isActive,
+        avatar: user.avatar,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('users')
+        .update(snakeCaseData)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ User updated:', data);
+      const camelCaseUser = toCamelCase(data);
+      dispatch({ type: 'UPDATE_USER', payload: camelCaseUser });
+    } catch (error) {
+      console.error('❌ Failed to update user:', error);
+      throw error;
+    }
+  };
+
+  const deleteUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log('✅ User deleted:', id);
+      dispatch({ type: 'DELETE_USER', payload: id });
+    } catch (error) {
+      console.error('❌ Failed to delete user:', error);
+      throw error;
+    }
+  };
+
+  const inviteUser = async (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => {
+    try {
+      console.log('📧 Inviting user:', invitation);
+      
+      // For now, we'll create a user record without auth_user_id
+      // In a real implementation, you would send an email invitation
+      const userData = {
+        organizationId: invitation.organizationId,
+        name: invitation.name,
+        email: invitation.email,
+        role: invitation.role,
+        isActive: true
+      };
+
+      await addUser(userData);
+      
+      // TODO: Implement actual email invitation system
+      console.log('✅ User invitation created (email sending not implemented)');
+    } catch (error) {
+      console.error('❌ Failed to invite user:', error);
+      throw error;
+    }
+  };
+
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
   const getCalculatorById = (id: string) => state.calculators.find(calculator => calculator.id === id);
+  const getUserById = (id: string) => state.users.find(user => user.id === id);
   
   const getCurrentOrganizationCustomers = () => 
     state.customers.filter(customer => customer.organizationId === state.currentOrganizationId);
@@ -935,6 +1108,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const getCurrentOrganizationCalculators = () => 
     state.calculators.filter(calculator => calculator.organizationId === state.currentOrganizationId);
+  
+  const getCurrentOrganizationUsers = () => 
+    state.users.filter(user => user.organizationId === state.currentOrganizationId);
   
   const getProjectsByCustomer = (customerId: string) => 
     state.projects.filter(project => project.customerId === customerId);
@@ -964,13 +1140,19 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       deleteCalculator,
       duplicateCalculator,
       moveCalculator,
+      addUser,
+      updateUser,
+      deleteUser,
+      inviteUser,
       getOrganizationById,
       getCustomerById,
       getProjectById,
       getCalculatorById,
+      getUserById,
       getCurrentOrganizationCustomers,
       getCurrentOrganizationProjects,
       getCurrentOrganizationCalculators,
+      getCurrentOrganizationUsers,
       getProjectsByCustomer,
       getCalculatorsByProject,
       refreshData
