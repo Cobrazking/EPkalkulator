@@ -98,6 +98,34 @@ const initialState: ProjectState = {
   error: null
 };
 
+// Helper function to convert snake_case to camelCase
+const toCamelCase = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(toCamelCase);
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result, key) => {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      result[camelKey] = toCamelCase(obj[key]);
+      return result;
+    }, {} as any);
+  }
+  return obj;
+};
+
+// Helper function to convert camelCase to snake_case
+const toSnakeCase = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(toSnakeCase);
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result, key) => {
+      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      result[snakeKey] = toSnakeCase(obj[key]);
+      return result;
+    }, {} as any);
+  }
+  return obj;
+};
+
 const projectReducer = (state: ProjectState, action: ProjectAction): ProjectState => {
   console.log('🔄 ProjectReducer action:', action.type);
   
@@ -308,7 +336,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       console.log('✅ Organizations loaded:', organizations?.length || 0);
-      dispatch({ type: 'SET_ORGANIZATIONS', payload: organizations || [] });
+      const camelCaseOrganizations = toCamelCase(organizations || []);
+      dispatch({ type: 'SET_ORGANIZATIONS', payload: camelCaseOrganizations });
 
       if (organizations && organizations.length > 0) {
         // Load customers
@@ -324,7 +353,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         console.log('✅ Customers loaded:', customers?.length || 0);
-        dispatch({ type: 'SET_CUSTOMERS', payload: customers || [] });
+        const camelCaseCustomers = toCamelCase(customers || []);
+        dispatch({ type: 'SET_CUSTOMERS', payload: camelCaseCustomers });
 
         // Load projects
         const { data: projects, error: projectError } = await supabase
@@ -339,7 +369,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         console.log('✅ Projects loaded:', projects?.length || 0);
-        dispatch({ type: 'SET_PROJECTS', payload: projects || [] });
+        const camelCaseProjects = toCamelCase(projects || []);
+        dispatch({ type: 'SET_PROJECTS', payload: camelCaseProjects });
 
         // Load calculators
         const { data: calculators, error: calculatorError } = await supabase
@@ -354,7 +385,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         console.log('✅ Calculators loaded:', calculators?.length || 0);
-        dispatch({ type: 'SET_CALCULATORS', payload: calculators || [] });
+        const camelCaseCalculators = toCamelCase(calculators || []);
+        dispatch({ type: 'SET_CALCULATORS', payload: camelCaseCalculators });
       }
 
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -384,14 +416,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // First, create the organization using the service role client
       const { data: newOrg, error: orgError } = await supabase.rpc('create_organization_with_user', {
         org_name: organizationData.name,
+        user_name: user.email?.split('@')[0] || 'User',
+        user_email: user.email || '',
         org_description: organizationData.description || null,
         org_logo: organizationData.logo || null,
         org_address: organizationData.address || null,
         org_phone: organizationData.phone || null,
         org_email: organizationData.email || null,
-        org_website: organizationData.website || null,
-        user_name: user.email?.split('@')[0] || 'User',
-        user_email: user.email || ''
+        org_website: organizationData.website || null
       });
 
       if (orgError) {
@@ -437,10 +469,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
 
           console.log('✅ Organization created via direct insert:', directOrg);
-          dispatch({ type: 'ADD_ORGANIZATION', payload: directOrg });
+          const camelCaseOrg = toCamelCase(directOrg);
+          dispatch({ type: 'ADD_ORGANIZATION', payload: camelCaseOrg });
           
           if (state.organizations.length === 0) {
-            dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: directOrg.id });
+            dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: camelCaseOrg.id });
           }
           
           return;
@@ -453,10 +486,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       // The RPC should return the organization data
       if (newOrg && typeof newOrg === 'object' && 'id' in newOrg) {
-        dispatch({ type: 'ADD_ORGANIZATION', payload: newOrg as Organization });
+        const camelCaseOrg = toCamelCase(newOrg);
+        dispatch({ type: 'ADD_ORGANIZATION', payload: camelCaseOrg });
         
         if (state.organizations.length === 0) {
-          dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: newOrg.id });
+          dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: camelCaseOrg.id });
         }
       } else {
         // If RPC doesn't return the org data, refresh the data
@@ -471,18 +505,20 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateOrganization = async (organization: Organization) => {
     try {
+      const snakeCaseData = toSnakeCase({
+        name: organization.name,
+        description: organization.description,
+        logo: organization.logo,
+        address: organization.address,
+        phone: organization.phone,
+        email: organization.email,
+        website: organization.website,
+        updatedAt: new Date().toISOString()
+      });
+
       const { data, error } = await supabase
         .from('organizations')
-        .update({
-          name: organization.name,
-          description: organization.description,
-          logo: organization.logo,
-          address: organization.address,
-          phone: organization.phone,
-          email: organization.email,
-          website: organization.website,
-          updated_at: new Date().toISOString()
-        })
+        .update(snakeCaseData)
         .eq('id', organization.id)
         .select()
         .single();
@@ -490,7 +526,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Organization updated:', data);
-      dispatch({ type: 'UPDATE_ORGANIZATION', payload: data });
+      const camelCaseOrg = toCamelCase(data);
+      dispatch({ type: 'UPDATE_ORGANIZATION', payload: camelCaseOrg });
     } catch (error) {
       console.error('❌ Failed to update organization:', error);
       throw error;
@@ -524,23 +561,33 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     try {
+      console.log('👤 Adding customer:', customerData);
+      
+      const snakeCaseData = {
+        organization_id: customerData.organizationId,
+        name: customerData.name,
+        email: customerData.email || '',
+        phone: customerData.phone || '',
+        address: customerData.address || '',
+        company: customerData.company || null
+      };
+
+      console.log('📤 Sending to Supabase:', snakeCaseData);
+
       const { data, error } = await supabase
         .from('customers')
-        .insert([{
-          organization_id: customerData.organizationId,
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          address: customerData.address,
-          company: customerData.company
-        }])
+        .insert([snakeCaseData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
 
       console.log('✅ Customer added:', data);
-      dispatch({ type: 'ADD_CUSTOMER', payload: data });
+      const camelCaseCustomer = toCamelCase(data);
+      dispatch({ type: 'ADD_CUSTOMER', payload: camelCaseCustomer });
     } catch (error) {
       console.error('❌ Failed to add customer:', error);
       throw error;
@@ -549,16 +596,18 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateCustomer = async (customer: Customer) => {
     try {
+      const snakeCaseData = {
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        company: customer.company,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('customers')
-        .update({
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone,
-          address: customer.address,
-          company: customer.company,
-          updated_at: new Date().toISOString()
-        })
+        .update(snakeCaseData)
         .eq('id', customer.id)
         .select()
         .single();
@@ -566,7 +615,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Customer updated:', data);
-      dispatch({ type: 'UPDATE_CUSTOMER', payload: data });
+      const camelCaseCustomer = toCamelCase(data);
+      dispatch({ type: 'UPDATE_CUSTOMER', payload: camelCaseCustomer });
     } catch (error) {
       console.error('❌ Failed to update customer:', error);
       throw error;
@@ -596,25 +646,28 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     try {
+      const snakeCaseData = {
+        organization_id: projectData.organizationId,
+        customer_id: projectData.customerId,
+        name: projectData.name,
+        description: projectData.description,
+        status: projectData.status,
+        start_date: projectData.startDate,
+        end_date: projectData.endDate,
+        budget: projectData.budget
+      };
+
       const { data, error } = await supabase
         .from('projects')
-        .insert([{
-          organization_id: projectData.organizationId,
-          customer_id: projectData.customerId,
-          name: projectData.name,
-          description: projectData.description,
-          status: projectData.status,
-          start_date: projectData.startDate,
-          end_date: projectData.endDate,
-          budget: projectData.budget
-        }])
+        .insert([snakeCaseData])
         .select()
         .single();
 
       if (error) throw error;
 
       console.log('✅ Project added:', data);
-      dispatch({ type: 'ADD_PROJECT', payload: data });
+      const camelCaseProject = toCamelCase(data);
+      dispatch({ type: 'ADD_PROJECT', payload: camelCaseProject });
     } catch (error) {
       console.error('❌ Failed to add project:', error);
       throw error;
@@ -623,18 +676,20 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProject = async (project: Project) => {
     try {
+      const snakeCaseData = {
+        name: project.name,
+        description: project.description,
+        customer_id: project.customerId,
+        status: project.status,
+        start_date: project.startDate,
+        end_date: project.endDate,
+        budget: project.budget,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('projects')
-        .update({
-          name: project.name,
-          description: project.description,
-          customer_id: project.customerId,
-          status: project.status,
-          start_date: project.startDate,
-          end_date: project.endDate,
-          budget: project.budget,
-          updated_at: new Date().toISOString()
-        })
+        .update(snakeCaseData)
         .eq('id', project.id)
         .select()
         .single();
@@ -642,7 +697,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Project updated:', data);
-      dispatch({ type: 'UPDATE_PROJECT', payload: data });
+      const camelCaseProject = toCamelCase(data);
+      dispatch({ type: 'UPDATE_PROJECT', payload: camelCaseProject });
     } catch (error) {
       console.error('❌ Failed to update project:', error);
       throw error;
@@ -696,7 +752,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (projectError) throw projectError;
 
       console.log('✅ Project duplicated:', newProject);
-      dispatch({ type: 'ADD_PROJECT', payload: newProject });
+      const camelCaseProject = toCamelCase(newProject);
+      dispatch({ type: 'ADD_PROJECT', payload: camelCaseProject });
 
       // Duplicate calculators
       if (originalCalculators.length > 0) {
@@ -718,7 +775,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         console.log('✅ Calculators duplicated:', duplicatedCalculators?.length || 0);
         duplicatedCalculators?.forEach(calc => {
-          dispatch({ type: 'ADD_CALCULATOR', payload: calc });
+          const camelCaseCalc = toCamelCase(calc);
+          dispatch({ type: 'ADD_CALCULATOR', payload: camelCaseCalc });
         });
       }
 
@@ -735,23 +793,26 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     try {
+      const snakeCaseData = {
+        organization_id: calculatorData.organizationId,
+        project_id: calculatorData.projectId,
+        name: calculatorData.name,
+        description: calculatorData.description,
+        entries: calculatorData.entries,
+        summary: calculatorData.summary
+      };
+
       const { data, error } = await supabase
         .from('calculators')
-        .insert([{
-          organization_id: calculatorData.organizationId,
-          project_id: calculatorData.projectId,
-          name: calculatorData.name,
-          description: calculatorData.description,
-          entries: calculatorData.entries,
-          summary: calculatorData.summary
-        }])
+        .insert([snakeCaseData])
         .select()
         .single();
 
       if (error) throw error;
 
       console.log('✅ Calculator added:', data);
-      dispatch({ type: 'ADD_CALCULATOR', payload: data });
+      const camelCaseCalculator = toCamelCase(data);
+      dispatch({ type: 'ADD_CALCULATOR', payload: camelCaseCalculator });
       return data.id;
     } catch (error) {
       console.error('❌ Failed to add calculator:', error);
@@ -761,15 +822,17 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateCalculator = async (calculator: Calculator) => {
     try {
+      const snakeCaseData = {
+        name: calculator.name,
+        description: calculator.description,
+        entries: calculator.entries,
+        summary: calculator.summary,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('calculators')
-        .update({
-          name: calculator.name,
-          description: calculator.description,
-          entries: calculator.entries,
-          summary: calculator.summary,
-          updated_at: new Date().toISOString()
-        })
+        .update(snakeCaseData)
         .eq('id', calculator.id)
         .select()
         .single();
@@ -777,7 +840,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Calculator updated:', data);
-      dispatch({ type: 'UPDATE_CALCULATOR', payload: data });
+      const camelCaseCalculator = toCamelCase(data);
+      dispatch({ type: 'UPDATE_CALCULATOR', payload: camelCaseCalculator });
     } catch (error) {
       console.error('❌ Failed to update calculator:', error);
       throw error;
@@ -826,7 +890,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Calculator duplicated:', data);
-      dispatch({ type: 'ADD_CALCULATOR', payload: data });
+      const camelCaseCalculator = toCamelCase(data);
+      dispatch({ type: 'ADD_CALCULATOR', payload: camelCaseCalculator });
       return data.id;
     } catch (error) {
       console.error('❌ Failed to duplicate calculator:', error);
@@ -849,7 +914,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
 
       console.log('✅ Calculator moved:', data);
-      dispatch({ type: 'UPDATE_CALCULATOR', payload: data });
+      const camelCaseCalculator = toCamelCase(data);
+      dispatch({ type: 'UPDATE_CALCULATOR', payload: camelCaseCalculator });
     } catch (error) {
       console.error('❌ Failed to move calculator:', error);
       throw error;
