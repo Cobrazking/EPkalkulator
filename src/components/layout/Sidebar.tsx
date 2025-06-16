@@ -69,10 +69,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
-    if (window.innerWidth < 1024) {
+    if (isOpen && window.innerWidth < 1024) {
       onToggle();
     }
-  }, [location.pathname]);
+  }, [location.pathname, isOpen, onToggle]);
 
   const handleOrganizationChange = (orgId: string) => {
     setCurrentOrganization(orgId);
@@ -105,6 +105,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   // Get user display name (part before @)
   const getUserDisplayName = (email: string) => {
     return email.split('@')[0];
+  };
+
+  // Handle menu item click - close sidebar on mobile
+  const handleMenuItemClick = () => {
+    if (window.innerWidth < 1024) {
+      onToggle();
+    }
   };
 
   return (
@@ -293,7 +300,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    onClick={() => window.innerWidth < 1024 && onToggle()}
+                    onClick={handleMenuItemClick}
                     className={`
                       flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-200 group
                       ${active 
