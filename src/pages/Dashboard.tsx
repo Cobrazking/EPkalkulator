@@ -12,10 +12,12 @@ import {
   ArrowRight,
   Building2,
   Filter,
-  RefreshCw
+  RefreshCw,
+  PieChart,
+  Target
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import { formatNumber } from '../utils/calculations';
+import { formatNumber, formatPercent } from '../utils/calculations';
 
 console.log('📊 Dashboard component loading...');
 
@@ -56,14 +58,41 @@ const Dashboard: React.FC = () => {
     filteredProjects.some(project => project.id === calc.projectId)
   );
 
+  // Calculate advanced statistics
+  const calculateAdvancedStats = () => {
+    const totalValue = filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0);
+    const totalHours = filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.timerTotalt || 0), 0);
+    const totalProfit = filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.fortjeneste || 0), 0);
+    
+    // Calculate average project value
+    const averageProjectValue = filteredProjects.length > 0 ? totalValue / filteredProjects.length : 0;
+    
+    // Calculate average margin (dekningsgrad) across all calculators
+    const calculatorsWithMargin = filteredCalculators.filter(calc => calc.summary?.totalSum > 0);
+    const averageMargin = calculatorsWithMargin.length > 0 
+      ? calculatorsWithMargin.reduce((acc, calc) => {
+          const margin = calc.summary?.totalSum > 0 ? (calc.summary.fortjeneste / calc.summary.totalSum) * 100 : 0;
+          return acc + margin;
+        }, 0) / calculatorsWithMargin.length
+      : 0;
+
+    return {
+      totalValue,
+      totalHours,
+      totalProfit,
+      averageProjectValue,
+      averageMargin
+    };
+  };
+
+  const advancedStats = calculateAdvancedStats();
+
   const stats = {
     totalCustomers: customers.length,
     totalProjects: allProjects.length,
     activeProjects: allProjects.filter(p => p.status === 'active').length,
     totalCalculators: calculators.length,
-    // Use filtered calculators for total value and hours
-    totalValue: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0),
-    totalHours: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.timerTotalt || 0), 0)
+    ...advancedStats
   };
 
   const recentProjects = filteredProjects
@@ -209,12 +238,12 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
@@ -229,7 +258,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
@@ -244,7 +273,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
@@ -259,7 +288,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-violet-400" />
@@ -274,7 +303,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-orange-400" />
@@ -296,7 +325,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30 xl:col-span-1"
         >
           <div className="flex items-center gap-3">
             <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
@@ -304,6 +333,123 @@ const Dashboard: React.FC = () => {
               <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.totalValue)}</p>
               <p className="text-xs sm:text-sm text-amber-200/80">
                 Total verdi
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 xl:col-span-1"
+        >
+          <div className="flex items-center gap-3">
+            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.totalProfit)}</p>
+              <p className="text-xs sm:text-sm text-green-200/80">
+                Fortjeneste
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-cyan-600/20 via-blue-600/15 to-indigo-600/20 border-cyan-500/30 xl:col-span-1"
+        >
+          <div className="flex items-center gap-3">
+            <PieChart className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatPercent(stats.averageMargin)}</p>
+              <p className="text-xs sm:text-sm text-cyan-200/80">
+                Snitt margin
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Secondary Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-purple-600/20 via-pink-600/15 to-rose-600/20 border-purple-500/30"
+        >
+          <div className="flex items-center gap-3">
+            <Target className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.averageProjectValue)}</p>
+              <p className="text-xs sm:text-sm text-purple-200/80">
+                Snitt prosjektverdi
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-indigo-600/20 via-blue-600/15 to-cyan-600/20 border-indigo-500/30"
+        >
+          <div className="flex items-center gap-3">
+            <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">
+                {stats.totalProjects > 0 ? formatNumber(stats.totalCalculators / stats.totalProjects) : '0'}
+              </p>
+              <p className="text-xs sm:text-sm text-indigo-200/80">
+                Kalkyler per prosjekt
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-teal-600/20 via-green-600/15 to-emerald-600/20 border-teal-500/30"
+        >
+          <div className="flex items-center gap-3">
+            <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-teal-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">
+                {stats.totalProjects > 0 ? formatNumber(stats.totalHours / stats.totalProjects) : '0'}
+              </p>
+              <p className="text-xs sm:text-sm text-teal-200/80">
+                Timer per prosjekt
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75">
                     ({getStatusText(statusFilter)})
@@ -321,7 +467,7 @@ const Dashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 1.2 }}
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -440,7 +586,7 @@ const Dashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.3 }}
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-4">
