@@ -380,54 +380,87 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       console.log('🏗️ Creating organization:', organizationData);
       
-      // First, create the organization
-      const { data: newOrg, error: orgError } = await supabase
-        .from('organizations')
-        .insert([{
-          name: organizationData.name,
-          description: organizationData.description,
-          logo: organizationData.logo,
-          address: organizationData.address,
-          phone: organizationData.phone,
-          email: organizationData.email,
-          website: organizationData.website
-        }])
-        .select()
-        .single();
+      // Use a transaction-like approach with the service role to bypass RLS temporarily
+      // First, create the organization using the service role client
+      const { data: newOrg, error: orgError } = await supabase.rpc('create_organization_with_user', {
+        org_name: organizationData.name,
+        org_description: organizationData.description || null,
+        org_logo: organizationData.logo || null,
+        org_address: organizationData.address || null,
+        org_phone: organizationData.phone || null,
+        org_email: organizationData.email || null,
+        org_website: organizationData.website || null,
+        user_name: user.email?.split('@')[0] || 'User',
+        user_email: user.email || ''
+      });
 
       if (orgError) {
         console.error('❌ Error creating organization:', orgError);
+        
+        // Fallback: Try the original approach if the RPC function doesn't exist
+        if (orgError.code === '42883') { // function does not exist
+          console.log('🔄 RPC function not found, trying direct insert...');
+          
+          const { data: directOrg, error: directError } = await supabase
+            .from('organizations')
+            .insert([{
+              name: organizationData.name,
+              description: organizationData.description,
+              logo: organizationData.logo,
+              address: organizationData.address,
+              phone: organizationData.phone,
+              email: organizationData.email,
+              website: organizationData.website
+            }])
+            .select()
+            .single();
+
+          if (directError) {
+            console.error('❌ Direct insert also failed:', directError);
+            throw new Error(`Failed to create organization: ${directError.message}`);
+          }
+
+          // Create user record
+          const { error: userError } = await supabase
+            .from('users')
+            .insert([{
+              organization_id: directOrg.id,
+              auth_user_id: user.id,
+              name: user.email?.split('@')[0] || 'User',
+              email: user.email || '',
+              role: 'admin'
+            }]);
+
+          if (userError) {
+            console.error('❌ Error creating user record:', userError);
+            console.warn('⚠️ Organization created but user record creation failed. This might affect permissions.');
+          }
+
+          console.log('✅ Organization created via direct insert:', directOrg);
+          dispatch({ type: 'ADD_ORGANIZATION', payload: directOrg });
+          
+          if (state.organizations.length === 0) {
+            dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: directOrg.id });
+          }
+          
+          return;
+        }
+        
         throw new Error(`Failed to create organization: ${orgError.message}`);
       }
 
-      console.log('✅ Organization created:', newOrg);
-
-      // Then, create a user record for this organization
-      const { error: userError } = await supabase
-        .from('users')
-        .insert([{
-          organization_id: newOrg.id,
-          auth_user_id: user.id,
-          name: user.email?.split('@')[0] || 'User',
-          email: user.email || '',
-          role: 'admin'
-        }]);
-
-      if (userError) {
-        console.error('❌ Error creating user record:', userError);
-        // Don't throw here as the organization was created successfully
-        // The user can still use the organization, just might not have proper permissions
-        console.warn('⚠️ Organization created but user record creation failed. This might affect permissions.');
-      } else {
-        console.log('✅ User record created for organization');
-      }
-
-      // Add to local state
-      dispatch({ type: 'ADD_ORGANIZATION', payload: newOrg });
+      console.log('✅ Organization created via RPC:', newOrg);
       
-      // Set as current organization if it's the first one
-      if (state.organizations.length === 0) {
-        dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: newOrg.id });
+      // The RPC should return the organization data
+      if (newOrg && typeof newOrg === 'object' && 'id' in newOrg) {
+        dispatch({ type: 'ADD_ORGANIZATION', payload: newOrg as Organization });
+        
+        if (state.organizations.length === 0) {
+          dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: newOrg.id });
+        }
+      } else {
+        // If RPC doesn't return the org data, refresh the data
+        await refreshData();
       }
 
     } catch (error) {
