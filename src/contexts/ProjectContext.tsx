@@ -398,7 +398,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.error('❌ Error creating organization:', orgError);
         
         // Fallback: Try the original approach if the RPC function doesn't exist
-        if (orgError.code === '42883') { // function does not exist
+        if (orgError.code === '42883' || orgError.code === 'PGRST202') { // function does not exist
           console.log('🔄 RPC function not found, trying direct insert...');
           
           const { data: directOrg, error: directError } = await supabase
