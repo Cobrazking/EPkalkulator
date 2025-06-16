@@ -158,47 +158,51 @@ const ProjectDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          to="/projects"
-          className="p-2 rounded-lg bg-background-lighter border border-border hover:bg-background transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-        
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-text-primary">{project.name}</h1>
-          <p className="text-text-muted mt-1">{project.description}</p>
+      {/* Header - Responsive layout */}
+      <div className="flex flex-col gap-4">
+        {/* Back button and title */}
+        <div className="flex items-center gap-4">
+          <Link
+            to="/projects"
+            className="p-2 rounded-lg bg-background-lighter border border-border hover:bg-background transition-colors flex-shrink-0"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+          
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary truncate">{project.name}</h1>
+            <p className="text-text-muted mt-1 text-sm sm:text-base">{project.description}</p>
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* Action buttons - responsive layout */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDuplicateProject}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Copy size={16} />
-            Dupliser
+            <span>Dupliser</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsProjectModalOpen(true)}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Edit size={16} />
-            Rediger
+            <span>Rediger</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDeleteProject}
-            className="btn-danger flex items-center gap-2"
+            className="btn-danger flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Trash2 size={16} />
-            Slett
+            <span>Slett</span>
           </motion.button>
         </div>
       </div>
@@ -209,7 +213,7 @@ const ProjectDetailPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-6"
+          className="card p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <User className="w-5 h-5 text-primary-400" />
@@ -221,7 +225,7 @@ const ProjectDetailPage: React.FC = () => {
               <p className="text-sm text-text-muted">{customer.company}</p>
             )}
             {customer?.email && (
-              <p className="text-sm text-text-muted">{customer.email}</p>
+              <p className="text-sm text-text-muted break-all">{customer.email}</p>
             )}
             {customer?.phone && (
               <p className="text-sm text-text-muted">{customer.phone}</p>
@@ -233,7 +237,7 @@ const ProjectDetailPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-6"
+          className="card p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <Calendar className="w-5 h-5 text-primary-400" />
@@ -266,7 +270,7 @@ const ProjectDetailPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card p-6"
+          className="card p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <Calculator className="w-5 h-5 text-primary-400" />
@@ -292,15 +296,15 @@ const ProjectDetailPage: React.FC = () => {
       </div>
 
       {/* Calculators */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="card p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <h2 className="text-xl font-semibold text-text-primary">Kalkyler</h2>
           <button
             onClick={() => setIsCalculatorModalOpen(true)}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Plus size={16} />
-            Ny kalkyle
+            <span>Ny kalkyle</span>
           </button>
         </div>
 
