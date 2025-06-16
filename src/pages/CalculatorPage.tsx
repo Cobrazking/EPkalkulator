@@ -16,7 +16,7 @@ import EditCalculatorModal from '../components/modals/EditCalculatorModal';
 import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 import { calculateRow, calculateSummary } from '../utils/calculations';
 import { exportToExcel } from '../utils/excel';
-import useLocalStorage from '../hooks/useLocalStorage';
+import { supabase } from '../lib/supabase';
 
 const CalculatorPage: React.FC = () => {
   const { projectId, calculatorId } = useParams<{ projectId: string; calculatorId?: string }>();
@@ -91,14 +91,15 @@ const CalculatorPage: React.FC = () => {
   };
 
   const [entries, setEntries] = useState<CalculationEntry[]>(calculator?.entries || initialEntries);
-  const [companyInfo, setCompanyInfo] = useLocalStorage<CompanyInfo>('company-info', initialCompanyInfo);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(initialCompanyInfo);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(initialCustomerInfo);
-  const [calculationSettings, setCalculationSettings] = useLocalStorage<CalculationSettings>('calculation-settings', initialSettings);
+  const [calculationSettings, setCalculationSettings] = useState<CalculationSettings>(initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -106,6 +107,96 @@ const CalculatorPage: React.FC = () => {
     bidrag: 0,
     totalKostprisTimer: 0
   });
+
+  // Load organization-specific settings
+  useEffect(() => {
+    if (currentOrganization && !settingsLoaded) {
+      loadOrganizationSettings();
+    }
+  }, [currentOrganization, settingsLoaded]);
+
+  const loadOrganizationSettings = async () => {
+    if (!currentOrganization) return;
+
+    try {
+      // Get current user ID
+      const { data: users, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (userError) {
+        console.error('Failed to get user ID:', userError);
+        setSettingsLoaded(true);
+        return;
+      }
+
+      // Load user settings
+      const { data: settings, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', users.id)
+        .single();
+
+      if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('Failed to load settings:', settingsError);
+        setSettingsLoaded(true);
+        return;
+      }
+
+      if (settings) {
+        // Load company info from settings
+        if (settings.company_info) {
+          setCompanyInfo({
+            firma: settings.company_info.firma || currentOrganization.name || '',
+            navn: settings.company_info.navn || '',
+            epost: settings.company_info.epost || currentOrganization.email || '',
+            tlf: settings.company_info.tlf || currentOrganization.phone || '',
+            refNr: settings.company_info.refNr || '',
+            tilbudstittel: settings.company_info.tilbudstittel || '',
+            logo: settings.company_info.logo || currentOrganization.logo
+          });
+        } else {
+          // Use organization data as fallback
+          setCompanyInfo({
+            firma: currentOrganization.name || '',
+            navn: '',
+            epost: currentOrganization.email || '',
+            tlf: currentOrganization.phone || '',
+            refNr: '',
+            tilbudstittel: '',
+            logo: currentOrganization.logo
+          });
+        }
+
+        // Load calculation settings
+        if (settings.calculation_settings) {
+          setCalculationSettings({
+            defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
+            defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
+            defaultPaslag: settings.calculation_settings.defaultPaslag || 20
+          });
+        }
+      } else {
+        // No settings found, use organization data as defaults
+        setCompanyInfo({
+          firma: currentOrganization.name || '',
+          navn: '',
+          epost: currentOrganization.email || '',
+          tlf: currentOrganization.phone || '',
+          refNr: '',
+          tilbudstittel: '',
+          logo: currentOrganization.logo
+        });
+      }
+
+      setSettingsLoaded(true);
+    } catch (error) {
+      console.error('Failed to load organization settings:', error);
+      setSettingsLoaded(true);
+    }
+  };
 
   // Update customer info when customer changes
   useEffect(() => {
@@ -125,7 +216,7 @@ const CalculatorPage: React.FC = () => {
 
   // Auto-save calculator with debouncing
   useEffect(() => {
-    if (projectId && entries.length > 0 && currentOrganization && !state.loading) {
+    if (projectId && entries.length > 0 && currentOrganization && !state.loading && settingsLoaded) {
       const saveTimer = setTimeout(async () => {
         try {
           setIsSaving(true);
@@ -161,9 +252,9 @@ const CalculatorPage: React.FC = () => {
 
       return () => clearTimeout(saveTimer);
     }
-  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization, state.loading, navigate]);
+  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization, state.loading, navigate, settingsLoaded]);
 
-  if (state.loading) {
+  if (state.loading || !settingsLoaded) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
