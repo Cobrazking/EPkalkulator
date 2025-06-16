@@ -61,8 +61,9 @@ const Dashboard: React.FC = () => {
     totalProjects: allProjects.length,
     activeProjects: allProjects.filter(p => p.status === 'active').length,
     totalCalculators: calculators.length,
-    // Use filtered calculators for total value
-    totalValue: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0)
+    // Use filtered calculators for total value and hours
+    totalValue: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0),
+    totalHours: filteredCalculators.reduce((acc, calc) => acc + (calc.summary?.timerTotalt || 0), 0)
   };
 
   const recentProjects = filteredProjects
@@ -208,7 +209,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,6 +274,28 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
+          className="card p-4 sm:p-6 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30"
+        >
+          <div className="flex items-center gap-3">
+            <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-orange-400" />
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.totalHours)}</p>
+              <p className="text-xs sm:text-sm text-orange-200/80">
+                Timer
+                {statusFilter !== 'all' && (
+                  <span className="block text-xs opacity-75">
+                    ({getStatusText(statusFilter)})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
           className="card p-4 sm:p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30"
         >
           <div className="flex items-center gap-3">
@@ -298,7 +321,7 @@ const Dashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.7 }}
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -417,7 +440,7 @@ const Dashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-4">
