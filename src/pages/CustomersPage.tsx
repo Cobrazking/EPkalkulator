@@ -499,7 +499,6 @@ const CustomersPage: React.FC = () => {
               <Plus size={16} />
               Legg til kunde
             </button>
-          </div>
           )}
         </div>
       )}
