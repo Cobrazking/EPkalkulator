@@ -18,7 +18,8 @@ import {
   Calendar,
   BarChart3,
   PieChart,
-  Target
+  Target,
+  Filter
 } from 'lucide-react';
 import { useProject, Customer } from '../contexts/ProjectContext';
 import CustomerModal from '../components/modals/CustomerModal';
@@ -33,6 +34,7 @@ const CustomersPage: React.FC = () => {
     currentOrganization 
   } = useProject();
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
@@ -61,13 +63,18 @@ const CustomersPage: React.FC = () => {
   };
 
   const getCustomerStats = (customerId: string) => {
-    const projects = getProjectsByCustomer(customerId);
+    const allProjects = getProjectsByCustomer(customerId);
+    
+    // Filter projects by status if a filter is applied
+    const projects = statusFilter === 'all' 
+      ? allProjects 
+      : allProjects.filter(project => project.status === statusFilter);
     
     const statusCounts = {
-      planning: projects.filter(p => p.status === 'planning').length,
-      active: projects.filter(p => p.status === 'active').length,
-      'on-hold': projects.filter(p => p.status === 'on-hold').length,
-      completed: projects.filter(p => p.status === 'completed').length
+      planning: allProjects.filter(p => p.status === 'planning').length,
+      active: allProjects.filter(p => p.status === 'active').length,
+      'on-hold': allProjects.filter(p => p.status === 'on-hold').length,
+      completed: allProjects.filter(p => p.status === 'completed').length
     };
 
     const statusValues = {
@@ -83,7 +90,7 @@ const CustomersPage: React.FC = () => {
     let totalProfit = 0;
     let lastActivity = '';
 
-    // Calculate advanced statistics
+    // Calculate advanced statistics - use filtered projects for calculations
     const calculatorsWithMargin: any[] = [];
 
     projects.forEach(project => {
@@ -106,7 +113,7 @@ const CustomersPage: React.FC = () => {
         }
       });
 
-      // Find latest activity
+      // Find latest activity from all projects (not just filtered ones)
       const latestCalc = calculators.sort((a, b) => 
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       )[0];
@@ -125,7 +132,8 @@ const CustomersPage: React.FC = () => {
       : 0;
 
     return {
-      totalProjects: projects.length,
+      totalProjects: projects.length, // Use filtered projects count
+      allProjectsCount: allProjects.length, // Keep track of all projects for display
       statusCounts,
       statusValues,
       totalCalculators,
@@ -159,6 +167,13 @@ const CustomersPage: React.FC = () => {
     }
   };
 
+  const getStatusCount = (status: string) => {
+    return customers.reduce((count, customer) => {
+      const projects = getProjectsByCustomer(customer.id);
+      return count + projects.filter(project => project.status === status).length;
+    }, 0);
+  };
+
   if (!currentOrganization) {
     return (
       <div className="text-center py-12">
@@ -174,7 +189,14 @@ const CustomersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Kunder</h1>
-          <p className="text-text-muted mt-1">Administrer kunder for {currentOrganization.name}</p>
+          <p className="text-text-muted mt-1">
+            Administrer kunder for {currentOrganization.name}
+            {statusFilter !== 'all' && (
+              <span className="ml-2 px-2 py-1 bg-primary-500/20 text-primary-400 rounded-full text-xs">
+                Filtrert: {getStatusText(statusFilter)}
+              </span>
+            )}
+          </p>
         </div>
         
         <button
@@ -186,16 +208,78 @@ const CustomersPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
-        <input
-          type="text"
-          placeholder="Søk etter kunder..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent"
-        />
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
+          <input
+            type="text"
+            placeholder="Søk etter kunder..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
+            <Filter size={16} />
+            <span>Prosjektstatus:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                statusFilter === 'all'
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+              }`}
+            >
+              Alle ({customers.reduce((count, customer) => count + getProjectsByCustomer(customer.id).length, 0)})
+            </button>
+            <button
+              onClick={() => setStatusFilter('planning')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                statusFilter === 'planning'
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                  : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+              }`}
+            >
+              Planlegging ({getStatusCount('planning')})
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                statusFilter === 'active'
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+              }`}
+            >
+              Aktiv ({getStatusCount('active')})
+            </button>
+            <button
+              onClick={() => setStatusFilter('on-hold')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                statusFilter === 'on-hold'
+                  ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                  : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+              }`}
+            >
+              På vent ({getStatusCount('on-hold')})
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                statusFilter === 'completed'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+              }`}
+            >
+              Fullført ({getStatusCount('completed')})
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Customers Grid */}
@@ -276,6 +360,9 @@ const CustomersPage: React.FC = () => {
                     <span className="text-xs text-emerald-200/80">Total verdi</span>
                   </div>
                   <p className="text-lg font-bold text-text-primary">{formatNumber(stats.statusValues.total)}</p>
+                  {statusFilter !== 'all' && (
+                    <p className="text-xs text-emerald-200/60">({getStatusText(statusFilter)})</p>
+                  )}
                 </div>
 
                 <div className="p-3 bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
@@ -284,6 +371,9 @@ const CustomersPage: React.FC = () => {
                     <span className="text-xs text-green-200/80">Fortjeneste</span>
                   </div>
                   <p className="text-lg font-bold text-text-primary">{formatNumber(stats.totalProfit)}</p>
+                  {statusFilter !== 'all' && (
+                    <p className="text-xs text-green-200/60">({getStatusText(statusFilter)})</p>
+                  )}
                 </div>
 
                 <div className="p-3 bg-gradient-to-br from-violet-600/20 to-purple-600/20 rounded-lg border border-violet-500/30">
@@ -291,7 +381,12 @@ const CustomersPage: React.FC = () => {
                     <FolderOpen size={16} className="text-violet-400" />
                     <span className="text-xs text-violet-200/80">Prosjekter</span>
                   </div>
-                  <p className="text-lg font-bold text-text-primary">{stats.totalProjects}</p>
+                  <p className="text-lg font-bold text-text-primary">
+                    {statusFilter === 'all' ? stats.allProjectsCount : stats.totalProjects}
+                  </p>
+                  {statusFilter !== 'all' && stats.totalProjects !== stats.allProjectsCount && (
+                    <p className="text-xs text-violet-200/60">av {stats.allProjectsCount} totalt</p>
+                  )}
                 </div>
 
                 <div className="p-3 bg-gradient-to-br from-amber-600/20 to-orange-600/20 rounded-lg border border-amber-500/30">
@@ -300,6 +395,9 @@ const CustomersPage: React.FC = () => {
                     <span className="text-xs text-amber-200/80">Timer</span>
                   </div>
                   <p className="text-lg font-bold text-text-primary">{formatNumber(stats.totalHours)}</p>
+                  {statusFilter !== 'all' && (
+                    <p className="text-xs text-amber-200/60">({getStatusText(statusFilter)})</p>
+                  )}
                 </div>
               </div>
 
@@ -338,8 +436,8 @@ const CustomersPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Project Status Overview */}
-              {stats.totalProjects > 0 && (
+              {/* Project Status Overview - Only show if customer has projects */}
+              {stats.allProjectsCount > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <BarChart3 size={16} className="text-text-muted" />
@@ -401,6 +499,7 @@ const CustomersPage: React.FC = () => {
               <Plus size={16} />
               Legg til kunde
             </button>
+          </div>
           )}
         </div>
       )}
