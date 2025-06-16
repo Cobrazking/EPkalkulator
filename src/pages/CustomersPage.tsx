@@ -16,11 +16,13 @@ import {
   Clock,
   DollarSign,
   Calendar,
-  BarChart3
+  BarChart3,
+  PieChart,
+  Target
 } from 'lucide-react';
 import { useProject, Customer } from '../contexts/ProjectContext';
 import CustomerModal from '../components/modals/CustomerModal';
-import { formatNumber } from '../utils/calculations';
+import { formatNumber, formatPercent } from '../utils/calculations';
 
 const CustomersPage: React.FC = () => {
   const { 
@@ -78,7 +80,11 @@ const CustomersPage: React.FC = () => {
 
     let totalCalculators = 0;
     let totalHours = 0;
+    let totalProfit = 0;
     let lastActivity = '';
+
+    // Calculate advanced statistics
+    const calculatorsWithMargin: any[] = [];
 
     projects.forEach(project => {
       const calculators = getCalculatorsByProject(project.id);
@@ -86,10 +92,19 @@ const CustomersPage: React.FC = () => {
       
       const projectValue = calculators.reduce((acc, calc) => acc + (calc.summary?.totalSum || 0), 0);
       const projectHours = calculators.reduce((acc, calc) => acc + (calc.summary?.timerTotalt || 0), 0);
+      const projectProfit = calculators.reduce((acc, calc) => acc + (calc.summary?.fortjeneste || 0), 0);
       
       statusValues[project.status as keyof typeof statusValues] += projectValue;
       statusValues.total += projectValue;
       totalHours += projectHours;
+      totalProfit += projectProfit;
+
+      // Collect calculators for margin calculation
+      calculators.forEach(calc => {
+        if (calc.summary?.totalSum > 0) {
+          calculatorsWithMargin.push(calc);
+        }
+      });
 
       // Find latest activity
       const latestCalc = calculators.sort((a, b) => 
@@ -101,14 +116,26 @@ const CustomersPage: React.FC = () => {
       }
     });
 
+    // Calculate average margin (dekningsgrad)
+    const averageMargin = calculatorsWithMargin.length > 0 
+      ? calculatorsWithMargin.reduce((acc, calc) => {
+          const margin = calc.summary?.totalSum > 0 ? (calc.summary.fortjeneste / calc.summary.totalSum) * 100 : 0;
+          return acc + margin;
+        }, 0) / calculatorsWithMargin.length
+      : 0;
+
     return {
       totalProjects: projects.length,
       statusCounts,
       statusValues,
       totalCalculators,
       totalHours,
+      totalProfit,
+      averageMargin,
       lastActivity: lastActivity ? new Date(lastActivity).toLocaleDateString('nb-NO') : 'Ingen aktivitet',
-      averageProjectValue: projects.length > 0 ? statusValues.total / projects.length : 0
+      averageProjectValue: projects.length > 0 ? statusValues.total / projects.length : 0,
+      calculatorsPerProject: projects.length > 0 ? totalCalculators / projects.length : 0,
+      hoursPerProject: projects.length > 0 ? totalHours / projects.length : 0
     };
   };
 
@@ -224,7 +251,7 @@ const CustomersPage: React.FC = () => {
                 {customer.email && (
                   <div className="flex items-center gap-2 text-sm text-text-muted">
                     <Mail size={14} />
-                    <span>{customer.email}</span>
+                    <span className="break-all">{customer.email}</span>
                   </div>
                 )}
                 {customer.phone && (
@@ -241,14 +268,22 @@ const CustomersPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              {/* Main Statistics Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 rounded-lg border border-emerald-500/30">
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign size={16} className="text-emerald-400" />
                     <span className="text-xs text-emerald-200/80">Total verdi</span>
                   </div>
                   <p className="text-lg font-bold text-text-primary">{formatNumber(stats.statusValues.total)}</p>
+                </div>
+
+                <div className="p-3 bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp size={16} className="text-green-400" />
+                    <span className="text-xs text-green-200/80">Fortjeneste</span>
+                  </div>
+                  <p className="text-lg font-bold text-text-primary">{formatNumber(stats.totalProfit)}</p>
                 </div>
 
                 <div className="p-3 bg-gradient-to-br from-violet-600/20 to-purple-600/20 rounded-lg border border-violet-500/30">
@@ -259,20 +294,47 @@ const CustomersPage: React.FC = () => {
                   <p className="text-lg font-bold text-text-primary">{stats.totalProjects}</p>
                 </div>
 
-                <div className="p-3 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-lg border border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calculator size={16} className="text-blue-400" />
-                    <span className="text-xs text-blue-200/80">Kalkyler</span>
-                  </div>
-                  <p className="text-lg font-bold text-text-primary">{stats.totalCalculators}</p>
-                </div>
-
                 <div className="p-3 bg-gradient-to-br from-amber-600/20 to-orange-600/20 rounded-lg border border-amber-500/30">
                   <div className="flex items-center gap-2 mb-1">
                     <Clock size={16} className="text-amber-400" />
                     <span className="text-xs text-amber-200/80">Timer</span>
                   </div>
                   <p className="text-lg font-bold text-text-primary">{formatNumber(stats.totalHours)}</p>
+                </div>
+              </div>
+
+              {/* Advanced Statistics */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-lg border border-cyan-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <PieChart size={16} className="text-cyan-400" />
+                    <span className="text-xs text-cyan-200/80">Snitt margin</span>
+                  </div>
+                  <p className="text-lg font-bold text-text-primary">{formatPercent(stats.averageMargin)}</p>
+                </div>
+
+                <div className="p-3 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-lg border border-purple-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Target size={16} className="text-purple-400" />
+                    <span className="text-xs text-purple-200/80">Snitt prosjekt</span>
+                  </div>
+                  <p className="text-lg font-bold text-text-primary">{formatNumber(stats.averageProjectValue)}</p>
+                </div>
+
+                <div className="p-3 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 rounded-lg border border-indigo-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calculator size={16} className="text-indigo-400" />
+                    <span className="text-xs text-indigo-200/80">Kalkyler/prosjekt</span>
+                  </div>
+                  <p className="text-lg font-bold text-text-primary">{formatNumber(stats.calculatorsPerProject)}</p>
+                </div>
+
+                <div className="p-3 bg-gradient-to-br from-teal-600/20 to-green-600/20 rounded-lg border border-teal-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock size={16} className="text-teal-400" />
+                    <span className="text-xs text-teal-200/80">Timer/prosjekt</span>
+                  </div>
+                  <p className="text-lg font-bold text-text-primary">{formatNumber(stats.hoursPerProject)}</p>
                 </div>
               </div>
 
@@ -304,19 +366,14 @@ const CustomersPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Additional Insights */}
+              {/* Footer with last activity */}
               <div className="pt-4 border-t border-border">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-text-muted">Snitt per prosjekt</span>
-                    <p className="font-semibold text-text-primary">
-                      {formatNumber(stats.averageProjectValue)}
-                    </p>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 text-text-muted">
+                    <Calendar size={14} />
+                    <span>Siste aktivitet</span>
                   </div>
-                  <div>
-                    <span className="text-text-muted">Siste aktivitet</span>
-                    <p className="font-semibold text-text-primary">{stats.lastActivity}</p>
-                  </div>
+                  <span className="font-semibold text-text-primary">{stats.lastActivity}</span>
                 </div>
               </div>
             </motion.div>
