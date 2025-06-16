@@ -117,10 +117,15 @@ const SettingsPage: React.FC = () => {
   };
 
   const getCurrentUserId = async () => {
+    if (!currentOrganization) {
+      throw new Error('No organization selected');
+    }
+
     const { data: users, error } = await supabase
       .from('users')
       .select('id')
       .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
+      .eq('organization_id', currentOrganization.id)
       .single();
 
     if (error) throw error;
