@@ -378,22 +378,35 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) throw new Error('User must be logged in');
 
     try {
-      const { data, error } = await supabase
+      console.log('🏗️ Creating organization:', organizationData);
+      
+      // First, create the organization
+      const { data: newOrg, error: orgError } = await supabase
         .from('organizations')
-        .insert([organizationData])
+        .insert([{
+          name: organizationData.name,
+          description: organizationData.description,
+          logo: organizationData.logo,
+          address: organizationData.address,
+          phone: organizationData.phone,
+          email: organizationData.email,
+          website: organizationData.website
+        }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (orgError) {
+        console.error('❌ Error creating organization:', orgError);
+        throw new Error(`Failed to create organization: ${orgError.message}`);
+      }
 
-      console.log('✅ Organization added:', data);
-      dispatch({ type: 'ADD_ORGANIZATION', payload: data });
+      console.log('✅ Organization created:', newOrg);
 
-      // Create a user record for this organization
+      // Then, create a user record for this organization
       const { error: userError } = await supabase
         .from('users')
         .insert([{
-          organization_id: data.id,
+          organization_id: newOrg.id,
           auth_user_id: user.id,
           name: user.email?.split('@')[0] || 'User',
           email: user.email || '',
@@ -403,7 +416,20 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (userError) {
         console.error('❌ Error creating user record:', userError);
         // Don't throw here as the organization was created successfully
+        // The user can still use the organization, just might not have proper permissions
+        console.warn('⚠️ Organization created but user record creation failed. This might affect permissions.');
+      } else {
+        console.log('✅ User record created for organization');
       }
+
+      // Add to local state
+      dispatch({ type: 'ADD_ORGANIZATION', payload: newOrg });
+      
+      // Set as current organization if it's the first one
+      if (state.organizations.length === 0) {
+        dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: newOrg.id });
+      }
+
     } catch (error) {
       console.error('❌ Failed to add organization:', error);
       throw error;

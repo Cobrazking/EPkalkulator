@@ -26,6 +26,7 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
     logo: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (organization) {
@@ -49,6 +50,7 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
         logo: ''
       });
     }
+    setError(null);
   }, [organization, isOpen]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,13 +58,13 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
     if (file) {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Bildet er for stort. Maksimal størrelse er 5MB.');
+        setError('Bildet er for stort. Maksimal størrelse er 5MB.');
         return;
       }
 
       // Check file type
       if (!file.type.startsWith('image/')) {
-        alert('Kun bildefiler er tillatt.');
+        setError('Kun bildefiler er tillatt.');
         return;
       }
 
@@ -72,6 +74,7 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
           ...formData,
           logo: reader.result as string
         });
+        setError(null);
       };
       reader.readAsDataURL(file);
     }
@@ -87,22 +90,22 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       if (organization) {
-        updateOrganization({
+        await updateOrganization({
           ...organization,
           ...formData
         });
       } else {
-        // When creating a new organization, automatically switch to it
-        addOrganization(formData);
+        await addOrganization(formData);
       }
       
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save organization:', error);
-      alert('Feil ved lagring av organisasjon. Prøv igjen.');
+      setError(error.message || 'Feil ved lagring av organisasjon. Prøv igjen.');
     } finally {
       setIsLoading(false);
     }
@@ -110,6 +113,7 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
 
   const handleClose = () => {
     if (!isLoading) {
+      setError(null);
       onClose();
     }
   };
@@ -164,6 +168,14 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({
                     <X size={20} />
                   </button>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="mx-6 mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-red-400 text-sm">{error}</p>
+                  </div>
+                )}
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
