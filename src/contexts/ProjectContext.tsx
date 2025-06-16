@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../components/auth/AuthProvider';
 
 console.log('🗂️ ProjectContext loading...');
 
@@ -60,42 +62,58 @@ interface ProjectState {
   projects: Project[];
   calculators: Calculator[];
   currentOrganizationId: string | null;
+  loading: boolean;
+  error: string | null;
 }
 
 type ProjectAction =
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_ORGANIZATIONS'; payload: Organization[] }
   | { type: 'ADD_ORGANIZATION'; payload: Organization }
   | { type: 'UPDATE_ORGANIZATION'; payload: Organization }
   | { type: 'DELETE_ORGANIZATION'; payload: string }
   | { type: 'SET_CURRENT_ORGANIZATION'; payload: string }
+  | { type: 'SET_CUSTOMERS'; payload: Customer[] }
   | { type: 'ADD_CUSTOMER'; payload: Customer }
   | { type: 'UPDATE_CUSTOMER'; payload: Customer }
   | { type: 'DELETE_CUSTOMER'; payload: string }
+  | { type: 'SET_PROJECTS'; payload: Project[] }
   | { type: 'ADD_PROJECT'; payload: Project }
   | { type: 'UPDATE_PROJECT'; payload: Project }
   | { type: 'DELETE_PROJECT'; payload: string }
-  | { type: 'DUPLICATE_PROJECT'; payload: { project: Project; calculators: Calculator[] } }
+  | { type: 'SET_CALCULATORS'; payload: Calculator[] }
   | { type: 'ADD_CALCULATOR'; payload: Calculator }
   | { type: 'UPDATE_CALCULATOR'; payload: Calculator }
   | { type: 'DELETE_CALCULATOR'; payload: string }
-  | { type: 'DUPLICATE_CALCULATOR'; payload: Calculator }
-  | { type: 'MOVE_CALCULATOR'; payload: { calculatorId: string; newProjectId: string } }
-  | { type: 'LOAD_DATA'; payload: ProjectState };
+  | { type: 'RESET_STATE' };
 
 const initialState: ProjectState = {
   organizations: [],
   customers: [],
   projects: [],
   calculators: [],
-  currentOrganizationId: null
+  currentOrganizationId: null,
+  loading: false,
+  error: null
 };
 
 const projectReducer = (state: ProjectState, action: ProjectAction): ProjectState => {
   console.log('🔄 ProjectReducer action:', action.type);
   
   switch (action.type) {
-    case 'LOAD_DATA':
-      console.log('📥 Loading data:', action.payload);
-      return action.payload;
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, loading: false };
+    
+    case 'SET_ORGANIZATIONS':
+      return { 
+        ...state, 
+        organizations: action.payload,
+        currentOrganizationId: state.currentOrganizationId || action.payload[0]?.id || null
+      };
     
     case 'ADD_ORGANIZATION':
       return { 
@@ -129,6 +147,9 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
     case 'SET_CURRENT_ORGANIZATION':
       return { ...state, currentOrganizationId: action.payload };
     
+    case 'SET_CUSTOMERS':
+      return { ...state, customers: action.payload };
+    
     case 'ADD_CUSTOMER':
       return { ...state, customers: [...state.customers, action.payload] };
     
@@ -146,6 +167,9 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         customers: state.customers.filter(customer => customer.id !== action.payload),
         projects: state.projects.filter(project => project.customerId !== action.payload)
       };
+    
+    case 'SET_PROJECTS':
+      return { ...state, projects: action.payload };
     
     case 'ADD_PROJECT':
       return { ...state, projects: [...state.projects, action.payload] };
@@ -165,12 +189,8 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: state.calculators.filter(calculator => calculator.projectId !== action.payload)
       };
     
-    case 'DUPLICATE_PROJECT':
-      return {
-        ...state,
-        projects: [...state.projects, action.payload.project],
-        calculators: [...state.calculators, ...action.payload.calculators]
-      };
+    case 'SET_CALCULATORS':
+      return { ...state, calculators: action.payload };
     
     case 'ADD_CALCULATOR':
       return { ...state, calculators: [...state.calculators, action.payload] };
@@ -189,21 +209,8 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         calculators: state.calculators.filter(calculator => calculator.id !== action.payload)
       };
     
-    case 'DUPLICATE_CALCULATOR':
-      return {
-        ...state,
-        calculators: [...state.calculators, action.payload]
-      };
-    
-    case 'MOVE_CALCULATOR':
-      return {
-        ...state,
-        calculators: state.calculators.map(calculator =>
-          calculator.id === action.payload.calculatorId 
-            ? { ...calculator, projectId: action.payload.newProjectId, updatedAt: new Date().toISOString() }
-            : calculator
-        )
-      };
+    case 'RESET_STATE':
+      return initialState;
     
     default:
       return state;
@@ -213,22 +220,22 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
 interface ProjectContextType {
   state: ProjectState;
   currentOrganization: Organization | null;
-  addOrganization: (organization: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateOrganization: (organization: Organization) => void;
-  deleteOrganization: (id: string) => void;
+  addOrganization: (organization: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateOrganization: (organization: Organization) => Promise<void>;
+  deleteOrganization: (id: string) => Promise<void>;
   setCurrentOrganization: (id: string) => void;
-  addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateCustomer: (customer: Customer) => void;
-  deleteCustomer: (id: string) => void;
-  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateProject: (project: Project) => void;
-  deleteProject: (id: string) => void;
-  duplicateProject: (projectId: string) => string;
-  addCalculator: (calculator: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateCalculator: (calculator: Calculator) => void;
-  deleteCalculator: (id: string) => void;
-  duplicateCalculator: (calculatorId: string, targetProjectId?: string) => string;
-  moveCalculator: (calculatorId: string, newProjectId: string) => void;
+  addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateCustomer: (customer: Customer) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProject: (project: Project) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  duplicateProject: (projectId: string) => Promise<string>;
+  addCalculator: (calculator: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateCalculator: (calculator: Calculator) => Promise<void>;
+  deleteCalculator: (id: string) => Promise<void>;
+  duplicateCalculator: (calculatorId: string, targetProjectId?: string) => Promise<string>;
+  moveCalculator: (calculatorId: string, newProjectId: string) => Promise<void>;
   getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
@@ -238,6 +245,7 @@ interface ProjectContextType {
   getCurrentOrganizationCalculators: () => Calculator[];
   getProjectsByCustomer: (customerId: string) => Project[];
   getCalculatorsByProject: (projectId: string) => Calculator[];
+  refreshData: () => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -245,105 +253,120 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   console.log('🏗️ ProjectProvider initializing...');
   const [state, dispatch] = useReducer(projectReducer, initialState);
+  const { user } = useAuth();
 
   console.log('📊 ProjectProvider state:', state);
 
-  // Load data from localStorage on mount
+  // Load data from Supabase when user changes
   useEffect(() => {
-    console.log('💾 Loading data from localStorage...');
-    
-    try {
-      const savedData = localStorage.getItem('epkalk-data');
-      console.log('📄 Saved data found:', !!savedData);
-      
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        console.log('📋 Parsed data:', parsedData);
-        
-        // Migrate old data if needed
-        if (!parsedData.organizations) {
-          console.log('🔄 Migrating old data format...');
-          const defaultOrg: Organization = {
-            id: uuidv4(),
-            name: 'Min organisasjon',
-            description: 'Standard organisasjon',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          
-          const migratedData = {
-            organizations: [defaultOrg],
-            customers: (parsedData.customers || []).map((customer: any) => ({
-              ...customer,
-              organizationId: defaultOrg.id
-            })),
-            projects: (parsedData.projects || []).map((project: any) => ({
-              ...project,
-              organizationId: defaultOrg.id
-            })),
-            calculators: (parsedData.calculators || []).map((calculator: any) => ({
-              ...calculator,
-              organizationId: defaultOrg.id
-            })),
-            currentOrganizationId: defaultOrg.id
-          };
-          
-          console.log('✅ Migrated data:', migratedData);
-          dispatch({ type: 'LOAD_DATA', payload: migratedData });
-        } else {
-          console.log('✅ Loading existing data structure...');
-          dispatch({ type: 'LOAD_DATA', payload: parsedData });
-        }
-      } else {
-        console.log('🆕 No saved data, creating default organization...');
-        const defaultOrg: Organization = {
-          id: uuidv4(),
-          name: 'Min organisasjon',
-          description: 'Standard organisasjon',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        
-        const defaultData = {
-          organizations: [defaultOrg],
-          customers: [],
-          projects: [],
-          calculators: [],
-          currentOrganizationId: defaultOrg.id
-        };
-        
-        console.log('✅ Default data created:', defaultData);
-        dispatch({ type: 'LOAD_DATA', payload: defaultData });
-      }
-    } catch (error) {
-      console.error('❌ Failed to load data from localStorage:', error);
-      // Create default organization if loading fails
-      const defaultOrg: Organization = {
-        id: uuidv4(),
-        name: 'Min organisasjon',
-        description: 'Standard organisasjon',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      const defaultData = {
-        organizations: [defaultOrg],
-        customers: [],
-        projects: [],
-        calculators: [],
-        currentOrganizationId: defaultOrg.id
-      };
-      
-      console.log('🔧 Error fallback data:', defaultData);
-      dispatch({ type: 'LOAD_DATA', payload: defaultData });
+    if (user) {
+      console.log('👤 User logged in, loading data from Supabase...');
+      loadDataFromSupabase();
+    } else {
+      console.log('👤 User logged out, resetting state...');
+      dispatch({ type: 'RESET_STATE' });
     }
-  }, []);
+  }, [user]);
 
-  // Save data to localStorage whenever state changes
+  // Load current organization from localStorage
   useEffect(() => {
-    console.log('💾 Saving state to localStorage...');
-    localStorage.setItem('epkalk-data', JSON.stringify(state));
-  }, [state]);
+    if (user && state.organizations.length > 0) {
+      const savedOrgId = localStorage.getItem(`currentOrganizationId_${user.id}`);
+      if (savedOrgId && state.organizations.find(org => org.id === savedOrgId)) {
+        dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: savedOrgId });
+      } else if (!state.currentOrganizationId) {
+        dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: state.organizations[0].id });
+      }
+    }
+  }, [user, state.organizations]);
+
+  // Save current organization to localStorage
+  useEffect(() => {
+    if (user && state.currentOrganizationId) {
+      localStorage.setItem(`currentOrganizationId_${user.id}`, state.currentOrganizationId);
+    }
+  }, [user, state.currentOrganizationId]);
+
+  const loadDataFromSupabase = async () => {
+    if (!user) return;
+
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      console.log('📥 Loading organizations from Supabase...');
+      
+      // Load organizations where user has access
+      const { data: organizations, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (orgError) {
+        console.error('❌ Error loading organizations:', orgError);
+        throw orgError;
+      }
+
+      console.log('✅ Organizations loaded:', organizations?.length || 0);
+      dispatch({ type: 'SET_ORGANIZATIONS', payload: organizations || [] });
+
+      if (organizations && organizations.length > 0) {
+        // Load customers
+        const { data: customers, error: customerError } = await supabase
+          .from('customers')
+          .select('*')
+          .in('organization_id', organizations.map(org => org.id))
+          .order('created_at', { ascending: false });
+
+        if (customerError) {
+          console.error('❌ Error loading customers:', customerError);
+          throw customerError;
+        }
+
+        console.log('✅ Customers loaded:', customers?.length || 0);
+        dispatch({ type: 'SET_CUSTOMERS', payload: customers || [] });
+
+        // Load projects
+        const { data: projects, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .in('organization_id', organizations.map(org => org.id))
+          .order('created_at', { ascending: false });
+
+        if (projectError) {
+          console.error('❌ Error loading projects:', projectError);
+          throw projectError;
+        }
+
+        console.log('✅ Projects loaded:', projects?.length || 0);
+        dispatch({ type: 'SET_PROJECTS', payload: projects || [] });
+
+        // Load calculators
+        const { data: calculators, error: calculatorError } = await supabase
+          .from('calculators')
+          .select('*')
+          .in('organization_id', organizations.map(org => org.id))
+          .order('created_at', { ascending: false });
+
+        if (calculatorError) {
+          console.error('❌ Error loading calculators:', calculatorError);
+          throw calculatorError;
+        }
+
+        console.log('✅ Calculators loaded:', calculators?.length || 0);
+        dispatch({ type: 'SET_CALCULATORS', payload: calculators || [] });
+      }
+
+      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (error) {
+      console.error('❌ Failed to load data from Supabase:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load data. Please try again.' });
+    }
+  };
+
+  const refreshData = async () => {
+    await loadDataFromSupabase();
+  };
 
   const currentOrganization = state.currentOrganizationId 
     ? state.organizations.find(org => org.id === state.currentOrganizationId) || null
@@ -351,76 +374,224 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   console.log('🏢 Current organization:', currentOrganization);
 
-  const addOrganization = (organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const organization: Organization = {
-      ...organizationData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: 'ADD_ORGANIZATION', payload: organization });
+  const addOrganization = async (organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .insert([organizationData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Organization added:', data);
+      dispatch({ type: 'ADD_ORGANIZATION', payload: data });
+
+      // Create a user record for this organization
+      const { error: userError } = await supabase
+        .from('users')
+        .insert([{
+          organization_id: data.id,
+          auth_user_id: user.id,
+          name: user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          role: 'admin'
+        }]);
+
+      if (userError) {
+        console.error('❌ Error creating user record:', userError);
+        // Don't throw here as the organization was created successfully
+      }
+    } catch (error) {
+      console.error('❌ Failed to add organization:', error);
+      throw error;
+    }
   };
 
-  const updateOrganization = (organization: Organization) => {
-    const updatedOrganization = { ...organization, updatedAt: new Date().toISOString() };
-    dispatch({ type: 'UPDATE_ORGANIZATION', payload: updatedOrganization });
+  const updateOrganization = async (organization: Organization) => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update({
+          name: organization.name,
+          description: organization.description,
+          logo: organization.logo,
+          address: organization.address,
+          phone: organization.phone,
+          email: organization.email,
+          website: organization.website,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', organization.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Organization updated:', data);
+      dispatch({ type: 'UPDATE_ORGANIZATION', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to update organization:', error);
+      throw error;
+    }
   };
 
-  const deleteOrganization = (id: string) => {
-    dispatch({ type: 'DELETE_ORGANIZATION', payload: id });
+  const deleteOrganization = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log('✅ Organization deleted:', id);
+      dispatch({ type: 'DELETE_ORGANIZATION', payload: id });
+    } catch (error) {
+      console.error('❌ Failed to delete organization:', error);
+      throw error;
+    }
   };
 
   const setCurrentOrganization = (id: string) => {
     dispatch({ type: 'SET_CURRENT_ORGANIZATION', payload: id });
   };
 
-  const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addCustomer = async (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!customerData.organizationId) {
       throw new Error('organizationId is required when adding a customer');
     }
     
-    const customer: Customer = {
-      ...customerData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: 'ADD_CUSTOMER', payload: customer });
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert([customerData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Customer added:', data);
+      dispatch({ type: 'ADD_CUSTOMER', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to add customer:', error);
+      throw error;
+    }
   };
 
-  const updateCustomer = (customer: Customer) => {
-    const updatedCustomer = { ...customer, updatedAt: new Date().toISOString() };
-    dispatch({ type: 'UPDATE_CUSTOMER', payload: updatedCustomer });
+  const updateCustomer = async (customer: Customer) => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .update({
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          company: customer.company,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', customer.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Customer updated:', data);
+      dispatch({ type: 'UPDATE_CUSTOMER', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to update customer:', error);
+      throw error;
+    }
   };
 
-  const deleteCustomer = (id: string) => {
-    dispatch({ type: 'DELETE_CUSTOMER', payload: id });
+  const deleteCustomer = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log('✅ Customer deleted:', id);
+      dispatch({ type: 'DELETE_CUSTOMER', payload: id });
+    } catch (error) {
+      console.error('❌ Failed to delete customer:', error);
+      throw error;
+    }
   };
 
-  const addProject = (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addProject = async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!projectData.organizationId) {
       throw new Error('organizationId is required when adding a project');
     }
     
-    const project: Project = {
-      ...projectData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: 'ADD_PROJECT', payload: project });
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([projectData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Project added:', data);
+      dispatch({ type: 'ADD_PROJECT', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to add project:', error);
+      throw error;
+    }
   };
 
-  const updateProject = (project: Project) => {
-    const updatedProject = { ...project, updatedAt: new Date().toISOString() };
-    dispatch({ type: 'UPDATE_PROJECT', payload: updatedProject });
+  const updateProject = async (project: Project) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          name: project.name,
+          description: project.description,
+          customer_id: project.customerId,
+          status: project.status,
+          start_date: project.startDate,
+          end_date: project.endDate,
+          budget: project.budget,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', project.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Project updated:', data);
+      dispatch({ type: 'UPDATE_PROJECT', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to update project:', error);
+      throw error;
+    }
   };
 
-  const deleteProject = (id: string) => {
-    dispatch({ type: 'DELETE_PROJECT', payload: id });
+  const deleteProject = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log('✅ Project deleted:', id);
+      dispatch({ type: 'DELETE_PROJECT', payload: id });
+    } catch (error) {
+      console.error('❌ Failed to delete project:', error);
+      throw error;
+    }
   };
 
-  const duplicateProject = (projectId: string) => {
+  const duplicateProject = async (projectId: string): Promise<string> => {
     const originalProject = state.projects.find(p => p.id === projectId);
     if (!originalProject) {
       throw new Error('Project not found');
@@ -428,83 +599,186 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const originalCalculators = state.calculators.filter(c => c.projectId === projectId);
     
-    const newProjectId = uuidv4();
-    const duplicatedProject: Project = {
-      ...originalProject,
-      id: newProjectId,
-      name: `${originalProject.name} (Kopi)`,
-      status: 'planning',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      // Create new project
+      const newProjectData = {
+        organization_id: originalProject.organizationId,
+        customer_id: originalProject.customerId,
+        name: `${originalProject.name} (Kopi)`,
+        description: originalProject.description,
+        status: 'planning' as const,
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: null,
+        budget: originalProject.budget
+      };
 
-    const duplicatedCalculators: Calculator[] = originalCalculators.map(calc => ({
-      ...calc,
-      id: uuidv4(),
-      projectId: newProjectId,
-      name: `${calc.name} (Kopi)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert([newProjectData])
+        .select()
+        .single();
 
-    dispatch({ 
-      type: 'DUPLICATE_PROJECT', 
-      payload: { 
-        project: duplicatedProject, 
-        calculators: duplicatedCalculators 
-      } 
-    });
+      if (projectError) throw projectError;
 
-    return newProjectId;
+      console.log('✅ Project duplicated:', newProject);
+      dispatch({ type: 'ADD_PROJECT', payload: newProject });
+
+      // Duplicate calculators
+      if (originalCalculators.length > 0) {
+        const newCalculators = originalCalculators.map(calc => ({
+          organization_id: calc.organizationId,
+          project_id: newProject.id,
+          name: `${calc.name} (Kopi)`,
+          description: calc.description,
+          entries: calc.entries,
+          summary: calc.summary
+        }));
+
+        const { data: duplicatedCalculators, error: calculatorError } = await supabase
+          .from('calculators')
+          .insert(newCalculators)
+          .select();
+
+        if (calculatorError) throw calculatorError;
+
+        console.log('✅ Calculators duplicated:', duplicatedCalculators?.length || 0);
+        duplicatedCalculators?.forEach(calc => {
+          dispatch({ type: 'ADD_CALCULATOR', payload: calc });
+        });
+      }
+
+      return newProject.id;
+    } catch (error) {
+      console.error('❌ Failed to duplicate project:', error);
+      throw error;
+    }
   };
 
-  const addCalculator = (calculatorData: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addCalculator = async (calculatorData: Omit<Calculator, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
     if (!calculatorData.organizationId) {
       throw new Error('organizationId is required when adding a calculator');
     }
     
-    const calculator: Calculator = {
-      ...calculatorData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: 'ADD_CALCULATOR', payload: calculator });
+    try {
+      const { data, error } = await supabase
+        .from('calculators')
+        .insert([{
+          organization_id: calculatorData.organizationId,
+          project_id: calculatorData.projectId,
+          name: calculatorData.name,
+          description: calculatorData.description,
+          entries: calculatorData.entries,
+          summary: calculatorData.summary
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Calculator added:', data);
+      dispatch({ type: 'ADD_CALCULATOR', payload: data });
+      return data.id;
+    } catch (error) {
+      console.error('❌ Failed to add calculator:', error);
+      throw error;
+    }
   };
 
-  const updateCalculator = (calculator: Calculator) => {
-    const updatedCalculator = { ...calculator, updatedAt: new Date().toISOString() };
-    dispatch({ type: 'UPDATE_CALCULATOR', payload: updatedCalculator });
+  const updateCalculator = async (calculator: Calculator) => {
+    try {
+      const { data, error } = await supabase
+        .from('calculators')
+        .update({
+          name: calculator.name,
+          description: calculator.description,
+          entries: calculator.entries,
+          summary: calculator.summary,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', calculator.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Calculator updated:', data);
+      dispatch({ type: 'UPDATE_CALCULATOR', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to update calculator:', error);
+      throw error;
+    }
   };
 
-  const deleteCalculator = (id: string) => {
-    dispatch({ type: 'DELETE_CALCULATOR', payload: id });
+  const deleteCalculator = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('calculators')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log('✅ Calculator deleted:', id);
+      dispatch({ type: 'DELETE_CALCULATOR', payload: id });
+    } catch (error) {
+      console.error('❌ Failed to delete calculator:', error);
+      throw error;
+    }
   };
 
-  const duplicateCalculator = (calculatorId: string, targetProjectId?: string) => {
+  const duplicateCalculator = async (calculatorId: string, targetProjectId?: string): Promise<string> => {
     const originalCalculator = state.calculators.find(c => c.id === calculatorId);
     if (!originalCalculator) {
       throw new Error('Calculator not found');
     }
 
-    const newCalculatorId = uuidv4();
-    const duplicatedCalculator: Calculator = {
-      ...originalCalculator,
-      id: newCalculatorId,
-      projectId: targetProjectId || originalCalculator.projectId,
-      name: `${originalCalculator.name} (Kopi)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      const newCalculatorData = {
+        organization_id: originalCalculator.organizationId,
+        project_id: targetProjectId || originalCalculator.projectId,
+        name: `${originalCalculator.name} (Kopi)`,
+        description: originalCalculator.description,
+        entries: originalCalculator.entries,
+        summary: originalCalculator.summary
+      };
 
-    dispatch({ type: 'DUPLICATE_CALCULATOR', payload: duplicatedCalculator });
-    return newCalculatorId;
+      const { data, error } = await supabase
+        .from('calculators')
+        .insert([newCalculatorData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Calculator duplicated:', data);
+      dispatch({ type: 'ADD_CALCULATOR', payload: data });
+      return data.id;
+    } catch (error) {
+      console.error('❌ Failed to duplicate calculator:', error);
+      throw error;
+    }
   };
 
-  const moveCalculator = (calculatorId: string, newProjectId: string) => {
-    dispatch({ type: 'MOVE_CALCULATOR', payload: { calculatorId, newProjectId } });
+  const moveCalculator = async (calculatorId: string, newProjectId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('calculators')
+        .update({
+          project_id: newProjectId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', calculatorId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Calculator moved:', data);
+      dispatch({ type: 'UPDATE_CALCULATOR', payload: data });
+    } catch (error) {
+      console.error('❌ Failed to move calculator:', error);
+      throw error;
+    }
   };
 
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
@@ -557,7 +831,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       getCurrentOrganizationProjects,
       getCurrentOrganizationCalculators,
       getProjectsByCustomer,
-      getCalculatorsByProject
+      getCalculatorsByProject,
+      refreshData
     }}>
       {children}
     </ProjectContext.Provider>

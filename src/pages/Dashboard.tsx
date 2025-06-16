@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -11,7 +11,8 @@ import {
   Plus,
   ArrowRight,
   Building2,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { formatNumber } from '../utils/calculations';
@@ -27,10 +28,13 @@ const Dashboard: React.FC = () => {
     getCurrentOrganizationCalculators,
     currentOrganization,
     getCustomerById,
-    getProjectById
+    getProjectById,
+    state,
+    refreshData
   } = useProject();
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   console.log('🏢 Dashboard - currentOrganization:', currentOrganization);
 
@@ -103,7 +107,47 @@ const Dashboard: React.FC = () => {
     return allProjects.filter(project => project.status === status).length;
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   console.log('🎯 Dashboard rendering with currentOrganization:', currentOrganization);
+
+  if (state.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-muted">Laster dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Feil ved lasting av data</h2>
+          <p className="text-text-muted mb-4">{state.error}</p>
+          <button onClick={handleRefresh} className="btn-primary flex items-center gap-2 mx-auto">
+            <RefreshCw size={16} />
+            Prøv igjen
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentOrganization) {
     console.log('⚠️ Dashboard - No current organization, showing fallback');
@@ -142,6 +186,15 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="flex gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="btn-secondary flex items-center gap-2"
+            title="Oppdater data"
+          >
+            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Oppdaterer...' : 'Oppdater'}
+          </button>
           <Link to="/customers" className="btn-secondary flex items-center gap-2">
             <Users size={16} />
             Ny kunde

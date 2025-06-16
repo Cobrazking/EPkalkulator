@@ -15,7 +15,8 @@ import {
   Check,
   User,
   LogOut,
-  ChevronUp
+  ChevronUp,
+  Loader2
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../auth/AuthProvider';
@@ -151,15 +152,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           <div className="relative org-dropdown-container">
             <button
               onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-              className="w-full flex items-center justify-between p-3 lg:p-4 bg-gradient-to-r from-background-darker/80 to-background-darker/60 rounded-xl border border-border hover:border-primary-500/50 transition-all duration-200 group shadow-md hover:shadow-lg"
+              disabled={state.loading}
+              className="w-full flex items-center justify-between p-3 lg:p-4 bg-gradient-to-r from-background-darker/80 to-background-darker/60 rounded-xl border border-border hover:border-primary-500/50 transition-all duration-200 group shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
                 <div className="p-1.5 lg:p-2 bg-primary-500/20 rounded-lg border border-primary-500/30">
-                  <Building2 size={14} className="lg:w-4 lg:h-4 text-primary-400" />
+                  {state.loading ? (
+                    <Loader2 size={14} className="lg:w-4 lg:h-4 text-primary-400 animate-spin" />
+                  ) : (
+                    <Building2 size={14} className="lg:w-4 lg:h-4 text-primary-400" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="text-xs lg:text-sm font-semibold text-text-primary truncate">
-                    {currentOrganization?.name || 'Velg organisasjon'}
+                    {state.loading ? 'Laster...' : (currentOrganization?.name || 'Velg organisasjon')}
                   </div>
                   {currentOrganization?.description ? (
                     <div className="text-xs text-text-muted truncate mt-0.5">
@@ -181,7 +187,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             </button>
 
             <AnimatePresence>
-              {isOrgDropdownOpen && (
+              {isOrgDropdownOpen && !state.loading && (
                 <motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}

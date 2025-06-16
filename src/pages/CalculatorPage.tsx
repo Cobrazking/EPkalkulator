@@ -29,7 +29,8 @@ const CalculatorPage: React.FC = () => {
     updateCalculator,
     currentOrganization,
     duplicateCalculator,
-    getCurrentOrganizationProjects
+    getCurrentOrganizationProjects,
+    state
   } = useProject();
 
   const project = projectId ? getProjectById(projectId) : null;
@@ -96,6 +97,8 @@ const CalculatorPage: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -120,35 +123,56 @@ const CalculatorPage: React.FC = () => {
     setSummary(calculateSummary(entries));
   }, [entries]);
 
-  // Auto-save calculator
+  // Auto-save calculator with debouncing
   useEffect(() => {
-    if (projectId && entries.length > 0 && currentOrganization) {
-      const saveTimer = setTimeout(() => {
-        const calculatorData = {
-          organizationId: currentOrganization.id,
-          projectId,
-          name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
-          description: calculator?.description,
-          entries,
-          summary
-        };
+    if (projectId && entries.length > 0 && currentOrganization && !state.loading) {
+      const saveTimer = setTimeout(async () => {
+        try {
+          setIsSaving(true);
+          
+          const calculatorData = {
+            organizationId: currentOrganization.id,
+            projectId,
+            name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
+            description: calculator?.description,
+            entries,
+            summary
+          };
 
-        if (calculatorId && calculator) {
-          updateCalculator({
-            ...calculator,
-            ...calculatorData
-          });
-        } else if (!calculatorId) {
-          // Create new calculator and redirect
-          const newCalculator = addCalculator(calculatorData);
-          // Note: In a real implementation, addCalculator would return the created calculator
-          // For now, we'll just stay on the current page
+          if (calculatorId && calculator) {
+            // Update existing calculator
+            await updateCalculator({
+              ...calculator,
+              ...calculatorData
+            });
+          } else if (!calculatorId) {
+            // Create new calculator and redirect
+            const newCalculatorId = await addCalculator(calculatorData);
+            navigate(`/projects/${projectId}/calculator/${newCalculatorId}`, { replace: true });
+          }
+          
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error('Failed to save calculator:', error);
+        } finally {
+          setIsSaving(false);
         }
       }, 2000);
 
       return () => clearTimeout(saveTimer);
     }
-  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization]);
+  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization, state.loading, navigate]);
+
+  if (state.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-muted">Laster kalkyle...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentOrganization) {
     return (
@@ -366,9 +390,22 @@ const CalculatorPage: React.FC = () => {
         </Link>
         
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-text-primary">
-            {calculator?.name || 'Ny kalkyle'}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-text-primary">
+              {calculator?.name || 'Ny kalkyle'}
+            </h1>
+            {isSaving && (
+              <div className="flex items-center gap-2 text-sm text-text-muted">
+                <div className="w-4 h-4 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
+                <span>Lagrer...</span>
+              </div>
+            )}
+            {lastSaved && !isSaving && (
+              <div className="text-sm text-text-muted">
+                Sist lagret: {lastSaved.toLocaleTimeString('nb-NO')}
+              </div>
+            )}
+          </div>
           <p className="text-text-muted mt-1">{project.name} - {customer?.name}</p>
         </div>
       </div>
