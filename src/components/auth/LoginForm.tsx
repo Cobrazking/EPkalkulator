@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Building2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Building2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 
 const LoginForm: React.FC = () => {
@@ -10,11 +10,13 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsSubmitting(true);
 
     try {
@@ -23,10 +25,32 @@ const LoginForm: React.FC = () => {
         : await signIn(email, password);
 
       if (error) {
-        setError(error.message);
+        // Provide more user-friendly error messages
+        if (error.message.includes('Invalid login credentials')) {
+          if (isSignUp) {
+            setError('Det oppstod en feil ved opprettelse av kontoen. Prøv igjen.');
+          } else {
+            setError('Ugyldig e-post eller passord. Kontroller at du har skrevet riktig, eller opprett en ny konto hvis du ikke har en.');
+          }
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('E-posten din er ikke bekreftet. Sjekk innboksen din for bekreftelseslenke.');
+        } else if (error.message.includes('User already registered')) {
+          setError('En bruker med denne e-posten eksisterer allerede. Prøv å logge inn i stedet.');
+        } else if (error.message.includes('Password should be at least')) {
+          setError('Passordet må være minst 6 tegn langt.');
+        } else if (error.message.includes('Unable to validate email address')) {
+          setError('Ugyldig e-postadresse. Kontroller at du har skrevet riktig.');
+        } else {
+          setError(error.message);
+        }
+      } else if (isSignUp) {
+        setSuccess('Kontoen ble opprettet! Du kan nå logge inn.');
+        setIsSignUp(false);
+        setPassword('');
       }
     } catch (err) {
-      setError('En uventet feil oppstod');
+      console.error('Authentication error:', err);
+      setError('En uventet feil oppstod. Prøv igjen senere.');
     } finally {
       setIsSubmitting(false);
     }
@@ -85,9 +109,21 @@ const LoginForm: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg"
+                className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3"
               >
+                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                 <p className="text-red-400 text-sm">{error}</p>
+              </motion.div>
+            )}
+
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3"
+              >
+                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <p className="text-green-400 text-sm">{success}</p>
               </motion.div>
             )}
 
@@ -161,6 +197,7 @@ const LoginForm: React.FC = () => {
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError('');
+                setSuccess('');
               }}
               className="text-primary-400 hover:text-primary-300 text-sm transition-colors"
               disabled={isSubmitting}
@@ -171,6 +208,15 @@ const LoginForm: React.FC = () => {
               }
             </button>
           </div>
+
+          {/* Help text for new users */}
+          {!isSignUp && (
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-400 text-xs text-center">
+                Første gang her? Opprett en konto for å komme i gang.
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Footer */}
