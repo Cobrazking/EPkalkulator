@@ -67,12 +67,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   }, [isOrgDropdownOpen, isUserDropdownOpen]);
 
-  // Close sidebar when route changes on mobile
+  // Close sidebar when route changes on mobile (only if sidebar is open)
   useEffect(() => {
     if (isOpen && window.innerWidth < 1024) {
       onToggle();
     }
-  }, [location.pathname, isOpen, onToggle]);
+  }, [location.pathname]); // Removed isOpen and onToggle from dependencies to prevent immediate closing
 
   const handleOrganizationChange = (orgId: string) => {
     setCurrentOrganization(orgId);
@@ -97,6 +97,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   };
 
+  // Handle menu item click - close sidebar on mobile
+  const handleMenuItemClick = () => {
+    if (window.innerWidth < 1024) {
+      onToggle();
+    }
+  };
+
   // Get user's initials for avatar
   const getUserInitials = (email: string) => {
     return email.split('@')[0].substring(0, 2).toUpperCase();
@@ -105,13 +112,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   // Get user display name (part before @)
   const getUserDisplayName = (email: string) => {
     return email.split('@')[0];
-  };
-
-  // Handle menu item click - close sidebar on mobile
-  const handleMenuItemClick = () => {
-    if (window.innerWidth < 1024) {
-      onToggle();
-    }
   };
 
   return (
