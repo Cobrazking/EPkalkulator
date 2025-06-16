@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-text-muted mt-1">
@@ -185,40 +185,41 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex gap-3">
+        {/* Action buttons - responsive layout */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
             title="Oppdater data"
           >
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-            {isRefreshing ? 'Oppdaterer...' : 'Oppdater'}
+            <span className="sm:inline">{isRefreshing ? 'Oppdaterer...' : 'Oppdater'}</span>
           </button>
-          <Link to="/customers" className="btn-secondary flex items-center gap-2">
+          <Link to="/customers" className="btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto">
             <Users size={16} />
-            Ny kunde
+            <span>Ny kunde</span>
           </Link>
-          <Link to="/projects" className="btn-primary flex items-center gap-2">
+          <Link to="/projects" className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
             <Plus size={16} />
-            Nytt prosjekt
+            <span>Nytt prosjekt</span>
           </Link>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-6 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30"
         >
           <div className="flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-400" />
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
             <div>
-              <p className="text-2xl font-bold text-text-primary">{stats.totalCustomers}</p>
-              <p className="text-sm text-blue-200/80">Kunder</p>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalCustomers}</p>
+              <p className="text-xs sm:text-sm text-blue-200/80">Kunder</p>
             </div>
           </div>
         </motion.div>
@@ -227,13 +228,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30"
         >
           <div className="flex items-center gap-3">
-            <FolderOpen className="w-8 h-8 text-emerald-400" />
+            <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
             <div>
-              <p className="text-2xl font-bold text-text-primary">{stats.totalProjects}</p>
-              <p className="text-sm text-emerald-200/80">Prosjekter</p>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalProjects}</p>
+              <p className="text-xs sm:text-sm text-emerald-200/80">Prosjekter</p>
             </div>
           </div>
         </motion.div>
@@ -242,13 +243,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30"
         >
           <div className="flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-green-400" />
+            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
             <div>
-              <p className="text-2xl font-bold text-text-primary">{stats.activeProjects}</p>
-              <p className="text-sm text-green-200/80">Aktive</p>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.activeProjects}</p>
+              <p className="text-xs sm:text-sm text-green-200/80">Aktive</p>
             </div>
           </div>
         </motion.div>
@@ -257,13 +258,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card p-6 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30"
         >
           <div className="flex items-center gap-3">
-            <Calculator className="w-8 h-8 text-violet-400" />
+            <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-violet-400" />
             <div>
-              <p className="text-2xl font-bold text-text-primary">{stats.totalCalculators}</p>
-              <p className="text-sm text-violet-200/80">Kalkyler</p>
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalCalculators}</p>
+              <p className="text-xs sm:text-sm text-violet-200/80">Kalkyler</p>
             </div>
           </div>
         </motion.div>
@@ -272,13 +273,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30"
+          className="card p-4 sm:p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30"
         >
           <div className="flex items-center gap-3">
-            <DollarSign className="w-8 h-8 text-amber-400" />
+            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
             <div>
-              <p className="text-2xl font-bold text-text-primary">{formatNumber(stats.totalValue)}</p>
-              <p className="text-sm text-amber-200/80">
+              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.totalValue)}</p>
+              <p className="text-xs sm:text-sm text-amber-200/80">
                 Total verdi
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75">
