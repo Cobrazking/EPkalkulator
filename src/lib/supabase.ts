@@ -27,7 +27,7 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
         console.warn('🔄 Invalid refresh token detected, clearing localStorage and reloading...');
         localStorage.clear();
         window.location.reload();
-        return response;
+        throw new Error('Page reloading due to invalid refresh token.');
       }
     } catch (e) {
       // If we can't parse the response, just return the original response
