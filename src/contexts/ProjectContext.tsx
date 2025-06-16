@@ -526,7 +526,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const { data, error } = await supabase
         .from('customers')
-        .insert([customerData])
+        .insert([{
+          organization_id: customerData.organizationId,
+          name: customerData.name,
+          email: customerData.email,
+          phone: customerData.phone,
+          address: customerData.address,
+          company: customerData.company
+        }])
         .select()
         .single();
 
@@ -591,7 +598,16 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const { data, error } = await supabase
         .from('projects')
-        .insert([projectData])
+        .insert([{
+          organization_id: projectData.organizationId,
+          customer_id: projectData.customerId,
+          name: projectData.name,
+          description: projectData.description,
+          status: projectData.status,
+          start_date: projectData.startDate,
+          end_date: projectData.endDate,
+          budget: projectData.budget
+        }])
         .select()
         .single();
 
