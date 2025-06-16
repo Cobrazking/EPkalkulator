@@ -119,11 +119,12 @@ const CalculatorPage: React.FC = () => {
     if (!currentOrganization) return;
 
     try {
-      // Get current user ID
+      // Get current user ID for the specific organization
       const { data: users, error: userError } = await supabase
         .from('users')
         .select('id')
         .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('organization_id', currentOrganization.id)
         .single();
 
       if (userError) {
