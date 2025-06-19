@@ -17,11 +17,14 @@ import {
   LogOut,
   ChevronUp,
   Loader2,
-  UserCheck
+  UserCheck,
+  Bell,
+  Mail
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../auth/AuthProvider';
 import OrganizationModal from '../modals/OrganizationModal';
+import InvitationNotificationModal from '../modals/InvitationNotificationModal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,11 +33,13 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const { state, currentOrganization, setCurrentOrganization } = useProject();
+  const { state, currentOrganization, setCurrentOrganization, getPendingInvitations } = useProject();
   const { user, signOut } = useAuth();
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -43,6 +48,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     { path: '/users', icon: UserCheck, label: 'Brukere' },
     { path: '/settings', icon: Settings, label: 'Innstillinger' },
   ];
+
+  // Load pending invitations when user changes
+  useEffect(() => {
+    if (user) {
+      loadPendingInvitations();
+    }
+  }, [user]);
+
+  const loadPendingInvitations = async () => {
+    if (!user) return;
+    
+    try {
+      const invitations = await getPendingInvitations();
+      setPendingInvitations(invitations);
+    } catch (error) {
+      console.error('Failed to load pending invitations:', error);
+    }
+  };
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -99,6 +122,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   };
 
+  const handleShowInvitations = () => {
+    setIsInvitationModalOpen(true);
+  };
+
+  const handleCloseInvitationModal = () => {
+    setIsInvitationModalOpen(false);
+    loadPendingInvitations(); // Refresh invitations when modal closes
+  };
+
   // Handle menu item click - close sidebar on mobile
   const handleMenuItemClick = () => {
     if (window.innerWidth < 1024) {
@@ -133,6 +165,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
+
+      {/* Invitation notification button - only show if there are pending invitations */}
+      {pendingInvitations.length > 0 && (
+        <button
+          onClick={handleShowInvitations}
+          className="fixed top-4 right-4 z-50 p-2 rounded-xl bg-primary-500 border border-primary-400 text-white hover:bg-primary-600 transition-colors shadow-lg animate-pulse"
+          title={`${pendingInvitations.length} ventende invitasjon${pendingInvitations.length !== 1 ? 'er' : ''}`}
+        >
+          <div className="relative">
+            <Bell size={20} />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {pendingInvitations.length}
+            </span>
+          </div>
+        </button>
+      )}
 
       {/* Sidebar */}
       <aside
@@ -379,6 +427,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       </div>
                     </div>
 
+                    {/* Invitations Button */}
+                    {pendingInvitations.length > 0 && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleShowInvitations}
+                        className="w-full text-left p-2.5 lg:p-3 rounded-lg hover:bg-primary-500/10 text-primary-400 flex items-center gap-2 lg:gap-3 transition-all duration-200 group mb-1"
+                      >
+                        <div className="relative">
+                          <Mail size={14} className="lg:w-4 lg:h-4 text-primary-400" />
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                            {pendingInvitations.length}
+                          </span>
+                        </div>
+                        <span className="text-xs lg:text-sm font-medium">Invitasjoner</span>
+                      </motion.button>
+                    )}
+
                     {/* Sign Out Button */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -409,6 +475,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         isOpen={isOrgModalOpen}
         onClose={handleCloseModal}
         organization={null}
+      />
+
+      <InvitationNotificationModal
+        isOpen={isInvitationModalOpen}
+        onClose={handleCloseInvitationModal}
+        invitations={pendingInvitations}
       />
     </>
   );

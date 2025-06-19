@@ -73,14 +73,13 @@ export interface OrganizationUser {
 export interface Invitation {
   id: string;
   organizationId: string;
+  organizationName: string;
   email: string;
   name: string;
   role: 'admin' | 'manager' | 'user';
-  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
-  invitedBy: string;
+  invitedByName: string;
   expiresAt: string;
   createdAt: string;
-  acceptedAt?: string;
 }
 
 interface ProjectState {
@@ -350,6 +349,9 @@ interface ProjectContextType {
   deleteUser: (id: string) => Promise<void>;
   inviteUser: (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => Promise<void>;
   sendInvitation: (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => Promise<void>;
+  getPendingInvitations: () => Promise<Invitation[]>;
+  acceptInvitation: (invitationId: string) => Promise<void>;
+  declineInvitation: (invitationId: string) => Promise<void>;
   getInvitations: (organizationId: string) => Promise<Invitation[]>;
   cancelInvitation: (invitationId: string) => Promise<void>;
   resendInvitation: (invitationId: string) => Promise<void>;
@@ -1142,10 +1144,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) throw new Error('User must be logged in');
 
     try {
-      console.log('📧 Sending invitation:', invitation);
+      console.log('📧 Creating in-app invitation:', invitation);
 
-      // Create invitation in database and get token
-      const { data: token, error } = await supabase.rpc('create_organization_invitation', {
+      // Create invitation in database
+      const { data, error } = await supabase.rpc('create_in_app_invitation', {
         p_organization_id: invitation.organizationId,
         p_email: invitation.email,
         p_name: invitation.name,
@@ -1155,41 +1157,65 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      console.log('✅ Invitation created with token:', token);
-      
-      // Generate invitation URL
-      const invitationUrl = `${window.location.origin}/invitation/${token}`;
-      
-      // Get current user's name for the email
-      const currentUser = state.users.find(u => u.authUserId === user.id && u.organizationId === invitation.organizationId);
-      const inviterName = currentUser?.name || user.email?.split('@')[0] || 'Unknown';
-      
-      // Get organization name
-      const organization = state.organizations.find(org => org.id === invitation.organizationId);
-      const organizationName = organization?.name || 'Unknown Organization';
-      
-      // Send email via Edge Function
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation-email', {
-        body: {
-          to: invitation.email,
-          inviterName,
-          organizationName,
-          invitationUrl,
-          recipientName: invitation.name,
-          role: invitation.role
-        }
-      });
-
-      if (emailError) {
-        console.error('❌ Failed to send email:', emailError);
-        // Don't throw error here - invitation is created, just email failed
-        console.warn('⚠️ Invitation created but email sending failed. User can still use the invitation URL.');
-      } else {
-        console.log('✅ Invitation email sent successfully:', emailResult);
-      }
+      console.log('✅ In-app invitation created:', data);
       
     } catch (error) {
       console.error('❌ Failed to send invitation:', error);
+      throw error;
+    }
+  };
+
+  const getPendingInvitations = async (): Promise<Invitation[]> => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase.rpc('get_user_pending_invitations', {
+        p_user_email: user.email
+      });
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('❌ Failed to get pending invitations:', error);
+      return [];
+    }
+  };
+
+  const acceptInvitation = async (invitationId: string) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      const { data, error } = await supabase.rpc('accept_in_app_invitation', {
+        p_invitation_id: invitationId,
+        p_auth_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Invitation accepted:', data);
+      
+      // Refresh data to get the new organization
+      await refreshData();
+    } catch (error) {
+      console.error('❌ Failed to accept invitation:', error);
+      throw error;
+    }
+  };
+
+  const declineInvitation = async (invitationId: string) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      const { data, error } = await supabase.rpc('decline_in_app_invitation', {
+        p_invitation_id: invitationId
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Invitation declined:', data);
+    } catch (error) {
+      console.error('❌ Failed to decline invitation:', error);
       throw error;
     }
   };
@@ -1217,14 +1243,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return data.map(invitation => ({
         id: invitation.id,
         organizationId,
+        organizationName: '', // Will be filled by caller if needed
         email: invitation.email,
         name: invitation.name,
         role: invitation.role,
-        status: invitation.status,
-        invitedBy: invitation.invited_by?.name || 'Unknown',
+        invitedByName: invitation.invited_by?.name || 'Unknown',
         expiresAt: invitation.expires_at,
-        createdAt: invitation.created_at,
-        acceptedAt: invitation.accepted_at
+        createdAt: invitation.created_at
       }));
     } catch (error) {
       console.error('❌ Failed to get invitations:', error);
@@ -1254,56 +1279,20 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) throw new Error('User must be logged in');
 
     try {
-      // Get new token from resend function
-      const { data: newToken, error } = await supabase.rpc('resend_invitation', {
-        p_invitation_id: invitationId,
-        p_auth_user_id: user.id
-      });
+      // For in-app invitations, we just update the expiry date
+      const { data, error } = await supabase
+        .from('organization_invitations')
+        .update({
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invitationId)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      console.log('✅ Invitation resent with new token:', newToken);
-      
-      // Get invitation details for email
-      const { data: invitationData, error: invitationError } = await supabase
-        .from('organization_invitations')
-        .select(`
-          email,
-          name,
-          role,
-          organization_id,
-          invited_by:users!organization_invitations_invited_by_fkey(name)
-        `)
-        .eq('id', invitationId)
-        .single();
-
-      if (invitationError) throw invitationError;
-
-      // Generate new invitation URL
-      const invitationUrl = `${window.location.origin}/invitation/${newToken}`;
-      
-      // Get organization name
-      const organization = state.organizations.find(org => org.id === invitationData.organization_id);
-      const organizationName = organization?.name || 'Unknown Organization';
-      
-      // Send email via Edge Function
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation-email', {
-        body: {
-          to: invitationData.email,
-          inviterName: invitationData.invited_by?.name || 'Unknown',
-          organizationName,
-          invitationUrl,
-          recipientName: invitationData.name,
-          role: invitationData.role
-        }
-      });
-
-      if (emailError) {
-        console.error('❌ Failed to send resend email:', emailError);
-        console.warn('⚠️ Invitation resent but email sending failed.');
-      } else {
-        console.log('✅ Resend invitation email sent successfully:', emailResult);
-      }
+      console.log('✅ Invitation resent (expiry extended):', data);
       
     } catch (error) {
       console.error('❌ Failed to resend invitation:', error);
@@ -1362,6 +1351,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       deleteUser,
       inviteUser,
       sendInvitation,
+      getPendingInvitations,
+      acceptInvitation,
+      declineInvitation,
       getInvitations,
       cancelInvitation,
       resendInvitation,
