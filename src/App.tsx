@@ -12,6 +12,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import CalculatorPage from './pages/CalculatorPage';
 import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
+import InvitationAcceptPage from './pages/InvitationAcceptPage';
 import { ProjectProvider } from './contexts/ProjectContext';
 
 console.log('📱 App component loading...');
@@ -76,12 +77,23 @@ const AppContent: React.FC = () => {
   );
 };
 
+const PublicRoutes: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/invitation/:token" element={<InvitationAcceptPage />} />
+        <Route path="*" element={<AppContent />} />
+      </Routes>
+    </Router>
+  );
+};
+
 const App: React.FC = () => {
   console.log('🎨 App component rendering...');
   
   return (
     <AuthProvider>
-      <AppContent />
+      <PublicRoutes />
     </AuthProvider>
   );
 };

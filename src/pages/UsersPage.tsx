@@ -17,10 +17,14 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Send,
+  Users
 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import UserModal, { OrganizationUser } from '../components/modals/UserModal';
+import InvitationModal from '../components/modals/InvitationModal';
+import InvitationListModal from '../components/modals/InvitationListModal';
 
 const UsersPage: React.FC = () => {
   const { 
@@ -32,6 +36,8 @@ const UsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
+  const [isInvitationListModalOpen, setIsInvitationListModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'invite'>('create');
   const [editingUser, setEditingUser] = useState<OrganizationUser | null>(null);
 
@@ -62,9 +68,7 @@ const UsersPage: React.FC = () => {
   };
 
   const handleInvite = () => {
-    setEditingUser(null);
-    setModalMode('invite');
-    setIsModalOpen(true);
+    setIsInvitationModalOpen(true);
   };
 
   const handleCreate = () => {
@@ -76,6 +80,14 @@ const UsersPage: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingUser(null);
+  };
+
+  const handleCloseInvitationModal = () => {
+    setIsInvitationModalOpen(false);
+  };
+
+  const handleCloseInvitationListModal = () => {
+    setIsInvitationListModalOpen(false);
   };
 
   const getRoleIcon = (role: string) => {
@@ -155,11 +167,18 @@ const UsersPage: React.FC = () => {
         
         <div className="flex gap-2">
           <button
+            onClick={() => setIsInvitationListModalOpen(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Users size={16} />
+            Invitasjoner
+          </button>
+          <button
             onClick={handleInvite}
             className="btn-secondary flex items-center gap-2"
           >
-            <UserPlus size={16} />
-            Inviter bruker
+            <Send size={16} />
+            Send invitasjon
           </button>
           <button
             onClick={handleCreate}
@@ -316,8 +335,8 @@ const UsersPage: React.FC = () => {
                 onClick={handleInvite}
                 className="btn-secondary flex items-center gap-2"
               >
-                <UserPlus size={16} />
-                Inviter bruker
+                <Send size={16} />
+                Send invitasjon
               </button>
               <button
                 onClick={handleCreate}
@@ -336,6 +355,16 @@ const UsersPage: React.FC = () => {
         onClose={handleCloseModal}
         user={editingUser}
         mode={modalMode}
+      />
+
+      <InvitationModal
+        isOpen={isInvitationModalOpen}
+        onClose={handleCloseInvitationModal}
+      />
+
+      <InvitationListModal
+        isOpen={isInvitationListModalOpen}
+        onClose={handleCloseInvitationListModal}
       />
     </div>
   );

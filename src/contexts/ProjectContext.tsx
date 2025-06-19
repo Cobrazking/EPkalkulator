@@ -70,12 +70,26 @@ export interface OrganizationUser {
   updatedAt: string;
 }
 
+export interface Invitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'manager' | 'user';
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+  invitedBy: string;
+  expiresAt: string;
+  createdAt: string;
+  acceptedAt?: string;
+}
+
 interface ProjectState {
   organizations: Organization[];
   customers: Customer[];
   projects: Project[];
   calculators: Calculator[];
   users: OrganizationUser[];
+  invitations: Invitation[];
   currentOrganizationId: string | null;
   loading: boolean;
   error: string | null;
@@ -105,6 +119,10 @@ type ProjectAction =
   | { type: 'ADD_USER'; payload: OrganizationUser }
   | { type: 'UPDATE_USER'; payload: OrganizationUser }
   | { type: 'DELETE_USER'; payload: string }
+  | { type: 'SET_INVITATIONS'; payload: Invitation[] }
+  | { type: 'ADD_INVITATION'; payload: Invitation }
+  | { type: 'UPDATE_INVITATION'; payload: Invitation }
+  | { type: 'DELETE_INVITATION'; payload: string }
   | { type: 'RESET_STATE' };
 
 const initialState: ProjectState = {
@@ -113,6 +131,7 @@ const initialState: ProjectState = {
   projects: [],
   calculators: [],
   users: [],
+  invitations: [],
   currentOrganizationId: null,
   loading: false,
   error: null
@@ -190,6 +209,7 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         projects: state.projects.filter(project => project.organizationId !== action.payload),
         calculators: state.calculators.filter(calculator => calculator.organizationId !== action.payload),
         users: state.users.filter(user => user.organizationId !== action.payload),
+        invitations: state.invitations.filter(invitation => invitation.organizationId !== action.payload),
         currentOrganizationId: newCurrentOrgId
       };
     
@@ -278,6 +298,26 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
         users: state.users.filter(user => user.id !== action.payload)
       };
     
+    case 'SET_INVITATIONS':
+      return { ...state, invitations: action.payload };
+    
+    case 'ADD_INVITATION':
+      return { ...state, invitations: [...state.invitations, action.payload] };
+    
+    case 'UPDATE_INVITATION':
+      return {
+        ...state,
+        invitations: state.invitations.map(invitation =>
+          invitation.id === action.payload.id ? action.payload : invitation
+        )
+      };
+    
+    case 'DELETE_INVITATION':
+      return {
+        ...state,
+        invitations: state.invitations.filter(invitation => invitation.id !== action.payload)
+      };
+    
     case 'RESET_STATE':
       return initialState;
     
@@ -309,6 +349,10 @@ interface ProjectContextType {
   updateUser: (user: OrganizationUser) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   inviteUser: (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => Promise<void>;
+  sendInvitation: (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => Promise<void>;
+  getInvitations: (organizationId: string) => Promise<Invitation[]>;
+  cancelInvitation: (invitationId: string) => Promise<void>;
+  resendInvitation: (invitationId: string) => Promise<void>;
   getOrganizationById: (id: string) => Organization | undefined;
   getCustomerById: (id: string) => Customer | undefined;
   getProjectById: (id: string) => Project | undefined;
@@ -1094,6 +1138,118 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const sendInvitation = async (invitation: { organizationId: string; email: string; name: string; role: 'admin' | 'manager' | 'user' }) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      console.log('📧 Sending invitation:', invitation);
+
+      const { data, error } = await supabase.rpc('create_organization_invitation', {
+        p_organization_id: invitation.organizationId,
+        p_email: invitation.email,
+        p_name: invitation.name,
+        p_role: invitation.role,
+        p_invited_by_auth_id: user.id
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Invitation created:', data);
+      
+      // TODO: Send actual email here
+      // For now, we'll just log the invitation URL
+      const invitationUrl = `${window.location.origin}/invitation/${data}`;
+      console.log('📧 Invitation URL:', invitationUrl);
+      
+      // In a real implementation, you would send this URL via email
+      alert(`Invitasjon opprettet! URL: ${invitationUrl}\n\nI en ekte implementasjon ville denne blitt sendt via e-post.`);
+      
+    } catch (error) {
+      console.error('❌ Failed to send invitation:', error);
+      throw error;
+    }
+  };
+
+  const getInvitations = async (organizationId: string): Promise<Invitation[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('organization_invitations')
+        .select(`
+          id,
+          email,
+          name,
+          role,
+          status,
+          expires_at,
+          created_at,
+          accepted_at,
+          invited_by:users!organization_invitations_invited_by_fkey(name)
+        `)
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(invitation => ({
+        id: invitation.id,
+        organizationId,
+        email: invitation.email,
+        name: invitation.name,
+        role: invitation.role,
+        status: invitation.status,
+        invitedBy: invitation.invited_by?.name || 'Unknown',
+        expiresAt: invitation.expires_at,
+        createdAt: invitation.created_at,
+        acceptedAt: invitation.accepted_at
+      }));
+    } catch (error) {
+      console.error('❌ Failed to get invitations:', error);
+      throw error;
+    }
+  };
+
+  const cancelInvitation = async (invitationId: string) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      const { data, error } = await supabase.rpc('cancel_invitation', {
+        p_invitation_id: invitationId,
+        p_auth_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Invitation cancelled:', invitationId);
+    } catch (error) {
+      console.error('❌ Failed to cancel invitation:', error);
+      throw error;
+    }
+  };
+
+  const resendInvitation = async (invitationId: string) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      const { data, error } = await supabase.rpc('resend_invitation', {
+        p_invitation_id: invitationId,
+        p_auth_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Invitation resent:', invitationId);
+      
+      // TODO: Send actual email here
+      const invitationUrl = `${window.location.origin}/invitation/${data}`;
+      console.log('📧 New invitation URL:', invitationUrl);
+      
+      alert(`Invitasjon sendt på nytt! URL: ${invitationUrl}\n\nI en ekte implementasjon ville denne blitt sendt via e-post.`);
+    } catch (error) {
+      console.error('❌ Failed to resend invitation:', error);
+      throw error;
+    }
+  };
+
   const getOrganizationById = (id: string) => state.organizations.find(org => org.id === id);
   const getCustomerById = (id: string) => state.customers.find(customer => customer.id === id);
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
@@ -1144,6 +1300,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateUser,
       deleteUser,
       inviteUser,
+      sendInvitation,
+      getInvitations,
+      cancelInvitation,
+      resendInvitation,
       getOrganizationById,
       getCustomerById,
       getProjectById,
