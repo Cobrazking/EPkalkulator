@@ -331,6 +331,8 @@ interface ProjectContextType {
   addOrganization: (organization: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateOrganization: (organization: Organization) => Promise<void>;
   deleteOrganization: (id: string) => Promise<void>;
+  leaveOrganization: (organizationId: string) => Promise<void>;
+  canLeaveOrganization: (organizationId: string) => Promise<boolean>;
   setCurrentOrganization: (id: string) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateCustomer: (customer: Customer) => Promise<void>;
@@ -656,6 +658,49 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       dispatch({ type: 'DELETE_ORGANIZATION', payload: id });
     } catch (error) {
       console.error('❌ Failed to delete organization:', error);
+      throw error;
+    }
+  };
+
+  const canLeaveOrganization = async (organizationId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase.rpc('can_user_leave_organization', {
+        p_auth_user_id: user.id,
+        p_organization_id: organizationId
+      });
+
+      if (error) throw error;
+      return data || false;
+    } catch (error) {
+      console.error('❌ Failed to check if user can leave organization:', error);
+      return false;
+    }
+  };
+
+  const leaveOrganization = async (organizationId: string) => {
+    if (!user) throw new Error('User must be logged in');
+
+    try {
+      console.log('🚪 Leaving organization:', organizationId);
+
+      const { data, error } = await supabase.rpc('leave_organization', {
+        p_auth_user_id: user.id,
+        p_organization_id: organizationId
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Successfully left organization:', organizationId);
+      
+      // Remove organization from local state
+      dispatch({ type: 'DELETE_ORGANIZATION', payload: organizationId });
+      
+      // Refresh data to get updated state
+      await refreshData();
+    } catch (error) {
+      console.error('❌ Failed to leave organization:', error);
       throw error;
     }
   };
@@ -1333,6 +1378,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addOrganization,
       updateOrganization,
       deleteOrganization,
+      leaveOrganization,
+      canLeaveOrganization,
       setCurrentOrganization,
       addCustomer,
       updateCustomer,

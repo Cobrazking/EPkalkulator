@@ -8,7 +8,10 @@ import {
   Upload,
   X,
   Save,
-  AlertTriangle
+  AlertTriangle,
+  LogOut,
+  Shield,
+  Users
 } from 'lucide-react';
 import { CompanyInfo, CalculationSettings } from '../types';
 import { useProject } from '../contexts/ProjectContext';
@@ -17,7 +20,10 @@ import { supabase } from '../lib/supabase';
 const SettingsPage: React.FC = () => {
   const { 
     currentOrganization,
-    updateOrganization
+    updateOrganization,
+    leaveOrganization,
+    canLeaveOrganization,
+    getCurrentOrganizationUsers
   } = useProject();
 
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
@@ -40,13 +46,31 @@ const SettingsPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [canLeave, setCanLeave] = useState(false);
+  const [isLeavingOrg, setIsLeavingOrg] = useState(false);
+
+  const users = getCurrentOrganizationUsers();
+  const currentUser = users.find(u => u.authUserId === (supabase.auth.getUser().then(({ data }) => data.user?.id)));
 
   // Load settings when organization changes
   useEffect(() => {
     if (currentOrganization) {
       loadOrganizationSettings();
+      checkCanLeaveOrganization();
     }
   }, [currentOrganization]);
+
+  const checkCanLeaveOrganization = async () => {
+    if (!currentOrganization) return;
+    
+    try {
+      const canLeaveResult = await canLeaveOrganization(currentOrganization.id);
+      setCanLeave(canLeaveResult);
+    } catch (error) {
+      console.error('Failed to check if user can leave organization:', error);
+      setCanLeave(false);
+    }
+  };
 
   const loadOrganizationSettings = async () => {
     if (!currentOrganization) return;
@@ -234,6 +258,39 @@ const SettingsPage: React.FC = () => {
             loadOrganizationSettings();
           });
       }
+    }
+  };
+
+  const handleLeaveOrganization = async () => {
+    if (!currentOrganization) return;
+
+    const adminCount = users.filter(u => u.role === 'admin' && u.isActive).length;
+    const isLastAdmin = currentUser?.role === 'admin' && adminCount === 1;
+
+    let confirmMessage = `Er du sikker på at du vil forlate organisasjonen "${currentOrganization.name}"?`;
+    
+    if (isLastAdmin) {
+      confirmMessage += '\n\nDu er den siste administratoren. Du må utnevne en annen administrator før du kan forlate organisasjonen.';
+      alert(confirmMessage);
+      return;
+    }
+
+    if (!window.confirm(confirmMessage + '\n\nDette kan ikke angres.')) {
+      return;
+    }
+
+    try {
+      setIsLeavingOrg(true);
+      setError(null);
+
+      await leaveOrganization(currentOrganization.id);
+      
+      // The leaveOrganization function will handle state updates and navigation
+    } catch (error: any) {
+      console.error('Failed to leave organization:', error);
+      setError(error.message || 'Feil ved forlating av organisasjon. Prøv igjen.');
+    } finally {
+      setIsLeavingOrg(false);
     }
   };
 
@@ -506,11 +563,96 @@ const SettingsPage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Organization Info */}
+      {/* Organization Management */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
+        className="card p-6"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <Building2 className="w-6 h-6 text-primary-400" />
+          <h2 className="text-xl font-semibold text-text-primary">Organisasjonsadministrasjon</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Organization Info */}
+          <div>
+            <h3 className="font-medium text-text-primary mb-4">Aktiv organisasjon</h3>
+            <div className="flex items-center gap-3 p-4 bg-background-darker/50 rounded-lg border border-border">
+              <Building2 className="w-8 h-8 text-primary-400" />
+              <div>
+                <p className="font-medium text-text-primary">{currentOrganization.name}</p>
+                {currentOrganization.description && (
+                  <p className="text-sm text-text-muted">{currentOrganization.description}</p>
+                )}
+                <div className="flex items-center gap-4 mt-2 text-xs text-text-muted">
+                  <div className="flex items-center gap-1">
+                    <Users size={12} />
+                    <span>{users.length} medlem{users.length !== 1 ? 'mer' : ''}</span>
+                  </div>
+                  {currentUser && (
+                    <div className="flex items-center gap-1">
+                      <Shield size={12} />
+                      <span>
+                        {currentUser.role === 'admin' ? 'Administrator' : 
+                         currentUser.role === 'manager' ? 'Manager' : 'Bruker'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Leave Organization */}
+          <div>
+            <h3 className="font-medium text-text-primary mb-4">Forlat organisasjon</h3>
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <div className="flex items-start gap-3 mb-4">
+                <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-400 font-medium text-sm mb-2">Advarsel</p>
+                  <p className="text-red-400 text-sm">
+                    Hvis du forlater denne organisasjonen vil du miste tilgang til alle prosjekter, 
+                    kalkyler og data tilknyttet organisasjonen.
+                  </p>
+                  {!canLeave && currentUser?.role === 'admin' && (
+                    <p className="text-red-400 text-sm mt-2">
+                      Du kan ikke forlate organisasjonen fordi du er den siste administratoren. 
+                      Utnevn en annen administrator først.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <button
+                onClick={handleLeaveOrganization}
+                disabled={!canLeave || isLeavingOrg || isSaving}
+                className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isLeavingOrg ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Forlater...
+                  </>
+                ) : (
+                  <>
+                    <LogOut size={16} />
+                    Forlat organisasjon
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* About Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
         className="card p-6"
       >
         <div className="flex items-center gap-3 mb-4">
@@ -536,18 +678,9 @@ const SettingsPage: React.FC = () => {
         </div>
 
         <div className="mt-6 pt-6 border-t border-border">
-          <h3 className="font-medium text-text-primary mb-2">Aktiv organisasjon</h3>
-          <div className="flex items-center gap-3 p-3 bg-background-darker/50 rounded-lg">
-            <Building2 className="w-5 h-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">{currentOrganization.name}</p>
-              {currentOrganization.description && (
-                <p className="text-sm text-text-muted">{currentOrganization.description}</p>
-              )}
-            </div>
-          </div>
-          <p className="text-xs text-text-muted mt-2">
-            Alle innstillinger på denne siden gjelder kun for denne organisasjonen.
+          <p className="text-xs text-text-muted">
+            Alle innstillinger på denne siden gjelder kun for den aktive organisasjonen. 
+            Hvis du bytter organisasjon vil du se innstillingene for den organisasjonen.
           </p>
         </div>
       </motion.div>
