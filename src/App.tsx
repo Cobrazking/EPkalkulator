@@ -45,46 +45,33 @@ const AppContent: React.FC = () => {
 
   return (
     <ProjectProvider>
-      <Router>
-        <div className="min-h-screen bg-background text-text-primary flex">
-          <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-          
-          {/* Main content with responsive margin */}
-          <div className="flex-1 flex flex-col overflow-hidden lg:ml-72 xl:ml-80">
-            {/* Content area with proper padding for mobile menu button */}
-            <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="container mx-auto px-4 py-6"
-              >
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/customers" element={<CustomersPage />} />
-                  <Route path="/projects" element={<ProjectsPage />} />
-                  <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-                  <Route path="/projects/:projectId/calculator/:calculatorId?" element={<CalculatorPage />} />
-                  <Route path="/users" element={<UsersPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Routes>
-              </motion.div>
-            </main>
-          </div>
+      <div className="min-h-screen bg-background text-text-primary flex">
+        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        
+        {/* Main content with responsive margin */}
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-72 xl:ml-80">
+          {/* Content area with proper padding for mobile menu button */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="container mx-auto px-4 py-6"
+            >
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/customers" element={<CustomersPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+                <Route path="/projects/:projectId/calculator/:calculatorId?" element={<CalculatorPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Routes>
+            </motion.div>
+          </main>
         </div>
-      </Router>
+      </div>
     </ProjectProvider>
-  );
-};
-
-const PublicRoutes: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/invitation/:token" element={<InvitationAcceptPage />} />
-        <Route path="*" element={<AppContent />} />
-      </Routes>
-    </Router>
   );
 };
 
@@ -93,7 +80,12 @@ const App: React.FC = () => {
   
   return (
     <AuthProvider>
-      <PublicRoutes />
+      <Router>
+        <Routes>
+          <Route path="/invitation/:token" element={<InvitationAcceptPage />} />
+          <Route path="*" element={<AppContent />} />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 };
