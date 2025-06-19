@@ -237,19 +237,19 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Improved mobile layout */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+      {/* Stats Cards - Completely redesigned for mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{stats.totalCustomers}</p>
-              <p className="text-xs sm:text-sm text-blue-200/80">Kunder</p>
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalCustomers}</p>
+              <p className="text-xs sm:text-xs lg:text-sm text-blue-200/80 truncate">Kunder</p>
             </div>
           </div>
         </motion.div>
@@ -258,13 +258,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-emerald-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{stats.totalProjects}</p>
-              <p className="text-xs sm:text-sm text-emerald-200/80">Prosjekter</p>
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-emerald-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalProjects}</p>
+              <p className="text-xs sm:text-xs lg:text-sm text-emerald-200/80 truncate">Prosjekter</p>
             </div>
           </div>
         </motion.div>
@@ -273,13 +273,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{stats.activeProjects}</p>
-              <p className="text-xs sm:text-sm text-green-200/80">Aktive</p>
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.activeProjects}</p>
+              <p className="text-xs sm:text-xs lg:text-sm text-green-200/80 truncate">Aktive</p>
             </div>
           </div>
         </motion.div>
@@ -288,13 +288,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <Calculator className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-violet-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{stats.totalCalculators}</p>
-              <p className="text-xs sm:text-sm text-violet-200/80">Kalkyler</p>
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <Calculator className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-violet-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalCalculators}</p>
+              <p className="text-xs sm:text-xs lg:text-sm text-violet-200/80 truncate">Kalkyler</p>
             </div>
           </div>
         </motion.div>
@@ -303,16 +303,18 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <Clock className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-orange-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{formatNumber(stats.totalHours)}</p>
-              <p className="text-xs sm:text-sm text-orange-200/80">
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-orange-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate" title={formatNumber(stats.totalHours)}>
+                {formatNumber(stats.totalHours)}
+              </p>
+              <p className="text-xs sm:text-xs lg:text-sm text-orange-200/80 truncate">
                 Timer
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -325,16 +327,23 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-amber-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{formatNumber(stats.totalValue)}</p>
-              <p className="text-xs sm:text-sm text-amber-200/80">
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate" title={formatNumber(stats.totalValue)}>
+                {stats.totalValue >= 1000000 
+                  ? `${(stats.totalValue / 1000000).toFixed(1)}M`
+                  : stats.totalValue >= 1000 
+                    ? `${(stats.totalValue / 1000).toFixed(0)}k`
+                    : formatNumber(stats.totalValue)
+                }
+              </p>
+              <p className="text-xs sm:text-xs lg:text-sm text-amber-200/80 truncate">
                 Total verdi
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -347,16 +356,23 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{formatNumber(stats.totalProfit)}</p>
-              <p className="text-xs sm:text-sm text-green-200/80">
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate" title={formatNumber(stats.totalProfit)}>
+                {stats.totalProfit >= 1000000 
+                  ? `${(stats.totalProfit / 1000000).toFixed(1)}M`
+                  : stats.totalProfit >= 1000 
+                    ? `${(stats.totalProfit / 1000).toFixed(0)}k`
+                    : formatNumber(stats.totalProfit)
+                }
+              </p>
+              <p className="text-xs sm:text-xs lg:text-sm text-green-200/80 truncate">
                 Fortjeneste
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -369,16 +385,16 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="card p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-cyan-600/20 via-blue-600/15 to-indigo-600/20 border-cyan-500/30 col-span-1"
+          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-cyan-600/20 via-blue-600/15 to-indigo-600/20 border-cyan-500/30 col-span-1"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <PieChart className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-cyan-400 flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">{formatPercent(stats.averageMargin)}</p>
-              <p className="text-xs sm:text-sm text-cyan-200/80">
+          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+            <PieChart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-cyan-400 flex-shrink-0" />
+            <div className="min-w-0 w-full">
+              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{formatPercent(stats.averageMargin)}</p>
+              <p className="text-xs sm:text-xs lg:text-sm text-cyan-200/80 truncate">
                 Snitt margin
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -398,12 +414,19 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <Target className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 flex-shrink-0" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-text-primary">{formatNumber(stats.averageProjectValue)}</p>
-              <p className="text-xs sm:text-sm text-purple-200/80">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate" title={formatNumber(stats.averageProjectValue)}>
+                {stats.averageProjectValue >= 1000000 
+                  ? `${(stats.averageProjectValue / 1000000).toFixed(1)}M`
+                  : stats.averageProjectValue >= 1000 
+                    ? `${(stats.averageProjectValue / 1000).toFixed(0)}k`
+                    : formatNumber(stats.averageProjectValue)
+                }
+              </p>
+              <p className="text-xs sm:text-sm text-purple-200/80 truncate">
                 Snitt prosjektverdi
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -420,14 +443,14 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400 flex-shrink-0" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-text-primary">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
                 {stats.totalProjects > 0 ? formatNumber(stats.totalCalculators / stats.totalProjects) : '0'}
               </p>
-              <p className="text-xs sm:text-sm text-indigo-200/80">
+              <p className="text-xs sm:text-sm text-indigo-200/80 truncate">
                 Kalkyler per prosjekt
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
@@ -444,14 +467,14 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-teal-400 flex-shrink-0" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-text-primary">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
                 {stats.totalProjects > 0 ? formatNumber(stats.totalHours / stats.totalProjects) : '0'}
               </p>
-              <p className="text-xs sm:text-sm text-teal-200/80">
+              <p className="text-xs sm:text-sm text-teal-200/80 truncate">
                 Timer per prosjekt
                 {statusFilter !== 'all' && (
-                  <span className="block text-xs opacity-75">
+                  <span className="block text-xs opacity-75 truncate">
                     ({getStatusText(statusFilter)})
                   </span>
                 )}
