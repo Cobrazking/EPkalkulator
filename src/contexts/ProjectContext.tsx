@@ -155,7 +155,7 @@ const toCamelCase = (obj: any): any => {
 const toSnakeCase = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(toSnakeCase);
-  } else if (obj !== null && typeof obj === 'object') {
+  } else else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result, key) => {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
       result[snakeKey] = toSnakeCase(obj[key]);
@@ -1144,7 +1144,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       console.log('📧 Sending invitation:', invitation);
 
-      const { data, error } = await supabase.rpc('create_organization_invitation', {
+      // Create invitation in database and get token
+      const { data: token, error } = await supabase.rpc('create_organization_invitation', {
         p_organization_id: invitation.organizationId,
         p_email: invitation.email,
         p_name: invitation.name,
@@ -1154,14 +1155,38 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      console.log('✅ Invitation created:', data);
+      console.log('✅ Invitation created with token:', token);
       
       // Generate invitation URL
-      const invitationUrl = `${window.location.origin}/invitation/${data}`;
-      console.log('📧 Invitation URL:', invitationUrl);
+      const invitationUrl = `${window.location.origin}/invitation/${token}`;
       
-      // Show success message without the implementation note
-      // In a production environment, this would trigger an email
+      // Get current user's name for the email
+      const currentUser = state.users.find(u => u.authUserId === user.id && u.organizationId === invitation.organizationId);
+      const inviterName = currentUser?.name || user.email?.split('@')[0] || 'Unknown';
+      
+      // Get organization name
+      const organization = state.organizations.find(org => org.id === invitation.organizationId);
+      const organizationName = organization?.name || 'Unknown Organization';
+      
+      // Send email via Edge Function
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation-email', {
+        body: {
+          to: invitation.email,
+          inviterName,
+          organizationName,
+          invitationUrl,
+          recipientName: invitation.name,
+          role: invitation.role
+        }
+      });
+
+      if (emailError) {
+        console.error('❌ Failed to send email:', emailError);
+        // Don't throw error here - invitation is created, just email failed
+        console.warn('⚠️ Invitation created but email sending failed. User can still use the invitation URL.');
+      } else {
+        console.log('✅ Invitation email sent successfully:', emailResult);
+      }
       
     } catch (error) {
       console.error('❌ Failed to send invitation:', error);
@@ -1229,18 +1254,56 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) throw new Error('User must be logged in');
 
     try {
-      const { data, error } = await supabase.rpc('resend_invitation', {
+      // Get new token from resend function
+      const { data: newToken, error } = await supabase.rpc('resend_invitation', {
         p_invitation_id: invitationId,
         p_auth_user_id: user.id
       });
 
       if (error) throw error;
 
-      console.log('✅ Invitation resent:', invitationId);
+      console.log('✅ Invitation resent with new token:', newToken);
       
+      // Get invitation details for email
+      const { data: invitationData, error: invitationError } = await supabase
+        .from('organization_invitations')
+        .select(`
+          email,
+          name,
+          role,
+          organization_id,
+          invited_by:users!organization_invitations_invited_by_fkey(name)
+        `)
+        .eq('id', invitationId)
+        .single();
+
+      if (invitationError) throw invitationError;
+
       // Generate new invitation URL
-      const invitationUrl = `${window.location.origin}/invitation/${data}`;
-      console.log('📧 New invitation URL:', invitationUrl);
+      const invitationUrl = `${window.location.origin}/invitation/${newToken}`;
+      
+      // Get organization name
+      const organization = state.organizations.find(org => org.id === invitationData.organization_id);
+      const organizationName = organization?.name || 'Unknown Organization';
+      
+      // Send email via Edge Function
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation-email', {
+        body: {
+          to: invitationData.email,
+          inviterName: invitationData.invited_by?.name || 'Unknown',
+          organizationName,
+          invitationUrl,
+          recipientName: invitationData.name,
+          role: invitationData.role
+        }
+      });
+
+      if (emailError) {
+        console.error('❌ Failed to send resend email:', emailError);
+        console.warn('⚠️ Invitation resent but email sending failed.');
+      } else {
+        console.log('✅ Resend invitation email sent successfully:', emailResult);
+      }
       
     } catch (error) {
       console.error('❌ Failed to resend invitation:', error);

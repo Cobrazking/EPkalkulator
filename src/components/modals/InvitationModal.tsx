@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { X, Mail, User, Shield, Send, AlertTriangle, CheckCircle, Copy } from 'lucide-react';
+import { X, Mail, User, Shield, Send, AlertTriangle, CheckCircle, Copy, Info } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 
 interface InvitationModalProps {
@@ -22,7 +22,6 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +34,6 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
     setIsLoading(true);
     setError(null);
     setSuccess(null);
-    setInvitationUrl(null);
 
     try {
       await sendInvitation({
@@ -45,14 +43,13 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
         role: formData.role
       });
       
-      setSuccess(`Invitasjon opprettet for ${formData.email}!`);
+      setSuccess(`Invitasjon sendt til ${formData.email}! De vil motta en e-post med instruksjoner for å bli med i organisasjonen.`);
       setFormData({ email: '', name: '', role: 'user' });
       
       // Auto-close after success
       setTimeout(() => {
         onClose();
         setSuccess(null);
-        setInvitationUrl(null);
       }, 5000);
     } catch (error: any) {
       console.error('Failed to send invitation:', error);
@@ -62,21 +59,11 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
     }
   };
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      // Could add a toast notification here
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-    }
-  };
-
   const handleClose = () => {
     if (!isLoading) {
       setFormData({ email: '', name: '', role: 'user' });
       setError(null);
       setSuccess(null);
-      setInvitationUrl(null);
       onClose();
     }
   };
@@ -142,38 +129,21 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
                     <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-green-400 text-sm">{success}</p>
-                      <p className="text-green-300 text-xs mt-1">
-                        Invitasjonen er klar til å deles med personen.
-                      </p>
                     </div>
                   </div>
                 )}
 
-                {invitationUrl && (
-                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                    <p className="text-blue-400 text-sm mb-2">Invitasjonslenke:</p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={invitationUrl}
-                        readOnly
-                        className="flex-1 text-xs bg-background-darker border border-border rounded px-2 py-1"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(invitationUrl)}
-                        className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
-                        title="Kopier lenke"
-                      >
-                        <Copy size={16} />
-                      </button>
-                    </div>
+                <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-blue-400 text-sm">
+                    <p className="font-medium mb-1">Slik fungerer invitasjoner:</p>
+                    <ul className="text-xs space-y-1 list-disc list-inside">
+                      <li>Personen mottar en e-post med invitasjonslenke</li>
+                      <li>De kan opprette konto eller logge inn med eksisterende konto</li>
+                      <li>Invitasjonen utløper automatisk etter 7 dager</li>
+                      <li>Du kan se status på alle invitasjoner i invitasjonsoversikten</li>
+                    </ul>
                   </div>
-                )}
-
-                <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                  <p className="text-blue-400 text-sm">
-                    Personen vil motta en invitasjonslenke som de kan bruke for å bli med i organisasjonen.
-                  </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
