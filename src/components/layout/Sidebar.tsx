@@ -40,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -53,6 +54,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   useEffect(() => {
     if (user) {
       loadPendingInvitations();
+      // Set up interval to check for new invitations every 30 seconds
+      const interval = setInterval(loadPendingInvitations, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setPendingInvitations([]);
     }
   }, [user]);
 
@@ -60,10 +66,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     if (!user) return;
     
     try {
+      setInvitationsLoading(true);
       const invitations = await getPendingInvitations();
       setPendingInvitations(invitations);
     } catch (error) {
       console.error('Failed to load pending invitations:', error);
+    } finally {
+      setInvitationsLoading(false);
     }
   };
 
@@ -365,6 +374,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </li>
               );
             })}
+
+            {/* Invitations Button */}
+            {pendingInvitations.length > 0 && (
+              <li>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleShowInvitations}
+                  className="w-full text-left flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl bg-gradient-to-r from-primary-500/20 to-purple-600/20 text-primary-400 border border-primary-500/30 shadow-md transition-all duration-200 group"
+                >
+                  <div className="relative">
+                    <Mail size={18} className="lg:w-5 lg:h-5 text-primary-400" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {pendingInvitations.length}
+                    </span>
+                  </div>
+                  <span className="text-sm lg:text-base font-semibold">Invitasjoner</span>
+                </motion.button>
+              </li>
+            )}
           </ul>
         </nav>
 
@@ -426,24 +455,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                         </div>
                       </div>
                     </div>
-
-                    {/* Invitations Button */}
-                    {pendingInvitations.length > 0 && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleShowInvitations}
-                        className="w-full text-left p-2.5 lg:p-3 rounded-lg hover:bg-primary-500/10 text-primary-400 flex items-center gap-2 lg:gap-3 transition-all duration-200 group mb-1"
-                      >
-                        <div className="relative">
-                          <Mail size={14} className="lg:w-4 lg:h-4 text-primary-400" />
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                            {pendingInvitations.length}
-                          </span>
-                        </div>
-                        <span className="text-xs lg:text-sm font-medium">Invitasjoner</span>
-                      </motion.button>
-                    )}
 
                     {/* Sign Out Button */}
                     <motion.button

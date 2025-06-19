@@ -17,6 +17,7 @@ import {
   Users
 } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
+import { supabase } from '../../lib/supabase';
 
 interface Invitation {
   id: string;
@@ -24,7 +25,7 @@ interface Invitation {
   name: string;
   role: 'admin' | 'manager' | 'user';
   status: 'pending' | 'accepted' | 'expired' | 'cancelled';
-  invited_by: string;
+  invited_by_name: string;
   expires_at: string;
   accepted_at?: string;
   created_at: string;
@@ -37,7 +38,7 @@ interface InvitationListModalProps {
 }
 
 const InvitationListModal: React.FC<InvitationListModalProps> = ({ isOpen, onClose }) => {
-  const { currentOrganization } = useProject();
+  const { currentOrganization, cancelInvitation } = useProject();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,35 +56,19 @@ const InvitationListModal: React.FC<InvitationListModalProps> = ({ isOpen, onClo
     setError(null);
     
     try {
-      // This would typically fetch from your API/Supabase
-      // For now, we'll use mock data
-      const mockInvitations: Invitation[] = [
-        {
-          id: '1',
-          email: 'john@example.com',
-          name: 'John Doe',
-          role: 'user',
-          status: 'pending',
-          invited_by: 'current-user',
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          email: 'jane@example.com',
-          name: 'Jane Smith',
-          role: 'manager',
-          status: 'accepted',
-          invited_by: 'current-user',
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          accepted_at: new Date().toISOString(),
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      ];
-      
-      setInvitations(mockInvitations);
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase.rpc('get_organization_invitations', {
+        p_organization_id: currentOrganization.id,
+        p_auth_user_id: user.user.id
+      });
+
+      if (error) throw error;
+
+      setInvitations(data || []);
     } catch (err: any) {
       console.error('Failed to fetch invitations:', err);
       setError('Kunne ikke hente invitasjoner. Prøv igjen.');
@@ -98,7 +83,7 @@ const InvitationListModal: React.FC<InvitationListModalProps> = ({ isOpen, onClo
     }
 
     try {
-      // This would typically delete from your API/Supabase
+      await cancelInvitation(invitationId);
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
     } catch (err: any) {
       console.error('Failed to delete invitation:', err);
@@ -110,7 +95,8 @@ const InvitationListModal: React.FC<InvitationListModalProps> = ({ isOpen, onClo
     try {
       // This would typically resend via your API/Supabase
       console.log('Resending invitation:', invitationId);
-      // Update the invitation status or expiry date
+      // For now, just refresh the list
+      await fetchInvitations();
     } catch (err: any) {
       console.error('Failed to resend invitation:', err);
       setError('Kunne ikke sende invitasjonen på nytt. Prøv igjen.');
@@ -283,6 +269,10 @@ const InvitationListModal: React.FC<InvitationListModalProps> = ({ isOpen, onClo
                                   <div className="flex items-center gap-2 text-sm text-text-muted">
                                     <Mail size={14} />
                                     <span>{invitation.email}</span>
+                                  </div>
+                                  
+                                  <div className="text-xs text-text-muted mt-1">
+                                    Invitert av: {invitation.invited_by_name}
                                   </div>
                                 </div>
                               </div>
