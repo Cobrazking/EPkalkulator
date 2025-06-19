@@ -200,9 +200,9 @@ const Dashboard: React.FC = () => {
   console.log('✅ Dashboard - Rendering main content');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-text-muted mt-1 text-sm sm:text-base">
@@ -216,7 +216,7 @@ const Dashboard: React.FC = () => {
         </div>
         
         {/* Action buttons - responsive layout */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
@@ -237,19 +237,19 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Completely redesigned for mobile */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4">
+      {/* Stats Cards - Reduced padding and text sizes */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-purple-600/20 border-blue-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <Users className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-blue-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalCustomers}</p>
-              <p className="text-xs sm:text-xs lg:text-sm text-blue-200/80 truncate">Kunder</p>
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate">{stats.totalCustomers}</p>
+              <p className="text-xs sm:text-xs lg:text-xs text-blue-200/80 truncate">Kunder</p>
             </div>
           </div>
         </motion.div>
@@ -258,13 +258,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/20 border-emerald-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-emerald-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <FolderOpen className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-emerald-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalProjects}</p>
-              <p className="text-xs sm:text-xs lg:text-sm text-emerald-200/80 truncate">Prosjekter</p>
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate">{stats.totalProjects}</p>
+              <p className="text-xs sm:text-xs lg:text-xs text-emerald-200/80 truncate">Prosjekter</p>
             </div>
           </div>
         </motion.div>
@@ -273,13 +273,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.activeProjects}</p>
-              <p className="text-xs sm:text-xs lg:text-sm text-green-200/80 truncate">Aktive</p>
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate">{stats.activeProjects}</p>
+              <p className="text-xs sm:text-xs lg:text-xs text-green-200/80 truncate">Aktive</p>
             </div>
           </div>
         </motion.div>
@@ -288,13 +288,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-violet-600/20 via-purple-600/15 to-fuchsia-600/20 border-violet-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <Calculator className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-violet-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <Calculator className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-violet-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{stats.totalCalculators}</p>
-              <p className="text-xs sm:text-xs lg:text-sm text-violet-200/80 truncate">Kalkyler</p>
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate">{stats.totalCalculators}</p>
+              <p className="text-xs sm:text-xs lg:text-xs text-violet-200/80 truncate">Kalkyler</p>
             </div>
           </div>
         </motion.div>
@@ -303,15 +303,15 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-orange-600/20 via-amber-600/15 to-yellow-600/20 border-orange-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-orange-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-orange-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate" title={formatNumber(stats.totalHours)}>
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate" title={formatNumber(stats.totalHours)}>
                 {formatNumber(stats.totalHours)}
               </p>
-              <p className="text-xs sm:text-xs lg:text-sm text-orange-200/80 truncate">
+              <p className="text-xs sm:text-xs lg:text-xs text-orange-200/80 truncate">
                 Timer
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -327,12 +327,12 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-yellow-600/20 border-amber-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-amber-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate" title={formatNumber(stats.totalValue)}>
+              <p className="text-xs sm:text-xs lg:text-base font-bold text-text-primary truncate" title={formatNumber(stats.totalValue)}>
                 {stats.totalValue >= 1000000 
                   ? `${(stats.totalValue / 1000000).toFixed(1)}M`
                   : stats.totalValue >= 1000 
@@ -340,7 +340,7 @@ const Dashboard: React.FC = () => {
                     : formatNumber(stats.totalValue)
                 }
               </p>
-              <p className="text-xs sm:text-xs lg:text-sm text-amber-200/80 truncate">
+              <p className="text-xs sm:text-xs lg:text-xs text-amber-200/80 truncate">
                 Total verdi
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -356,12 +356,12 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-green-600/20 via-emerald-600/15 to-teal-600/20 border-green-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate" title={formatNumber(stats.totalProfit)}>
+              <p className="text-xs sm:text-xs lg:text-base font-bold text-text-primary truncate" title={formatNumber(stats.totalProfit)}>
                 {stats.totalProfit >= 1000000 
                   ? `${(stats.totalProfit / 1000000).toFixed(1)}M`
                   : stats.totalProfit >= 1000 
@@ -369,7 +369,7 @@ const Dashboard: React.FC = () => {
                     : formatNumber(stats.totalProfit)
                 }
               </p>
-              <p className="text-xs sm:text-xs lg:text-sm text-green-200/80 truncate">
+              <p className="text-xs sm:text-xs lg:text-xs text-green-200/80 truncate">
                 Fortjeneste
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -385,13 +385,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="card p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-cyan-600/20 via-blue-600/15 to-indigo-600/20 border-cyan-500/30 col-span-1"
+          className="card p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-cyan-600/20 via-blue-600/15 to-indigo-600/20 border-cyan-500/30 col-span-1"
         >
-          <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-            <PieChart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-cyan-400 flex-shrink-0" />
+          <div className="flex flex-col items-center text-center space-y-0.5 sm:space-y-1">
+            <PieChart className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-cyan-400 flex-shrink-0" />
             <div className="min-w-0 w-full">
-              <p className="text-sm sm:text-base lg:text-xl font-bold text-text-primary truncate">{formatPercent(stats.averageMargin)}</p>
-              <p className="text-xs sm:text-xs lg:text-sm text-cyan-200/80 truncate">
+              <p className="text-xs sm:text-sm lg:text-lg font-bold text-text-primary truncate">{formatPercent(stats.averageMargin)}</p>
+              <p className="text-xs sm:text-xs lg:text-xs text-cyan-200/80 truncate">
                 Snitt margin
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -404,18 +404,18 @@ const Dashboard: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Secondary Stats Row - Better mobile layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Secondary Stats Row - Reduced padding */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-purple-600/20 via-pink-600/15 to-rose-600/20 border-purple-500/30"
+          className="card p-3 sm:p-4 bg-gradient-to-br from-purple-600/20 via-pink-600/15 to-rose-600/20 border-purple-500/30"
         >
-          <div className="flex items-center gap-3">
-            <Target className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Target className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate" title={formatNumber(stats.averageProjectValue)}>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-text-primary truncate" title={formatNumber(stats.averageProjectValue)}>
                 {stats.averageProjectValue >= 1000000 
                   ? `${(stats.averageProjectValue / 1000000).toFixed(1)}M`
                   : stats.averageProjectValue >= 1000 
@@ -423,7 +423,7 @@ const Dashboard: React.FC = () => {
                     : formatNumber(stats.averageProjectValue)
                 }
               </p>
-              <p className="text-xs sm:text-sm text-purple-200/80 truncate">
+              <p className="text-xs sm:text-xs text-purple-200/80 truncate">
                 Snitt prosjektverdi
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -439,15 +439,15 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-indigo-600/20 via-blue-600/15 to-cyan-600/20 border-indigo-500/30"
+          className="card p-3 sm:p-4 bg-gradient-to-br from-indigo-600/20 via-blue-600/15 to-cyan-600/20 border-indigo-500/30"
         >
-          <div className="flex items-center gap-3">
-            <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-text-primary truncate">
                 {stats.totalProjects > 0 ? formatNumber(stats.totalCalculators / stats.totalProjects) : '0'}
               </p>
-              <p className="text-xs sm:text-sm text-indigo-200/80 truncate">
+              <p className="text-xs sm:text-xs text-indigo-200/80 truncate">
                 Kalkyler per prosjekt
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -463,15 +463,15 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1 }}
-          className="card p-4 sm:p-6 bg-gradient-to-br from-teal-600/20 via-green-600/15 to-emerald-600/20 border-teal-500/30"
+          className="card p-3 sm:p-4 bg-gradient-to-br from-teal-600/20 via-green-600/15 to-emerald-600/20 border-teal-500/30"
         >
-          <div className="flex items-center gap-3">
-            <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-teal-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-teal-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-text-primary truncate">
                 {stats.totalProjects > 0 ? formatNumber(stats.totalHours / stats.totalProjects) : '0'}
               </p>
-              <p className="text-xs sm:text-sm text-teal-200/80 truncate">
+              <p className="text-xs sm:text-xs text-teal-200/80 truncate">
                 Timer per prosjekt
                 {statusFilter !== 'all' && (
                   <span className="block text-xs opacity-75 truncate">
@@ -484,32 +484,32 @@ const Dashboard: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Recent Activity - Reduced padding */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Projects with Status Filter */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.2 }}
-          className="card p-4 sm:p-6"
+          className="card p-3 sm:p-4"
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Siste prosjekter</h2>
-            <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-sm">
-              Se alle <ArrowRight size={14} />
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base sm:text-lg font-semibold text-text-primary">Siste prosjekter</h2>
+            <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-xs sm:text-sm">
+              Se alle <ArrowRight size={12} />
             </Link>
           </div>
 
           {/* Status Filter - Better mobile layout */}
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter size={16} className="text-text-muted" />
-              <span className="text-sm text-text-muted">Filtrer etter status:</span>
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Filter size={14} className="text-text-muted" />
+              <span className="text-xs text-text-muted">Filtrer etter status:</span>
             </div>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === 'all'
                     ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
                     : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
@@ -519,7 +519,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setStatusFilter('planning')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === 'planning'
                     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                     : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
@@ -529,7 +529,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setStatusFilter('active')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === 'active'
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                     : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
@@ -539,7 +539,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setStatusFilter('on-hold')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === 'on-hold'
                     ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                     : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
@@ -549,7 +549,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setStatusFilter('completed')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors col-span-2 sm:col-span-1 ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors col-span-2 sm:col-span-1 ${
                   statusFilter === 'completed'
                     ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                     : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
@@ -560,42 +560,42 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentProjects.length > 0 ? (
               recentProjects.map((project) => (
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="block p-3 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
+                  className="block p-2.5 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-text-primary truncate">{project.name}</h3>
-                      <p className="text-sm text-text-muted truncate">{getCustomerName(project.customerId)}</p>
+                      <h3 className="font-medium text-text-primary truncate text-sm">{project.name}</h3>
+                      <p className="text-xs text-text-muted truncate">{getCustomerName(project.customerId)}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 flex-shrink-0 ${getStatusColor(project.status)}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 flex-shrink-0 ${getStatusColor(project.status)}`}>
                       {getStatusText(project.status)}
                     </span>
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="text-center py-8 text-text-muted">
-                <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>
+              <div className="text-center py-6 text-text-muted">
+                <FolderOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
                   {statusFilter === 'all' 
                     ? 'Ingen prosjekter ennå' 
                     : `Ingen prosjekter med status "${getStatusText(statusFilter)}"`
                   }
                 </p>
                 {statusFilter === 'all' ? (
-                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
+                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-xs">
                     Opprett ditt første prosjekt
                   </Link>
                 ) : (
                   <button 
                     onClick={() => setStatusFilter('all')}
-                    className="text-primary-400 hover:text-primary-300 text-sm"
+                    className="text-primary-400 hover:text-primary-300 text-xs"
                   >
                     Vis alle prosjekter
                   </button>
@@ -610,37 +610,37 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.3 }}
-          className="card p-4 sm:p-6"
+          className="card p-3 sm:p-4"
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-text-primary">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base sm:text-lg font-semibold text-text-primary">
               Siste kalkyler
               {statusFilter !== 'all' && (
-                <span className="block text-sm text-text-muted font-normal">
+                <span className="block text-xs text-text-muted font-normal">
                   Fra {getStatusText(statusFilter).toLowerCase()} prosjekter
                 </span>
               )}
             </h2>
-            <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-sm">
-              Se alle <ArrowRight size={14} />
+            <Link to="/projects" className="text-primary-400 hover:text-primary-300 flex items-center gap-1 text-xs sm:text-sm">
+              Se alle <ArrowRight size={12} />
             </Link>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentCalculators.length > 0 ? (
               recentCalculators.map((calculator) => (
                 <Link
                   key={calculator.id}
                   to={`/projects/${calculator.projectId}/calculator/${calculator.id}`}
-                  className="block p-3 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
+                  className="block p-2.5 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-text-primary truncate">{calculator.name}</h3>
-                      <p className="text-sm text-text-muted truncate">{getProjectName(calculator.projectId)}</p>
+                      <h3 className="font-medium text-text-primary truncate text-sm">{calculator.name}</h3>
+                      <p className="text-xs text-text-muted truncate">{getProjectName(calculator.projectId)}</p>
                     </div>
                     <div className="text-right ml-2 flex-shrink-0">
-                      <p className="font-semibold text-primary-400 text-sm">
+                      <p className="font-semibold text-primary-400 text-xs">
                         {formatNumber(calculator.summary?.totalSum || 0)}
                       </p>
                       <p className="text-xs text-text-muted">
@@ -651,22 +651,22 @@ const Dashboard: React.FC = () => {
                 </Link>
               ))
             ) : (
-              <div className="text-center py-8 text-text-muted">
-                <Calculator className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>
+              <div className="text-center py-6 text-text-muted">
+                <Calculator className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
                   {statusFilter === 'all' 
                     ? 'Ingen kalkyler ennå' 
                     : `Ingen kalkyler for ${getStatusText(statusFilter).toLowerCase()} prosjekter`
                   }
                 </p>
                 {statusFilter === 'all' ? (
-                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-sm">
+                  <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-xs">
                     Opprett din første kalkyle
                   </Link>
                 ) : (
                   <button 
                     onClick={() => setStatusFilter('all')}
-                    className="text-primary-400 hover:text-primary-300 text-sm"
+                    className="text-primary-400 hover:text-primary-300 text-xs"
                   >
                     Vis alle kalkyler
                   </button>
