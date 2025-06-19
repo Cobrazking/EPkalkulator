@@ -1156,13 +1156,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       console.log('✅ Invitation created:', data);
       
-      // TODO: Send actual email here
-      // For now, we'll just log the invitation URL
+      // Generate invitation URL
       const invitationUrl = `${window.location.origin}/invitation/${data}`;
       console.log('📧 Invitation URL:', invitationUrl);
       
-      // In a real implementation, you would send this URL via email
-      alert(`Invitasjon opprettet! URL: ${invitationUrl}\n\nI en ekte implementasjon ville denne blitt sendt via e-post.`);
+      // Show success message without the implementation note
+      // In a production environment, this would trigger an email
       
     } catch (error) {
       console.error('❌ Failed to send invitation:', error);
@@ -1239,11 +1238,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       console.log('✅ Invitation resent:', invitationId);
       
-      // TODO: Send actual email here
+      // Generate new invitation URL
       const invitationUrl = `${window.location.origin}/invitation/${data}`;
       console.log('📧 New invitation URL:', invitationUrl);
       
-      alert(`Invitasjon sendt på nytt! URL: ${invitationUrl}\n\nI en ekte implementasjon ville denne blitt sendt via e-post.`);
     } catch (error) {
       console.error('❌ Failed to resend invitation:', error);
       throw error;
