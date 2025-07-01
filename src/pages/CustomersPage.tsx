@@ -628,15 +628,17 @@ const CustomersPage: React.FC = () => {
             <span className="text-sm text-text-muted">av {sortedCustomers.length} kunder</span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1 || itemsPerPage === 0}
               className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
               title="Første side"
             >
-              <ChevronLeft size={14} className="mr-1" />
-              <ChevronLeft size={14} className="-ml-3" />
+              <div className="flex">
+                <ChevronLeft size={14} />
+                <ChevronLeft size={14} className="-ml-2" />
+              </div>
             </button>
             
             <button
@@ -740,8 +742,10 @@ const CustomersPage: React.FC = () => {
               className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
               title="Siste side"
             >
-              <ChevronRight size={14} className="ml-1" />
-              <ChevronRight size={14} className="-ml-3" />
+              <div className="flex">
+                <ChevronRight size={14} />
+                <ChevronRight size={14} className="-ml-2" />
+              </div>
             </button>
           </div>
         </div>
