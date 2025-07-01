@@ -108,22 +108,29 @@ const CalculatorPage: React.FC = () => {
     totalKostprisTimer: 0
   });
 
-  // Load organization-specific settings
+  // Load user-specific settings
   useEffect(() => {
     if (currentOrganization && !settingsLoaded) {
-      loadOrganizationSettings();
+      loadUserSettings();
     }
   }, [currentOrganization, settingsLoaded]);
 
-  const loadOrganizationSettings = async () => {
+  const loadUserSettings = async () => {
     if (!currentOrganization) return;
 
     try {
       // Get current user ID for the specific organization
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        console.error('User not authenticated');
+        setSettingsLoaded(true);
+        return;
+      }
+
       const { data: users, error: userError } = await supabase
         .from('users')
         .select('id')
-        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('auth_user_id', userData.user.id)
         .eq('organization_id', currentOrganization.id)
         .single();
 
@@ -156,7 +163,7 @@ const CalculatorPage: React.FC = () => {
             tlf: settings.company_info.tlf || currentOrganization.phone || '',
             refNr: settings.company_info.refNr || '',
             tilbudstittel: settings.company_info.tilbudstittel || '',
-            logo: settings.company_info.logo || currentOrganization.logo
+            logo: settings.company_info.logo
           });
         } else {
           // Use organization data as fallback
@@ -173,11 +180,23 @@ const CalculatorPage: React.FC = () => {
 
         // Load calculation settings
         if (settings.calculation_settings) {
-          setCalculationSettings({
+          const newSettings = {
             defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
             defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
             defaultPaslag: settings.calculation_settings.defaultPaslag || 20
-          });
+          };
+          
+          setCalculationSettings(newSettings);
+          
+          // If this is a new calculator, update the entries with the user's default settings
+          if (!calculatorId) {
+            setEntries(prev => prev.map(entry => ({
+              ...entry,
+              kostpris: newSettings.defaultKostpris,
+              timepris: newSettings.defaultTimepris,
+              paslagMateriell: newSettings.defaultPaslag
+            })));
+          }
         }
       } else {
         // No settings found, use organization data as defaults
@@ -194,7 +213,7 @@ const CalculatorPage: React.FC = () => {
 
       setSettingsLoaded(true);
     } catch (error) {
-      console.error('Failed to load organization settings:', error);
+      console.error('Failed to load user settings:', error);
       setSettingsLoaded(true);
     }
   };

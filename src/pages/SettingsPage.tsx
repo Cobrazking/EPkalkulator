@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   LogOut,
   Shield,
-  Users
+  Users,
+  Info
 } from 'lucide-react';
 import { CompanyInfo, CalculationSettings } from '../types';
 import { useProject } from '../contexts/ProjectContext';
@@ -55,7 +56,7 @@ const SettingsPage: React.FC = () => {
   // Load settings when organization changes
   useEffect(() => {
     if (currentOrganization) {
-      loadOrganizationSettings();
+      loadUserSettings();
       checkCanLeaveOrganization();
     }
   }, [currentOrganization]);
@@ -72,21 +73,38 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const loadOrganizationSettings = async () => {
+  const loadUserSettings = async () => {
     if (!currentOrganization) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      // Load user settings for this organization
+      // Get current user ID for the specific organization
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', userData.user?.id)
+        .eq('organization_id', currentOrganization.id)
+        .single();
+
+      if (usersError) {
+        console.error('Failed to get user ID:', usersError);
+        throw usersError;
+      }
+
+      // Load user settings
       const { data: settings, error: settingsError } = await supabase
         .from('user_settings')
         .select('*')
-        .eq('user_id', (await getCurrentUserId()))
+        .eq('user_id', users.id)
         .single();
 
       if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('Failed to load settings:', settingsError);
         throw settingsError;
       }
 
@@ -96,13 +114,24 @@ const SettingsPage: React.FC = () => {
         // Load company info from settings
         if (settings.company_info) {
           setCompanyInfo({
-            firma: settings.company_info.firma || '',
+            firma: settings.company_info.firma || currentOrganization.name || '',
             navn: settings.company_info.navn || '',
-            epost: settings.company_info.epost || '',
-            tlf: settings.company_info.tlf || '',
+            epost: settings.company_info.epost || currentOrganization.email || '',
+            tlf: settings.company_info.tlf || currentOrganization.phone || '',
             refNr: settings.company_info.refNr || '',
             tilbudstittel: settings.company_info.tilbudstittel || '',
             logo: settings.company_info.logo
+          });
+        } else {
+          // Use organization data as fallback
+          setCompanyInfo({
+            firma: currentOrganization.name || '',
+            navn: '',
+            epost: currentOrganization.email || '',
+            tlf: currentOrganization.phone || '',
+            refNr: '',
+            tilbudstittel: '',
+            logo: currentOrganization.logo
           });
         }
 
@@ -133,7 +162,7 @@ const SettingsPage: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error('Failed to load organization settings:', error);
+      console.error('Failed to load user settings:', error);
       setError('Feil ved lasting av innstillinger. Prøv igjen.');
     } finally {
       setIsLoading(false);
@@ -145,10 +174,15 @@ const SettingsPage: React.FC = () => {
       throw new Error('No organization selected');
     }
 
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      throw new Error('User not authenticated');
+    }
+
     const { data: users, error } = await supabase
       .from('users')
       .select('id')
-      .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
+      .eq('auth_user_id', user.user.id)
       .eq('organization_id', currentOrganization.id)
       .single();
 
@@ -246,7 +280,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleReset = () => {
-    if (window.confirm('Er du sikker på at du vil tilbakestille alle innstillinger for denne organisasjonen? Dette kan ikke angres.')) {
+    if (window.confirm('Er du sikker på at du vil tilbakestille alle innstillinger? Dette kan ikke angres.')) {
       if (userSettings) {
         // Delete settings from database
         supabase
@@ -255,7 +289,7 @@ const SettingsPage: React.FC = () => {
           .eq('id', userSettings.id)
           .then(() => {
             setUserSettings(null);
-            loadOrganizationSettings();
+            loadUserSettings();
           });
       }
     }
@@ -324,7 +358,7 @@ const SettingsPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Innstillinger</h1>
           <p className="text-text-muted mt-1">
-            Administrer innstillinger for {currentOrganization.name}
+            Administrer dine personlige innstillinger
             {isSaving && (
               <span className="ml-2 text-primary-400 text-sm">
                 • Lagrer...
@@ -345,6 +379,17 @@ const SettingsPage: React.FC = () => {
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
+
+        {/* User-specific settings notice */}
+        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-blue-400 text-sm font-medium">Personlige innstillinger</p>
+            <p className="text-blue-400/80 text-sm">
+              Disse innstillingene er personlige og gjelder kun for deg. Andre brukere i organisasjonen vil ha sine egne innstillinger.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -550,7 +595,7 @@ const SettingsPage: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-border">
             <h3 className="text-lg font-medium text-text-primary mb-4">Tilbakestill innstillinger</h3>
             <p className="text-sm text-text-muted mb-4">
-              Dette vil tilbakestille alle innstillinger for denne organisasjonen til standardverdier.
+              Dette vil tilbakestille alle dine personlige innstillinger til standardverdier.
             </p>
             <button
               onClick={handleReset}
@@ -672,15 +717,15 @@ const SettingsPage: React.FC = () => {
           </div>
           
           <div>
-            <h3 className="font-medium text-text-primary mb-2">Organisasjon</h3>
-            <p className="text-text-muted">Innstillinger er knyttet til organisasjon</p>
+            <h3 className="font-medium text-text-primary mb-2">Innstillinger</h3>
+            <p className="text-text-muted">Personlige innstillinger per bruker</p>
           </div>
         </div>
 
         <div className="mt-6 pt-6 border-t border-border">
           <p className="text-xs text-text-muted">
-            Alle innstillinger på denne siden gjelder kun for den aktive organisasjonen. 
-            Hvis du bytter organisasjon vil du se innstillingene for den organisasjonen.
+            Innstillingene på denne siden er personlige og gjelder kun for din bruker.
+            Hver bruker i organisasjonen har sine egne innstillinger.
           </p>
         </div>
       </motion.div>
