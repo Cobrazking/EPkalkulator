@@ -44,37 +44,8 @@ const CalculatorPage: React.FC = () => {
     defaultPaslag: 20
   };
 
-  const initialEntries: CalculationEntry[] = [
-    {
-      id: uuidv4(),
-      post: '',
-      beskrivelse: '',
-      antall: 1,
-      kostMateriell: 1000,
-      timer: 1,
-      kostpris: initialSettings.defaultKostpris,
-      timepris: initialSettings.defaultTimepris,
-      paslagMateriell: initialSettings.defaultPaslag,
-      enhetspris: 2195,
-      sum: 2195,
-      kommentar: ''
-    },
-    {
-      id: uuidv4(),
-      post: '',
-      beskrivelse: '',
-      antall: 1,
-      kostMateriell: 0,
-      timer: 0,
-      kostpris: initialSettings.defaultKostpris,
-      timepris: initialSettings.defaultTimepris,
-      paslagMateriell: initialSettings.defaultPaslag,
-      enhetspris: 0,
-      sum: 0,
-      kommentar: ''
-    }
-  ];
-
+  // Remove initialEntries from here - we'll create them in useEffect instead
+  
   const initialCompanyInfo: CompanyInfo = {
     firma: '',
     navn: '',
@@ -90,7 +61,8 @@ const CalculatorPage: React.FC = () => {
     tlf: customer?.phone || ''
   };
 
-  const [entries, setEntries] = useState<CalculationEntry[]>(calculator?.entries || initialEntries);
+  // Initialize entries as an empty array
+  const [entries, setEntries] = useState<CalculationEntry[]>([]);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(initialCompanyInfo);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(initialCustomerInfo);
   const [calculationSettings, setCalculationSettings] = useState<CalculationSettings>(initialSettings);
@@ -114,6 +86,52 @@ const CalculatorPage: React.FC = () => {
       loadUserSettings();
     }
   }, [currentOrganization, settingsLoaded]);
+
+  // Initialize entries after settings are loaded and calculator is determined
+  useEffect(() => {
+    if (settingsLoaded) {
+      if (calculatorId && calculator) {
+        // For existing calculators, use the saved entries
+        setEntries(calculator.entries || []);
+      } else {
+        // For new calculators, create entries with current user settings
+        const newEntries = [
+          {
+            id: uuidv4(),
+            post: '',
+            beskrivelse: '',
+            antall: 1,
+            kostMateriell: 1000,
+            timer: 1,
+            kostpris: calculationSettings.defaultKostpris,
+            timepris: calculationSettings.defaultTimepris,
+            paslagMateriell: calculationSettings.defaultPaslag,
+            enhetspris: 0,
+            sum: 0,
+            kommentar: ''
+          },
+          {
+            id: uuidv4(),
+            post: '',
+            beskrivelse: '',
+            antall: 1,
+            kostMateriell: 0,
+            timer: 0,
+            kostpris: calculationSettings.defaultKostpris,
+            timepris: calculationSettings.defaultTimepris,
+            paslagMateriell: calculationSettings.defaultPaslag,
+            enhetspris: 0,
+            sum: 0,
+            kommentar: ''
+          }
+        ];
+        
+        // Calculate the initial values for enhetspris and sum
+        const calculatedEntries = newEntries.map(entry => calculateRow(entry));
+        setEntries(calculatedEntries);
+      }
+    }
+  }, [settingsLoaded, calculatorId, calculator, calculationSettings]);
 
   const loadUserSettings = async () => {
     if (!currentOrganization) return;
@@ -188,15 +206,7 @@ const CalculatorPage: React.FC = () => {
           
           setCalculationSettings(newSettings);
           
-          // If this is a new calculator, update the entries with the user's default settings
-          if (!calculatorId) {
-            setEntries(prev => prev.map(entry => ({
-              ...entry,
-              kostpris: newSettings.defaultKostpris,
-              timepris: newSettings.defaultTimepris,
-              paslagMateriell: newSettings.defaultPaslag
-            })));
-          }
+          // We don't update entries here anymore - that's handled by the useEffect above
         }
       } else {
         // No settings found, use organization data as defaults
