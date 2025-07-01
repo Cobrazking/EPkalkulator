@@ -22,7 +22,9 @@ import {
   Filter,
   ArrowDownAZ,
   ArrowUpZA,
-  ArrowDownUp
+  ArrowDownUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useProject, Customer } from '../contexts/ProjectContext';
 import CustomerModal from '../components/modals/CustomerModal';
@@ -41,6 +43,10 @@ const CustomersPage: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>('name-asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const customers = getCurrentOrganizationCustomers();
   
@@ -90,6 +96,20 @@ const CustomersPage: React.FC = () => {
         return 0;
     }
   });
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCustomers = itemsPerPage === 0 
+    ? sortedCustomers 
+    : sortedCustomers.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const totalPages = itemsPerPage === 0 ? 1 : Math.ceil(sortedCustomers.length / itemsPerPage);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, sortOption, itemsPerPage]);
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
@@ -350,9 +370,56 @@ const CustomersPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Pagination Controls - Top */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-background-lighter/50 p-3 rounded-lg border border-border">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-text-muted">Viser</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="bg-background-darker border border-border rounded px-2 py-1 text-sm"
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="0">Alle</option>
+          </select>
+          <span className="text-sm text-text-muted">av {sortedCustomers.length} kunder</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1 || itemsPerPage === 0}
+            className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          
+          <span className="text-sm text-text-muted">
+            {itemsPerPage === 0 
+              ? `Viser alle ${sortedCustomers.length} kunder` 
+              : `Side ${currentPage} av ${totalPages}`
+            }
+          </span>
+          
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages || itemsPerPage === 0}
+            className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
       {/* Customers Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {sortedCustomers.map((customer, index) => {
+        {currentCustomers.map((customer, index) => {
           const stats = getCustomerStats(customer.id);
           
           return (
@@ -547,14 +614,147 @@ const CustomersPage: React.FC = () => {
         })}
       </div>
 
+      {/* Pagination Controls - Bottom */}
+      {sortedCustomers.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-background-lighter/50 p-3 rounded-lg border border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-text-muted">Viser</span>
+            <span className="font-medium text-text-primary">
+              {itemsPerPage === 0 
+                ? sortedCustomers.length 
+                : `${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, sortedCustomers.length)}`
+              }
+            </span>
+            <span className="text-sm text-text-muted">av {sortedCustomers.length} kunder</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1 || itemsPerPage === 0}
+              className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Første side"
+            >
+              <ChevronLeft size={14} className="mr-1" />
+              <ChevronLeft size={14} className="-ml-3" />
+            </button>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || itemsPerPage === 0}
+              className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Forrige side"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            
+            {/* Page numbers */}
+            {itemsPerPage > 0 && totalPages <= 7 ? (
+              // Show all page numbers if there are 7 or fewer
+              [...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 rounded-md text-sm ${
+                    currentPage === i + 1
+                      ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                      : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))
+            ) : itemsPerPage > 0 ? (
+              // Show limited page numbers with ellipsis for many pages
+              <>
+                {/* Always show first page */}
+                {currentPage > 3 && (
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    className="w-8 h-8 rounded-md text-sm bg-background-darker/50 text-text-muted hover:text-text-primary border border-border"
+                  >
+                    1
+                  </button>
+                )}
+                
+                {/* Show ellipsis if not showing first pages */}
+                {currentPage > 4 && (
+                  <span className="w-8 h-8 flex items-center justify-center text-text-muted">...</span>
+                )}
+                
+                {/* Show current page and surrounding pages */}
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Show current page and 1 page before and after
+                  if (
+                    pageNum === currentPage ||
+                    pageNum === currentPage - 1 ||
+                    pageNum === currentPage + 1
+                  ) {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                            : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  return null;
+                })}
+                
+                {/* Show ellipsis if not showing last pages */}
+                {currentPage < totalPages - 3 && (
+                  <span className="w-8 h-8 flex items-center justify-center text-text-muted">...</span>
+                )}
+                
+                {/* Always show last page */}
+                {currentPage < totalPages - 2 && (
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    className="w-8 h-8 rounded-md text-sm bg-background-darker/50 text-text-muted hover:text-text-primary border border-border"
+                  >
+                    {totalPages}
+                  </button>
+                )}
+              </>
+            ) : null}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || itemsPerPage === 0}
+              className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Neste side"
+            >
+              <ChevronRight size={16} />
+            </button>
+            
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || itemsPerPage === 0}
+              className="p-1 rounded-md bg-background-darker/50 border border-border text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Siste side"
+            >
+              <ChevronRight size={14} className="ml-1" />
+              <ChevronRight size={14} className="-ml-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {sortedCustomers.length === 0 && (
         <div className="text-center py-12">
           <User className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-50" />
           <h3 className="text-lg font-medium text-text-primary mb-2">
-            {searchTerm ? 'Ingen kunder funnet' : 'Ingen kunder ennå'}
+            {searchTerm || statusFilter !== 'all' ? 'Ingen kunder funnet' : 'Ingen kunder ennå'}
           </h3>
           <p className="text-text-muted mb-4">
-            {searchTerm 
+            {searchTerm || statusFilter !== 'all'
               ? 'Prøv å endre søkekriteriene dine'
               : 'Kom i gang ved å legge til din første kunde'
             }
