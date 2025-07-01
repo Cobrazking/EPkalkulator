@@ -11,7 +11,11 @@ import {
   Calendar,
   Calculator,
   ArrowRight,
-  Copy
+  Copy,
+  Filter,
+  ArrowDownAZ,
+  ArrowUpZA,
+  ArrowDownUp
 } from 'lucide-react';
 import { useProject, Project } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
@@ -28,16 +32,73 @@ const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<string>('updated-desc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const projects = getCurrentOrganizationProjects();
   
+  // Filter projects based on search term and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         getCustomerById(project.customerId)?.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  // Sort projects based on selected sort option
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    switch (sortOption) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'created-desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'created-asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'updated-desc':
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      case 'updated-asc':
+        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      case 'customer-asc': {
+        const customerA = getCustomerById(a.customerId)?.name || '';
+        const customerB = getCustomerById(b.customerId)?.name || '';
+        return customerA.localeCompare(customerB);
+      }
+      case 'customer-desc': {
+        const customerA = getCustomerById(a.customerId)?.name || '';
+        const customerB = getCustomerById(b.customerId)?.name || '';
+        return customerB.localeCompare(customerA);
+      }
+      case 'calculators-desc': {
+        const calculatorsA = getCalculatorsByProject(a.id).length;
+        const calculatorsB = getCalculatorsByProject(b.id).length;
+        return calculatorsB - calculatorsA;
+      }
+      case 'calculators-asc': {
+        const calculatorsA = getCalculatorsByProject(a.id).length;
+        const calculatorsB = getCalculatorsByProject(b.id).length;
+        return calculatorsA - calculatorsB;
+      }
+      case 'value-desc': {
+        const valueA = getCalculatorsByProject(a.id).reduce((sum, calc) => sum + (calc.summary?.totalSum || 0), 0);
+        const valueB = getCalculatorsByProject(b.id).reduce((sum, calc) => sum + (calc.summary?.totalSum || 0), 0);
+        return valueB - valueA;
+      }
+      case 'value-asc': {
+        const valueA = getCalculatorsByProject(a.id).reduce((sum, calc) => sum + (calc.summary?.totalSum || 0), 0);
+        const valueB = getCalculatorsByProject(b.id).reduce((sum, calc) => sum + (calc.summary?.totalSum || 0), 0);
+        return valueA - valueB;
+      }
+      case 'start-desc':
+        return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+      case 'start-asc':
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      default:
+        return 0;
+    }
   });
 
   const handleEdit = (project: Project) => {
@@ -142,22 +203,55 @@ const ProjectsPage: React.FC = () => {
           />
         </div>
         
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent"
-        >
-          <option value="all">Alle statuser</option>
-          <option value="planning">Planlegging</option>
-          <option value="active">Aktiv</option>
-          <option value="on-hold">På vent</option>
-          <option value="completed">Fullført</option>
-        </select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
+            <Filter size={16} />
+            <span>Status:</span>
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent"
+          >
+            <option value="all">Alle statuser</option>
+            <option value="planning">Planlegging</option>
+            <option value="active">Aktiv</option>
+            <option value="on-hold">På vent</option>
+            <option value="completed">Fullført</option>
+          </select>
+        </div>
+
+        {/* Sort Options */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
+            <ArrowDownUp size={16} />
+            <span>Sorter etter:</span>
+          </div>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-3 py-2 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent text-sm"
+          >
+            <option value="updated-desc">Sist oppdatert</option>
+            <option value="name-asc">Navn (A-Å)</option>
+            <option value="name-desc">Navn (Å-A)</option>
+            <option value="created-desc">Nyeste først</option>
+            <option value="created-asc">Eldste først</option>
+            <option value="customer-asc">Kunde (A-Å)</option>
+            <option value="customer-desc">Kunde (Å-A)</option>
+            <option value="start-desc">Startdato (nyeste)</option>
+            <option value="start-asc">Startdato (eldste)</option>
+            <option value="calculators-desc">Flest kalkyler</option>
+            <option value="calculators-asc">Færrest kalkyler</option>
+            <option value="value-desc">Høyeste verdi</option>
+            <option value="value-asc">Laveste verdi</option>
+          </select>
+        </div>
       </div>
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredProjects.map((project, index) => (
+        {sortedProjects.map((project, index) => (
           <motion.div
             key={project.id}
             initial={{ opacity: 0, y: 20 }}
@@ -237,7 +331,7 @@ const ProjectsPage: React.FC = () => {
         ))}
       </div>
 
-      {filteredProjects.length === 0 && (
+      {sortedProjects.length === 0 && (
         <div className="text-center py-12">
           <FolderOpen className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-50" />
           <h3 className="text-lg font-medium text-text-primary mb-2">

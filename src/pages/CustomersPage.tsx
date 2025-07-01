@@ -19,7 +19,10 @@ import {
   BarChart3,
   PieChart,
   Target,
-  Filter
+  Filter,
+  ArrowDownAZ,
+  ArrowUpZA,
+  ArrowDownUp
 } from 'lucide-react';
 import { useProject, Customer } from '../contexts/ProjectContext';
 import CustomerModal from '../components/modals/CustomerModal';
@@ -35,16 +38,58 @@ const CustomersPage: React.FC = () => {
   } = useProject();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<string>('name-asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
   const customers = getCurrentOrganizationCustomers();
   
+  // Filter customers based on search term and status filter
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.company?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Sort customers based on selected sort option
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    switch (sortOption) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'created-desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'created-asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'updated-desc':
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      case 'updated-asc':
+        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      case 'projects-desc': {
+        const projectsA = getProjectsByCustomer(a.id).length;
+        const projectsB = getProjectsByCustomer(b.id).length;
+        return projectsB - projectsA;
+      }
+      case 'projects-asc': {
+        const projectsA = getProjectsByCustomer(a.id).length;
+        const projectsB = getProjectsByCustomer(b.id).length;
+        return projectsA - projectsB;
+      }
+      case 'value-desc': {
+        const valueA = getCustomerStats(a.id).statusValues.total;
+        const valueB = getCustomerStats(b.id).statusValues.total;
+        return valueB - valueA;
+      }
+      case 'value-asc': {
+        const valueA = getCustomerStats(a.id).statusValues.total;
+        const valueB = getCustomerStats(b.id).statusValues.total;
+        return valueA - valueB;
+      }
+      default:
+        return 0;
+    }
+  });
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
@@ -280,11 +325,34 @@ const CustomersPage: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Sort Options */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
+            <ArrowDownUp size={16} />
+            <span>Sorter etter:</span>
+          </div>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-3 py-2 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent text-sm"
+          >
+            <option value="name-asc">Navn (A-Å)</option>
+            <option value="name-desc">Navn (Å-A)</option>
+            <option value="created-desc">Nyeste først</option>
+            <option value="created-asc">Eldste først</option>
+            <option value="updated-desc">Sist oppdatert</option>
+            <option value="projects-desc">Flest prosjekter</option>
+            <option value="projects-asc">Færrest prosjekter</option>
+            <option value="value-desc">Høyeste verdi</option>
+            <option value="value-asc">Laveste verdi</option>
+          </select>
+        </div>
       </div>
 
       {/* Customers Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {filteredCustomers.map((customer, index) => {
+        {sortedCustomers.map((customer, index) => {
           const stats = getCustomerStats(customer.id);
           
           return (
@@ -479,7 +547,7 @@ const CustomersPage: React.FC = () => {
         })}
       </div>
 
-      {filteredCustomers.length === 0 && (
+      {sortedCustomers.length === 0 && (
         <div className="text-center py-12">
           <User className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-50" />
           <h3 className="text-lg font-medium text-text-primary mb-2">
