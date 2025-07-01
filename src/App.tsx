@@ -21,9 +21,18 @@ const AppContent: React.FC = () => {
   console.log('🎨 AppContent component rendering...');
   const { user, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   console.log('👤 Current user:', user?.email || 'No user');
   console.log('⏳ Loading state:', loading);
+
+  // Load sidebar collapsed state from localStorage
+  React.useEffect(() => {
+    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+    if (savedCollapsed !== null) {
+      setSidebarCollapsed(JSON.parse(savedCollapsed));
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -48,8 +57,10 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-background text-text-primary flex">
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        {/* Main content with responsive margin */}
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-72 xl:ml-80">
+        {/* Main content with responsive margin based on sidebar state */}
+        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+          sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72 xl:ml-80'
+        }`}>
           {/* Content area with proper padding for mobile menu button */}
           <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
             <motion.div
