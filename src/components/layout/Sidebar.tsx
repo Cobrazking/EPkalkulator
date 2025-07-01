@@ -31,9 +31,11 @@ import InvitationNotificationModal from '../modals/InvitationNotificationModal';
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isCollapsed: boolean;
+  onCollapseToggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onCollapseToggle }) => {
   const location = useLocation();
   const { state, currentOrganization, setCurrentOrganization, getPendingInvitations } = useProject();
   const { user, signOut } = useAuth();
@@ -43,7 +45,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -64,19 +65,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       setPendingInvitations([]);
     }
   }, [user]);
-
-  // Load collapsed state from localStorage
-  useEffect(() => {
-    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
-    if (savedCollapsed !== null) {
-      setIsCollapsed(JSON.parse(savedCollapsed));
-    }
-  }, []);
-
-  // Save collapsed state to localStorage
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
 
   const loadPendingInvitations = async () => {
     if (!user) return;
@@ -173,15 +161,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     return email.split('@')[0];
   };
 
-  // Toggle collapsed state
-  const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  // Calculate sidebar width based on collapsed state
-  const sidebarWidth = isCollapsed ? 'w-20' : 'w-72 lg:w-80';
-  const sidebarWidthClass = `lg:${sidebarWidth}`;
-
   return (
     <>
       {/* Mobile overlay */}
@@ -228,8 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         `}
       >
         {/* Header */}
-        <div className={`p-4 lg:p-6 border-b border-border ${isCollapsed ? 'px-2' : ''}`}>
-          {/* Logo and collapse button */}
+        <div className={`p-4 lg:p-6 border-b border-border ${isCollapsed ? 'px-2 py-4' : ''}`}>
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4 lg:mb-6`}>
             {!isCollapsed && (
               <>
@@ -243,9 +221,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </>
             )}
             
+            {isCollapsed && (
+              <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl shadow-lg">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+            )}
+            
             {/* Collapse button - only show on large screens */}
             <button
-              onClick={handleToggleCollapse}
+              onClick={onCollapseToggle}
               className="hidden lg:flex p-2 rounded-lg hover:bg-background-darker/50 text-text-muted hover:text-text-primary transition-colors"
               title={isCollapsed ? 'Utvid sidemeny' : 'Minimer sidemeny'}
             >
@@ -427,13 +411,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             })}
 
             {/* Invitations Button */}
-            {pendingInvitations.length > 0 && !isCollapsed && (
+            {pendingInvitations.length > 0 && (
               <li>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleShowInvitations}
-                  className="w-full text-left flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl bg-gradient-to-r from-primary-500/20 to-purple-600/20 text-primary-400 border border-primary-500/30 shadow-md transition-all duration-200 group"
+                  className={`
+                    w-full text-left flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 lg:gap-3'} 
+                    px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl 
+                    bg-gradient-to-r from-primary-500/20 to-purple-600/20 
+                    text-primary-400 border border-primary-500/30 shadow-md 
+                    transition-all duration-200 group
+                  `}
+                  title={isCollapsed ? 'Invitasjoner' : undefined}
                 >
                   <div className="relative">
                     <Mail size={18} className="lg:w-5 lg:h-5 text-primary-400" />
@@ -441,7 +432,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       {pendingInvitations.length}
                     </span>
                   </div>
-                  <span className="text-sm lg:text-base font-semibold">Invitasjoner</span>
+                  {!isCollapsed && <span className="text-sm lg:text-base font-semibold">Invitasjoner</span>}
                 </motion.button>
               </li>
             )}
@@ -486,13 +477,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
             {/* User Dropdown */}
             <AnimatePresence>
-              {isUserDropdownOpen && !isCollapsed && (
+              {isUserDropdownOpen && (
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute bottom-full left-0 right-0 mb-2 bg-background-lighter/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
+                  className={`absolute ${isCollapsed ? 'left-full ml-2' : 'bottom-full left-0 right-0 mb-2'} bg-background-lighter/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 overflow-hidden`}
                 >
                   <div className="p-2">
                     {/* User Info Header */}

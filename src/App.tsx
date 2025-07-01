@@ -34,6 +34,11 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  // Save sidebar collapsed state when it changes
+  React.useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-900/10 flex items-center justify-center">
@@ -55,7 +60,12 @@ const AppContent: React.FC = () => {
   return (
     <ProjectProvider>
       <div className="min-h-screen bg-background text-text-primary flex">
-        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onToggle={() => setSidebarOpen(!sidebarOpen)} 
+          isCollapsed={sidebarCollapsed}
+          onCollapseToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
         
         {/* Main content with responsive margin based on sidebar state */}
         <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
@@ -67,7 +77,7 @@ const AppContent: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="container mx-auto px-4 py-6"
+              className="container mx-auto px-4 py-6 max-w-full"
             >
               <Routes>
                 <Route path="/" element={<Dashboard />} />
