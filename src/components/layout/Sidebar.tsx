@@ -207,8 +207,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
         `}
       >
         {/* Header */}
-        <div className={`p-4 lg:p-6 border-b border-border ${isCollapsed ? 'px-2 py-4' : ''}`}>
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4 lg:mb-6`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-4 lg:p-6'} border-b border-border`}>
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'mb-3' : 'mb-4 lg:mb-6'}`}>
             {!isCollapsed && (
               <>
                 <div className="p-2 lg:p-3 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl shadow-lg">
@@ -222,15 +222,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
             )}
             
             {isCollapsed && (
-              <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl shadow-lg">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="p-3 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl shadow-lg">
+                <Building2 className="w-6 h-6 text-white" />
               </div>
             )}
             
             {/* Collapse button - only show on large screens */}
             <button
               onClick={onCollapseToggle}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-background-darker/50 text-text-muted hover:text-text-primary transition-colors"
+              className={`hidden lg:flex p-2 rounded-lg hover:bg-background-darker/50 text-text-muted hover:text-text-primary transition-colors ${isCollapsed ? 'absolute top-3 right-3' : ''}`}
               title={isCollapsed ? 'Utvid sidemeny' : 'Minimer sidemeny'}
             >
               {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -374,17 +374,30 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
 
           {/* Collapsed organization indicator */}
           {isCollapsed && currentOrganization && (
-            <div className="flex justify-center">
-              <div className="p-2 bg-primary-500/20 rounded-lg border border-primary-500/30" title={currentOrganization.name}>
-                <Building2 size={16} className="text-primary-400" />
+            <div className="flex justify-center mt-3">
+              <div className="relative group">
+                <div className="p-2.5 bg-primary-500/20 rounded-xl border border-primary-500/30 hover:bg-primary-500/30 transition-colors cursor-pointer" 
+                     title={currentOrganization.name}>
+                  <Building2 size={18} className="text-primary-400" />
+                </div>
+                
+                {/* Tooltip */}
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-background-darker border border-border rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                  <div className="text-sm font-medium text-text-primary">{currentOrganization.name}</div>
+                  {currentOrganization.description && (
+                    <div className="text-xs text-text-muted">{currentOrganization.description}</div>
+                  )}
+                  {/* Arrow */}
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background-darker"></div>
+                </div>
               </div>
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 lg:p-4">
-          <ul className="space-y-1 lg:space-y-2">
+        <nav className={`flex-1 ${isCollapsed ? 'p-2' : 'p-3 lg:p-4'}`}>
+          <ul className={`space-y-1 ${isCollapsed ? 'space-y-2' : 'lg:space-y-2'}`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -395,7 +408,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                     to={item.path}
                     onClick={handleMenuItemClick}
                     className={`
-                      flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 lg:gap-3'} px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-200 group
+                      relative flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3'} 
+                      rounded-xl transition-all duration-200 group
                       ${active 
                         ? 'bg-gradient-to-r from-primary-500/20 to-purple-600/20 text-primary-400 border border-primary-500/30 shadow-md' 
                         : 'text-text-secondary hover:text-text-primary hover:bg-background-darker/50 hover:shadow-md'
@@ -403,8 +417,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                     `}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <Icon size={18} className={`lg:w-5 lg:h-5 ${active ? 'text-primary-400' : 'group-hover:text-primary-400 transition-colors'}`} />
+                    <Icon size={20} className={`${active ? 'text-primary-400' : 'group-hover:text-primary-400 transition-colors'}`} />
                     {!isCollapsed && <span className="text-sm lg:text-base font-semibold">{item.label}</span>}
+                    
+                    {/* Tooltip for collapsed state */}
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-background-darker border border-border rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                        <div className="text-sm font-medium text-text-primary">{item.label}</div>
+                        {/* Arrow */}
+                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background-darker"></div>
+                      </div>
+                    )}
                   </Link>
                 </li>
               );
@@ -418,21 +441,29 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                   whileTap={{ scale: 0.98 }}
                   onClick={handleShowInvitations}
                   className={`
-                    w-full text-left flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 lg:gap-3'} 
-                    px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl 
-                    bg-gradient-to-r from-primary-500/20 to-purple-600/20 
+                    relative w-full text-left flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3'} 
+                    rounded-xl bg-gradient-to-r from-primary-500/20 to-purple-600/20 
                     text-primary-400 border border-primary-500/30 shadow-md 
                     transition-all duration-200 group
                   `}
                   title={isCollapsed ? 'Invitasjoner' : undefined}
                 >
                   <div className="relative">
-                    <Mail size={18} className="lg:w-5 lg:h-5 text-primary-400" />
+                    <Mail size={20} className="text-primary-400" />
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                       {pendingInvitations.length}
                     </span>
                   </div>
                   {!isCollapsed && <span className="text-sm lg:text-base font-semibold">Invitasjoner</span>}
+                  
+                  {/* Tooltip for collapsed state */}
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-background-darker border border-border rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                      <div className="text-sm font-medium text-text-primary">Invitasjoner ({pendingInvitations.length})</div>
+                      {/* Arrow */}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background-darker"></div>
+                    </div>
+                  )}
                 </motion.button>
               </li>
             )}
@@ -440,15 +471,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
         </nav>
 
         {/* User Section */}
-        <div className={`p-3 lg:p-4 border-t border-border ${isCollapsed ? 'px-2' : ''}`}>
+        <div className={`${isCollapsed ? 'p-2' : 'p-3 lg:p-4'} border-t border-border`}>
           <div className="relative user-dropdown-container">
             <button
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 lg:gap-3'} p-2.5 lg:p-3 rounded-xl bg-background-darker/50 hover:bg-background-darker transition-all duration-200 group`}
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-2 lg:gap-3 p-2.5 lg:p-3'} rounded-xl bg-background-darker/50 hover:bg-background-darker transition-all duration-200 group relative`}
               title={isCollapsed ? (user?.email ? getUserDisplayName(user.email) : 'Bruker') : undefined}
             >
               {/* User Avatar */}
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs lg:text-sm shadow-md">
+              <div className={`${isCollapsed ? 'w-10 h-10' : 'w-8 h-8 lg:w-10 lg:h-10'} bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs lg:text-sm shadow-md`}>
                 {user?.email ? getUserInitials(user.email) : <User size={14} className="lg:w-4 lg:h-4" />}
               </div>
               
@@ -472,6 +503,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                     }`} 
                   />
                 </>
+              )}
+
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && (
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-background-darker border border-border rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                  <div className="text-sm font-medium text-text-primary">
+                    {user?.email ? getUserDisplayName(user.email) : 'Bruker'}
+                  </div>
+                  <div className="text-xs text-text-muted">
+                    {user?.email || 'Ikke innlogget'}
+                  </div>
+                  {/* Arrow */}
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background-darker"></div>
+                </div>
               )}
             </button>
 
