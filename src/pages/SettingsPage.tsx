@@ -111,7 +111,7 @@ const SettingsPage: React.FC = () => {
       if (settings) {
         setUserSettings(settings);
         
-        // Load company info from settings
+        // Load company info from settings - only firma and logo
         if (settings.company_info) {
           setCompanyInfo({
             firma: settings.company_info.firma || currentOrganization.name || '',
@@ -234,7 +234,7 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Auto-save with debouncing
+  // Auto-save with debouncing - only for firma and logo changes
   useEffect(() => {
     if (!isLoading && currentOrganization) {
       const saveTimer = setTimeout(() => {
@@ -243,7 +243,7 @@ const SettingsPage: React.FC = () => {
 
       return () => clearTimeout(saveTimer);
     }
-  }, [companyInfo, calculationSettings, isLoading, currentOrganization]);
+  }, [companyInfo.firma, companyInfo.logo, calculationSettings, isLoading, currentOrganization]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -393,7 +393,7 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Company Information */}
+        {/* Company Information - Simplified */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -405,59 +405,7 @@ const SettingsPage: React.FC = () => {
             <h2 className="text-xl font-semibold text-text-primary">Firmaopplysninger</h2>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="input-label">Tilbudstittel</label>
-              <input
-                type="text"
-                value={companyInfo.tilbudstittel || ''}
-                onChange={(e) => setCompanyInfo({ ...companyInfo, tilbudstittel: e.target.value })}
-                className="w-full"
-                placeholder="F.eks. Tilbud på elektrisk arbeid"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="input-label">Firmalogo</label>
-              <div className="mt-2 flex items-center gap-4">
-                {companyInfo.logo ? (
-                  <div className="relative">
-                    <img 
-                      src={companyInfo.logo} 
-                      alt="Firmalogo" 
-                      className="h-16 w-auto object-contain rounded border border-border"
-                    />
-                    <button
-                      onClick={handleRemoveLogo}
-                      disabled={isSaving}
-                      className="absolute -top-2 -right-2 p-1 bg-background-lighter rounded-full border border-border hover:bg-background text-red-400 disabled:opacity-50"
-                      title="Fjern logo"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex items-center justify-center w-32 h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                      disabled={isSaving}
-                    />
-                    <div className="text-center">
-                      <Upload size={16} className="mx-auto mb-1 text-text-muted" />
-                      <span className="text-text-muted text-xs">Last opp logo</span>
-                    </div>
-                  </label>
-                )}
-              </div>
-              <p className="text-xs text-text-muted mt-1">
-                Maksimal filstørrelse: 5MB. Kun bildefiler er tillatt.
-              </p>
-            </div>
-
+          <div className="space-y-6">
             <div>
               <label className="input-label">Firma</label>
               <input
@@ -468,54 +416,79 @@ const SettingsPage: React.FC = () => {
                 placeholder="Firmanavn"
                 disabled={isSaving}
               />
+              <p className="text-xs text-text-muted mt-1">
+                Dette navnet brukes på tilbud og andre dokumenter
+              </p>
             </div>
 
             <div>
-              <label className="input-label">Kontaktperson</label>
-              <input
-                type="text"
-                value={companyInfo.navn}
-                onChange={(e) => setCompanyInfo({ ...companyInfo, navn: e.target.value })}
-                className="w-full"
-                placeholder="Navn på kontaktperson"
-                disabled={isSaving}
-              />
+              <label className="input-label">Firmalogo</label>
+              <div className="mt-2 flex items-center gap-4">
+                {companyInfo.logo ? (
+                  <div className="relative">
+                    <img 
+                      src={companyInfo.logo} 
+                      alt="Firmalogo" 
+                      className="h-20 w-auto object-contain rounded border border-border bg-background-darker/50"
+                    />
+                    <button
+                      onClick={handleRemoveLogo}
+                      disabled={isSaving}
+                      className="absolute -top-2 -right-2 p-1 bg-background-lighter rounded-full border border-border hover:bg-background text-red-400 disabled:opacity-50"
+                      title="Fjern logo"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-32 h-20 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      disabled={isSaving}
+                    />
+                    <Upload size={20} className="mb-2 text-text-muted" />
+                    <span className="text-text-muted text-xs text-center">Last opp logo</span>
+                  </label>
+                )}
+                
+                <div className="flex-1">
+                  <p className="text-sm text-text-primary font-medium mb-1">Organisasjonslogo</p>
+                  <p className="text-xs text-text-muted">
+                    Logoen brukes på tilbud og andre dokumenter. Anbefalt størrelse: 200x200px eller større.
+                    Maksimal filstørrelse: 5MB.
+                  </p>
+                  {!companyInfo.logo && (
+                    <label className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-background-darker/50 hover:bg-background-darker transition-colors rounded-lg cursor-pointer text-sm text-text-muted hover:text-text-primary">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        disabled={isSaving}
+                      />
+                      <Upload size={14} />
+                      Velg fil
+                    </label>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="input-label">E-post</label>
-              <input
-                type="email"
-                value={companyInfo.epost}
-                onChange={(e) => setCompanyInfo({ ...companyInfo, epost: e.target.value })}
-                className="w-full"
-                placeholder="firma@eksempel.no"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="input-label">Telefon</label>
-              <input
-                type="tel"
-                value={companyInfo.tlf}
-                onChange={(e) => setCompanyInfo({ ...companyInfo, tlf: e.target.value })}
-                className="w-full"
-                placeholder="+47 123 45 678"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="input-label">Referansenummer</label>
-              <input
-                type="text"
-                value={companyInfo.refNr}
-                onChange={(e) => setCompanyInfo({ ...companyInfo, refNr: e.target.value })}
-                className="w-full"
-                placeholder="Ref.nr eller org.nr"
-                disabled={isSaving}
-              />
+            {/* Info about other fields */}
+            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-blue-400 text-sm font-medium mb-1">Andre firmaopplysninger</p>
+                  <p className="text-blue-400/80 text-sm">
+                    Kontaktperson, e-post, telefon og referansenummer kan redigeres direkte i kalkylen under innstillinger.
+                    Dette gir deg fleksibilitet til å tilpasse informasjonen for hver kalkyle.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
