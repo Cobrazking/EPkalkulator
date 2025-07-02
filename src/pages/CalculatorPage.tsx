@@ -4,15 +4,14 @@ import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy, Edit } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 
 import { useProject } from '../contexts/ProjectContext';
 import SummaryCard from '../components/SummaryCard';
 import CalculationTable from '../components/CalculationTable';
-import QuotePDF from '../components/QuotePDF';
 import SettingsModal from '../components/SettingsModal';
 import DuplicateCalculatorModal from '../components/modals/DuplicateCalculatorModal';
 import EditCalculatorModal from '../components/modals/EditCalculatorModal';
+import PDFTemplateSelector from '../components/PDFTemplateSelector';
 import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 import { calculateRow, calculateSummary } from '../utils/calculations';
 import { exportToExcel } from '../utils/excel';
@@ -69,6 +68,7 @@ const CalculatorPage: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPDFSelectorOpen, setIsPDFSelectorOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -593,17 +593,13 @@ const CalculatorPage: React.FC = () => {
           <span>Innstillinger</span>
         </button>
 
-        <PDFDownloadLink
-          document={<QuotePDF entries={entries} companyInfo={companyInfo} customerInfo={customerInfo} />}
-          fileName={`tilbud-${project.name}-${new Date().toISOString().slice(0, 10)}.pdf`}
+        <button
+          onClick={() => setIsPDFSelectorOpen(true)}
+          className="btn-secondary flex items-center gap-2"
         >
-          {({ loading }) => (
-            <button className="btn-secondary flex items-center gap-2">
-              <FileText size={16} />
-              <span>{loading ? 'Laster...' : 'Last ned tilbud'}</span>
-            </button>
-          )}
-        </PDFDownloadLink>
+          <FileText size={16} />
+          <span>Last ned tilbud</span>
+        </button>
       </motion.div>
 
       {/* Summary */}
@@ -654,6 +650,15 @@ const CalculatorPage: React.FC = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         calculator={calculator}
+      />
+
+      <PDFTemplateSelector
+        isOpen={isPDFSelectorOpen}
+        onClose={() => setIsPDFSelectorOpen(false)}
+        entries={entries}
+        companyInfo={companyInfo}
+        customerInfo={customerInfo}
+        projectName={project.name}
       />
     </div>
   );
