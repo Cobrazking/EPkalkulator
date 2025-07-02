@@ -158,18 +158,20 @@ const CalculatorPage: React.FC = () => {
         return;
       }
 
-      // Load user settings
-      const { data: settings, error: settingsError } = await supabase
+      // Load user settings - remove .single() to avoid PGRST116 error
+      const { data: settingsArray, error: settingsError } = await supabase
         .from('user_settings')
         .select('*')
-        .eq('user_id', users.id)
-        .single();
+        .eq('user_id', users.id);
 
-      if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 = no rows found
+      if (settingsError) {
         console.error('Failed to load settings:', settingsError);
         setSettingsLoaded(true);
         return;
       }
+
+      // Get the first settings record if it exists
+      const settings = settingsArray && settingsArray.length > 0 ? settingsArray[0] : null;
 
       if (settings) {
         // Load company info from settings
