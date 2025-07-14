@@ -7,6 +7,7 @@ import { CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isSaving?: boolean;
   companyInfo: CompanyInfo;
   customerInfo: CustomerInfo;
   calculationSettings: CalculationSettings;
@@ -19,6 +20,7 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
+  isSaving = false,
   companyInfo,
   customerInfo,
   calculationSettings,

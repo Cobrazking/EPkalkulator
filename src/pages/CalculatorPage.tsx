@@ -734,6 +734,7 @@ const CalculatorPage: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        isSaving={isSaving}
         companyInfo={companyInfo}
         customerInfo={customerInfo}
         calculationSettings={calculationSettings}
