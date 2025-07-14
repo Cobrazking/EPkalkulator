@@ -3,25 +3,10 @@ import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/
 import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
 import { formatNumber } from '../utils/calculations';
 
-// Register fonts
-Font.register({
-  family: 'Open Sans',
-  fonts: [
-    {
-      src: '/fonts/OpenSans-Regular.woff2',
-      fontWeight: 400
-    },
-    {
-      src: '/fonts/OpenSans-Bold.woff2',
-      fontWeight: 700
-    }
-  ]
-});
-
 const styles = StyleSheet.create({
   page: {
     padding: 0,
-    fontFamily: 'Open Sans',
+    fontFamily: 'Helvetica',
     fontSize: 10,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
@@ -50,8 +35,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     marginBottom: 8,
   },
@@ -84,8 +68,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 14,
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 12,
     color: '#1e293b',
     textTransform: 'uppercase',
@@ -109,8 +92,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   tableHeaderCell: {
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     fontSize: 9,
     textTransform: 'uppercase',
@@ -179,8 +161,7 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 12,
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
     minWidth: 80,
     textAlign: 'right',
@@ -193,14 +174,12 @@ const styles = StyleSheet.create({
   },
   grandTotalLabel: {
     fontSize: 14,
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
   },
   grandTotalAmount: {
     fontSize: 16,
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: '#3b82f6',
     minWidth: 80,
     textAlign: 'right',
@@ -220,8 +199,7 @@ const styles = StyleSheet.create({
   },
   accent: {
     color: '#3b82f6',
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
   },
   summaryRow: {
     backgroundColor: '#3b82f6',
@@ -230,8 +208,7 @@ const styles = StyleSheet.create({
   },
   summaryCell: {
     color: '#ffffff',
-    fontFamily: 'Open Sans',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
   },
 });
 
@@ -320,7 +297,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   </View>
                   <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
                   <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
-                  <Text style={[styles.numberCell, { fontFamily: 'Open Sans', fontWeight: 700, color: '#3b82f6' }]}>{formatCurrency(entry.sum)}</Text>
+                  <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold', color: '#3b82f6' }]}>{formatCurrency(entry.sum)}</Text>
                 </View>
                 {entry.kommentar && (
                   <View style={[styles.tableRowComment, index % 2 === 1 && styles.tableRowAlt]}>
