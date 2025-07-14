@@ -52,6 +52,11 @@ export interface Calculator {
   description?: string;
   entries: any[];
   summary: any;
+  settings?: {
+    companyInfo?: any;
+    customerInfo?: any;
+    calculationSettings?: any;
+  };
   createdAt: string;
   updatedAt: string;
 }

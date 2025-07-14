@@ -15,7 +15,6 @@ import PDFTemplateSelector from '../components/PDFTemplateSelector';
 import { CalculationEntry, CalculationSummary, CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 import { calculateRow, calculateSummary } from '../utils/calculations';
 import { exportToExcel } from '../utils/excel';
-import { supabase } from '../lib/supabase';
 
 const CalculatorPage: React.FC = () => {
   const { projectId, calculatorId } = useParams<{ projectId: string; calculatorId?: string }>();
@@ -73,6 +72,7 @@ const CalculatorPage: React.FC = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -83,18 +83,67 @@ const CalculatorPage: React.FC = () => {
 
   // Load user-specific settings
   useEffect(() => {
-    if (currentOrganization && !settingsLoaded) {
-      loadUserSettings();
+    if (currentOrganization && !settingsLoaded && calculatorId && calculator) {
+      // Load settings from the calculator
+      if (calculator.settings) {
+        // If calculator has settings, use them
+        if (calculator.settings.companyInfo) {
+          setCompanyInfo(calculator.settings.companyInfo);
+        }
+        if (calculator.settings.customerInfo) {
+          setCustomerInfo(calculator.settings.customerInfo);
+        }
+        if (calculator.settings.calculationSettings) {
+          setCalculationSettings(calculator.settings.calculationSettings);
+        }
+      } else {
+        // If no settings in calculator, use defaults
+        if (currentOrganization) {
+          setCompanyInfo({
+            firma: currentOrganization.name || '',
+            navn: '',
+            epost: currentOrganization.email || '',
+            tlf: currentOrganization.phone || '',
+            refNr: '',
+            tilbudstittel: '',
+            logo: currentOrganization.logo
+          });
+        }
+      }
+      setSettingsLoaded(true);
+    } else if (currentOrganization && !settingsLoaded && !calculatorId) {
+      // For new calculators, use organization defaults
+      setCompanyInfo({
+        firma: currentOrganization.name || '',
+        navn: '',
+        epost: currentOrganization.email || '',
+        tlf: currentOrganization.phone || '',
+        refNr: '',
+        tilbudstittel: '',
+        logo: currentOrganization.logo
+      });
+      setSettingsLoaded(true);
     }
-  }, [currentOrganization, settingsLoaded]);
+  }, [currentOrganization, settingsLoaded, calculatorId, calculator]);
 
   // Initialize entries after settings are loaded and calculator is determined
   useEffect(() => {
     if (settingsLoaded) {
       setHasUnsavedChanges(false);
       if (calculatorId && calculator) {
-        // For existing calculators, use the saved entries
+        // For existing calculators, use the saved entries and settings
         setEntries(calculator.entries || []);
+        
+        // Update customer info from the project's customer
+        if (customer) {
+          setCustomerInfo({
+            kunde: customer.name,
+            adresse: customer.address,
+            epost: customer.email,
+            tlf: customer.phone
+          });
+        }
+        setInitialLoad(false);
       } else {
         // For new calculators, create entries with current user settings
         const newEntries = [
@@ -131,110 +180,14 @@ const CalculatorPage: React.FC = () => {
         // Calculate the initial values for enhetspris and sum
         const calculatedEntries = newEntries.map(entry => calculateRow(entry));
         setEntries(calculatedEntries);
+        setInitialLoad(false);
       }
     }
   }, [settingsLoaded, calculatorId, calculator, calculationSettings]);
 
-  const loadUserSettings = async () => {
-    if (!currentOrganization) return;
-
-    try {
-      // Get current user ID for the specific organization
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        console.error('User not authenticated');
-        setSettingsLoaded(true);
-        return;
-      }
-
-      const { data: users, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', userData.user.id)
-        .eq('organization_id', currentOrganization.id)
-        .single();
-
-      if (userError) {
-        console.error('Failed to get user ID:', userError);
-        setSettingsLoaded(true);
-        return;
-      }
-
-      // Load user settings - remove .single() to avoid PGRST116 error
-      const { data: settingsArray, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', users.id);
-
-      if (settingsError) {
-        console.error('Failed to load settings:', settingsError);
-        setSettingsLoaded(true);
-        return;
-      }
-
-      // Get the first settings record if it exists
-      const settings = settingsArray && settingsArray.length > 0 ? settingsArray[0] : null;
-
-      if (settings) {
-        // Load company info from settings
-        if (settings.company_info) {
-          setCompanyInfo({
-            firma: settings.company_info.firma || currentOrganization.name || '',
-            navn: settings.company_info.navn || '',
-            epost: settings.company_info.epost || currentOrganization.email || '',
-            tlf: settings.company_info.tlf || currentOrganization.phone || '',
-            refNr: settings.company_info.refNr || '',
-            tilbudstittel: settings.company_info.tilbudstittel || '',
-            logo: settings.company_info.logo
-          });
-        } else {
-          // Use organization data as fallback
-          setCompanyInfo({
-            firma: currentOrganization.name || '',
-            navn: '',
-            epost: currentOrganization.email || '',
-            tlf: currentOrganization.phone || '',
-            refNr: '',
-            tilbudstittel: '',
-            logo: currentOrganization.logo
-          });
-        }
-
-        // Load calculation settings
-        if (settings.calculation_settings) {
-          const newSettings = {
-            defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
-            defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
-            defaultPaslag: settings.calculation_settings.defaultPaslag || 20
-          };
-          
-          setCalculationSettings(newSettings);
-          
-          // We don't update entries here anymore - that's handled by the useEffect above
-        }
-      } else {
-        // No settings found, use organization data as defaults
-        setCompanyInfo({
-          firma: currentOrganization.name || '',
-          navn: '',
-          epost: currentOrganization.email || '',
-          tlf: currentOrganization.phone || '',
-          refNr: '',
-          tilbudstittel: '',
-          logo: currentOrganization.logo
-        });
-      }
-
-      setSettingsLoaded(true);
-    } catch (error) {
-      console.error('Failed to load user settings:', error);
-      setSettingsLoaded(true);
-    }
-  };
-
   // Update customer info when customer changes
   useEffect(() => {
-    if (customer) {
+    if (customer && initialLoad) {
       setCustomerInfo({
         kunde: customer.name,
         adresse: customer.address,
@@ -277,16 +230,19 @@ const CalculatorPage: React.FC = () => {
     
     try {
       setIsSaving(true);
-      
-      // First, save the calculator data
-      
+            
       const calculatorData = {
         organizationId: currentOrganization.id,
         projectId,
         name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
         description: calculator?.description,
         entries: entries,
-        summary: summary
+        summary: summary,
+        settings: {
+          companyInfo,
+          customerInfo,
+          calculationSettings
+        }
       };
 
       if (calculatorId && calculator) {
@@ -299,69 +255,6 @@ const CalculatorPage: React.FC = () => {
         // Create new calculator and redirect
         const newCalculatorId = await addCalculator(calculatorData);
         navigate(`/projects/${projectId}/calculator/${newCalculatorId}`, { replace: true });
-      }
-      
-      // Then, save the user settings
-      try {
-        // Get current user ID for the specific organization
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) {
-          console.error('User not authenticated');
-          return;
-        }
-
-        const { data: users, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('auth_user_id', userData.user.id)
-          .eq('organization_id', currentOrganization.id)
-          .single();
-
-        if (userError) {
-          console.error('Failed to get user ID:', userError);
-          return;
-        }
-
-        // Check if user settings exist
-        const { data: settingsArray, error: settingsError } = await supabase
-          .from('user_settings')
-          .select('id')
-          .eq('user_id', users.id);
-
-        if (settingsError) {
-          console.error('Failed to check user settings:', settingsError);
-          return;
-        }
-
-        const settingsData = {
-          user_id: users.id,
-          company_info: companyInfo,
-          calculation_settings: calculationSettings
-        };
-
-        if (settingsArray && settingsArray.length > 0) {
-          // Update existing settings
-          const { error: updateError } = await supabase
-            .from('user_settings')
-            .update(settingsData)
-            .eq('id', settingsArray[0].id);
-
-          if (updateError) {
-            console.error('Failed to update user settings:', updateError);
-          }
-        } else {
-          // Create new settings
-          const { error: insertError } = await supabase
-            .from('user_settings')
-            .insert([settingsData]);
-
-          if (insertError) {
-            console.error('Failed to create user settings:', insertError);
-          }
-        }
-      } catch (settingsError) {
-        console.error('Failed to save user settings:', settingsError);
-        // Don't fail the whole save operation if settings save fails
       }
       
       setLastSaved(new Date());
@@ -747,10 +640,22 @@ const CalculatorPage: React.FC = () => {
         companyInfo={companyInfo}
         customerInfo={customerInfo}
         calculationSettings={calculationSettings}
-        onSave={handleSave}
-        onUpdateCompanyInfo={setCompanyInfo}
-        onUpdateCustomerInfo={setCustomerInfo}
-        onUpdateCalculationSettings={setCalculationSettings}
+        onSave={() => {
+          setHasUnsavedChanges(true);
+          handleSave();
+        }}
+        onUpdateCompanyInfo={(info) => {
+          setCompanyInfo(info);
+          setHasUnsavedChanges(true);
+        }}
+        onUpdateCustomerInfo={(info) => {
+          setCustomerInfo(info);
+          setHasUnsavedChanges(true);
+        }}
+        onUpdateCalculationSettings={(settings) => {
+          setCalculationSettings(settings);
+          setHasUnsavedChanges(true);
+        }}
       />
 
       <DuplicateCalculatorModal
