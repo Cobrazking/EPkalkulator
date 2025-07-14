@@ -132,7 +132,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           <div className="text-blue-400 text-sm">
                             <p className="font-medium mb-1">Firma og logo</p>
                             <p className="text-blue-400/80 text-sm">
-                              Firma og logo hentes fra globale innstillinger. Endre disse i hovedinnstillingene.
+                              Firma hentes fra globale innstillinger. Du kan overstyre logo for denne kalkylen.
                             </p>
                           </div>
                         </div>
@@ -150,17 +150,54 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="mb-4">
                         <label className="input-label">Firmalogo</label>
                         <div className="mt-2 flex items-center gap-4">
-                          {companyInfo.logo && (
+                          {companyInfo.logo ? (
                             <div className="relative">
                               <img 
                                 src={companyInfo.logo} 
-                                alt="Firmalogo" 
-                                className="h-16 w-auto object-contain rounded opacity-75"
+                                alt="Firmalogo"
+                                className="h-16 w-auto object-contain rounded border border-border bg-background-darker/50"
                               />
+                              <button
+                                onClick={handleRemoveLogo}
+                                disabled={isSaving}
+                                className="absolute -top-2 -right-2 p-1 bg-background-lighter rounded-full border border-border hover:bg-background text-red-400 disabled:opacity-50"
+                                title="Fjern logo"
+                              >
+                                <X size={14} />
+                              </button>
                             </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-32 h-20 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleLogoUpload}
+                                className="hidden"
+                                disabled={isSaving}
+                              />
+                              <Upload size={20} className="mb-2 text-text-muted" />
+                              <span className="text-text-muted text-xs text-center">Last opp logo</span>
+                            </label>
                           )}
-                          <div className="text-sm text-text-muted">
-                            Logo kan endres i hovedinnstillingene.
+                          <div className="flex-1">
+                            <p className="text-sm text-text-primary font-medium mb-1">Kalkyle-spesifikk logo</p>
+                            <p className="text-xs text-text-muted">
+                              Du kan overstyre den globale logoen for denne kalkylen. Anbefalt størrelse: 200x200px eller større.
+                              Maksimal filstørrelse: 5MB.
+                            </p>
+                            {!companyInfo.logo && (
+                              <label className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-background-darker/50 hover:bg-background-darker transition-colors rounded-lg cursor-pointer text-sm text-text-muted hover:text-text-primary">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleLogoUpload}
+                                  className="hidden"
+                                  disabled={isSaving}
+                                />
+                                <Upload size={14} />
+                                Velg fil
+                              </label>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -171,7 +208,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           value={companyInfo.firma}
                           className="w-full"
                           disabled={true}
-                          title="Firma kan endres i hovedinnstillingene"
+                          title="Firmanavn kan kun endres i hovedinnstillingene"
                         />
                         <p className="text-xs text-text-muted mt-1">
                           Firmanavn kan endres i hovedinnstillingene
