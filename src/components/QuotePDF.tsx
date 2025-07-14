@@ -132,10 +132,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
+    marginTop: 30,
     fontSize: 8,
     color: '#666',
     textAlign: 'center',
@@ -264,9 +261,9 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
           </View>
         </View>
 
-        <View style={styles.footer} fixed>
+        <View style={styles.footer}>
           <Text>
-            Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
+            Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra 14. juli 2025.
           </Text>
         </View>
       </Page>
