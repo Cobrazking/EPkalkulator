@@ -304,13 +304,13 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
               {/* Table */}
               <View style={styles.table}>
+               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
                 <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
                 <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
                 <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
                 <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
-                  </View>
-                </View>
+               </View>
 
                 {pageEntries.map((entry, index) => (
                   <View key={`${entry.id}-${index}`} style={styles.tableRow}>
