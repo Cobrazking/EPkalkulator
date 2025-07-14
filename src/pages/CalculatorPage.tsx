@@ -323,11 +323,7 @@ const CalculatorPage: React.FC = () => {
     try {
       setIsSaving(true);
       
-      // Preserve global company info settings (firma and logo)
-      // by only saving the calculator-specific settings
-      // Now we save the logo with the calculator if it's been customized
-      const calculatorCompanyInfo = { ...companyInfo };
-      
+      // Save all company info and customer info with the calculator
       const calculatorData = {
         organizationId: currentOrganization.id,
         projectId,
@@ -336,11 +332,12 @@ const CalculatorPage: React.FC = () => {
         entries: entries,
         summary: summary,
         settings: {
-          companyInfo: calculatorCompanyInfo,
-          customerInfo,
-          calculationSettings
+          companyInfo: companyInfo,
+          customerInfo: customerInfo,
+          calculationSettings: calculationSettings
         }
       };
+      
 
       if (calculatorId && calculator) {
         // Update existing calculator

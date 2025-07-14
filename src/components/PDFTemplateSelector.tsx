@@ -163,9 +163,9 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
                           <PDFDownloadLink
                             document={
                               <SelectedComponent 
-                                entries={entries} 
-                                companyInfo={companyInfo} 
-                                customerInfo={customerInfo} 
+                                entries={entries}
+                                companyInfo={companyInfo}
+                                customerInfo={customerInfo}
                               />
                             }
                             fileName={getFileName()}
@@ -219,9 +219,9 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
                         <PDFDownloadLink
                           document={
                             <SelectedComponent 
-                              entries={entries} 
-                              companyInfo={companyInfo} 
-                              customerInfo={customerInfo} 
+                              entries={entries}
+                              companyInfo={companyInfo}
+                              customerInfo={customerInfo}
                             />
                           }
                           fileName={getFileName()}
