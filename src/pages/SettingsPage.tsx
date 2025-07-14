@@ -419,7 +419,7 @@ const SettingsPage: React.FC = () => {
                 disabled={isSaving}
               />
               <p className="text-xs text-text-muted mt-1">
-                Dette navnet brukes på tilbud og andre dokumenter
+                Dette navnet brukes som standard på tilbud og andre dokumenter, men kan overstyres per kalkyle
               </p>
             </div>
 
@@ -487,6 +487,8 @@ const SettingsPage: React.FC = () => {
                   <p className="text-blue-400 text-sm font-medium mb-1">Andre firmaopplysninger</p>
                   <p className="text-blue-400/80 text-sm">
                     Kontaktperson, e-post, telefon og referansenummer kan redigeres direkte i kalkylen under innstillinger.
+                   <br /><br />
+                   <strong>Merk:</strong> Firmanavn og logo kan overstyres i hver enkelt kalkyle.
                     Dette gir deg fleksibilitet til å tilpasse informasjonen for hver kalkyle.
                   </p>
                 </div>

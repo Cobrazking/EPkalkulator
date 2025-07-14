@@ -126,8 +126,8 @@ const CalculatorPage: React.FC = () => {
                     // If we have a calculator, merge global settings with calculator-specific settings
                     if (calculatorId && calculator && calculator.settings?.companyInfo) {
                       setCompanyInfo({
-                        // Global settings (always override)
-                        firma: globalCompanyInfo.firma, // Always use global firma
+                        // Use calculator-specific firma if available, otherwise use global
+                        firma: calculator.settings.companyInfo.firma || globalCompanyInfo.firma,
                         logo: calculator.settings.companyInfo.logo || globalCompanyInfo.logo, // Use calculator logo if available, otherwise global
                         // Calculator-specific settings
                         navn: calculator.settings.companyInfo.navn || '',
@@ -139,7 +139,7 @@ const CalculatorPage: React.FC = () => {
                     } else {
                       // For new calculators, use global settings as defaults
                       setCompanyInfo({
-                        firma: globalCompanyInfo.firma,
+                        firma: globalCompanyInfo.firma, // Default to global, but can be overridden
                         logo: globalCompanyInfo.logo, // For new calculators, start with global logo
                         navn: '',
                         epost: currentOrganization.email || '',
@@ -185,7 +185,7 @@ const CalculatorPage: React.FC = () => {
                     } else {
                       // For new calculators with no global settings
                       setCompanyInfo({
-                        firma: defaultCompanyInfo.firma,
+                        firma: defaultCompanyInfo.firma, // Default to organization name, but can be overridden
                         logo: defaultCompanyInfo.logo,
                         navn: '',
                         epost: currentOrganization.email || '',

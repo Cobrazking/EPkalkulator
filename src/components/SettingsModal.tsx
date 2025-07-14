@@ -132,12 +132,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                         <div className="flex items-start gap-3">
                           <div className="text-blue-400 text-sm">
-                            <p className="font-medium mb-1">Firma og logo</p>
+                            <p className="font-medium mb-1">Firma og logo (kan overstyres)</p>
                             <p className="text-blue-400/80 text-sm">
-                              Firma hentes fra globale innstillinger. Du kan overstyre logo for denne kalkylen.
+                              Firma og logo kan overstyres for denne kalkylen.
                             </p>
                           </div>
                         </div>
+                      </div>
+                      <div>
+                        <label className="input-label">Firmanavn</label>
+                        <input
+                          type="text"
+                          value={companyInfo.firma}
+                          onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, firma: e.target.value })}
+                          className="w-full"
+                          placeholder="Firmanavn"
+                        />
+                        <p className="text-xs text-text-muted mt-1">
+                          Overstyrer globalt firmanavn for denne kalkylen
+                        </p>
                       </div>
                       <div>
                         <label className="input-label">Tilbudstittel</label>
@@ -202,19 +215,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             )}
                           </div>
                         </div>
-                      </div>
-                      <div>
-                        <label className="input-label">Firma</label>
-                        <input
-                          type="text"
-                          value={companyInfo.firma}
-                          className="w-full"
-                          disabled={true}
-                          title="Firmanavn kan kun endres i hovedinnstillingene"
-                        />
-                        <p className="text-xs text-text-muted mt-1">
-                          Firmanavn kan endres i hovedinnstillingene
-                        </p>
                       </div>
                       <div>
                         <label className="input-label">Navn</label>
