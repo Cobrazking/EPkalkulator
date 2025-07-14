@@ -246,8 +246,11 @@ const CalculatorPage: React.FC = () => {
 
   useEffect(() => {
     const newSummary = calculateSummary(entries);
-    setSummary(newSummary);
-    if (entries.length > 0) {
+    
+    // Only update summary and set hasUnsavedChanges if the summary actually changed
+    const summaryChanged = JSON.stringify(newSummary) !== JSON.stringify(summary);
+    if (summaryChanged) {
+      setSummary(newSummary);
       setHasUnsavedChanges(true);
     }
   }, [entries]);
@@ -349,7 +352,11 @@ const CalculatorPage: React.FC = () => {
         }
         return entry;
       });
-      setHasUnsavedChanges(true);
+      // Only set hasUnsavedChanges if the entries actually changed
+      const entriesChanged = JSON.stringify(updated) !== JSON.stringify(prevEntries);
+      if (entriesChanged) {
+        setHasUnsavedChanges(true);
+      }
       return updated;
     });
   };
