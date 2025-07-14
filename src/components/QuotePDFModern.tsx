@@ -361,12 +361,12 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
               {/* Total Section - only on last page */}
               {pageIndex === entriesByPage.length - 1 && (
-                    <Text style={[styles.postCell, styles.summaryCell]}>TOTAL</Text>
-                    <Text style={[styles.descriptionCell, styles.summaryCell]}></Text>
-                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                    <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
-                  </Text>
+                <View style={styles.totalSection}>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Totalt ekskl. mva</Text>
+                    <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
+                  </View>
+                </View>
                 </View>
               )}
             </View>
