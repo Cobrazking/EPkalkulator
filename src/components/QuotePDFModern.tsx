@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f9fafb',
     padding: 30,
     marginBottom: 0,
     borderBottom: '1px solid #e2e8f0',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 10,
     paddingBottom: 10,
-    backgroundColor: 'inherit',
+    backgroundColor: 'inherit', // Inherit from parent to maintain row color
   },
   postCell: {
     width: '12%',
@@ -129,12 +129,9 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 9,
     color: '#64748b',
-    fontStyle: 'italic',
-    paddingTop: 4,
-    backgroundColor: '#f8fafc',
-    padding: 6,
-    borderRadius: 4,
-    marginTop: 4,
+    fontStyle: 'italic', 
+    paddingTop: 2,
+    // Remove the background color and border that was causing the issue
   },
   totalSection: {
     marginTop: 20,
@@ -243,9 +240,10 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
   const totalPages = Math.ceil(validEntries.length / ENTRIES_PER_PAGE);
   
   // Split entries into pages
-  const entriesByPage = Array.from({ length: totalPages }, (_, i) => 
-    validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE)
-  );
+  const entriesByPage = [];
+  for (let i = 0; i < totalPages; i++) {
+    entriesByPage.push(validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE));
+  }
 
   return (
     <Document>
@@ -272,7 +270,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
           {/* Content Section */}
           <View style={styles.contentSection}>
             {/* Info Section - only on first page */}
-            {pageIndex === 0 && (
+            {pageIndex === 0 ? (
               <View style={styles.infoSection}>
                 <View style={styles.infoBlock}>
                   <Text style={styles.infoTitle}>Fra</Text>
@@ -293,7 +291,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   <Text style={styles.infoText}>{customerInfo.tlf}</Text>
                 </View>
               </View>
-            )}
+            ) : null}
 
             {/* Page number indicator for multi-page documents */}
             {totalPages > 1 && (
@@ -332,7 +330,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
               ))}
 
               {/* Summary Row - only on last page */}
-              {pageIndex === entriesByPage.length - 1 && (
+              {pageIndex === entriesByPage.length - 1 ? (
                 <View style={[styles.tableRow, styles.summaryRow]}>
                   <View style={styles.tableRowMain}>
                     <View style={styles.postCell}>
@@ -346,11 +344,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                     <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
                   </View>
                 </View>
-              )}
+              ) : null}
             </View>
 
             {/* Total Section - only on last page */}
-            {pageIndex === entriesByPage.length - 1 && (
+            {pageIndex === entriesByPage.length - 1 ? (
               <View style={styles.totalSection} wrap={false}>
                 <View style={styles.totalRow}>
                   <Text style={styles.totalLabel}>Subtotal eks. mva</Text>
@@ -365,17 +363,20 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   <Text style={styles.grandTotalAmount}>{formatCurrency(totalSum * 1.25)}</Text>
                 </View>
               </View>
-            )}
+            ) : null}
 
             {/* Footer - only on last page */}
-            {pageIndex === entriesByPage.length - 1 && (
+            {pageIndex === entriesByPage.length - 1 ? (
               <View style={styles.footer} fixed={false}>
                 <Text style={styles.footerText}>
                   Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
                 </Text>
               </View>
-            )}
+            ) : null}
           </View>
+          
+          {/* Only add page break if not the last page */}
+          {pageIndex < entriesByPage.length - 1 ? <Text break /> : null}
         </Page>
       ))}
     </Document>
