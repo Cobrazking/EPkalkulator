@@ -199,10 +199,10 @@ const CalculatorPage: React.FC = () => {
                   // Update customer info from the project's customer
                   if (customer) {
                     setCustomerInfo({
-                      kunde: customer.name,
-                      adresse: customer.address,
-                      epost: customer.email,
-                      tlf: customer.phone
+                      kunde: customer.name || '',
+                      adresse: customer.address || '',
+                      epost: customer.email || '',
+                      tlf: customer.phone || ''
                     });
                   }
                   
@@ -228,7 +228,12 @@ const CalculatorPage: React.FC = () => {
         
         // Use saved customer info if available, otherwise use project's customer info
         if (calculator.settings?.customerInfo) {
-          setCustomerInfo(calculator.settings.customerInfo);
+          setCustomerInfo({
+            kunde: calculator.settings.customerInfo.kunde || customer?.name || '',
+            adresse: calculator.settings.customerInfo.adresse || customer?.address || '',
+            epost: calculator.settings.customerInfo.epost || customer?.email || '',
+            tlf: calculator.settings.customerInfo.tlf || customer?.phone || ''
+          });
         } else if (customer) {
           setCustomerInfo({
             kunde: customer.name,
@@ -335,7 +340,12 @@ const CalculatorPage: React.FC = () => {
         summary: summary,
         settings: {
           companyInfo: companyInfo,
-          customerInfo: customerInfo, // Ensure customer info is saved
+          customerInfo: {
+            kunde: customerInfo.kunde || '',
+            adresse: customerInfo.adresse || '',
+            epost: customerInfo.epost || '',
+            tlf: customerInfo.tlf || ''
+          },
           calculationSettings: calculationSettings
         }
       };

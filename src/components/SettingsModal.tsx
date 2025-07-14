@@ -274,7 +274,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="text"
                           value={customerInfo.kunde}
-                          onChange={(e) => onUpdateCustomerInfo({ ...customerInfo, kunde: e.target.value })}
+                          onChange={(e) => {
+                            const newCustomerInfo = { ...customerInfo, kunde: e.target.value };
+                            onUpdateCustomerInfo(newCustomerInfo);
+                          }}
                           className="w-full"
                         />
                       </div>
@@ -283,7 +286,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="text"
                           value={customerInfo.adresse}
-                          onChange={(e) => onUpdateCustomerInfo({ ...customerInfo, adresse: e.target.value })}
+                          onChange={(e) => {
+                            const newCustomerInfo = { ...customerInfo, adresse: e.target.value };
+                            onUpdateCustomerInfo(newCustomerInfo);
+                          }}
                           className="w-full"
                         />
                       </div>
@@ -292,7 +298,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="email"
                           value={customerInfo.epost}
-                          onChange={(e) => onUpdateCustomerInfo({ ...customerInfo, epost: e.target.value })}
+                          onChange={(e) => {
+                            const newCustomerInfo = { ...customerInfo, epost: e.target.value };
+                            onUpdateCustomerInfo(newCustomerInfo);
+                          }}
                           className="w-full"
                         />
                       </div>
@@ -301,7 +310,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="tel"
                           value={customerInfo.tlf}
-                          onChange={(e) => onUpdateCustomerInfo({ ...customerInfo, tlf: e.target.value })}
+                          onChange={(e) => {
+                            const newCustomerInfo = { ...customerInfo, tlf: e.target.value };
+                            onUpdateCustomerInfo(newCustomerInfo);
+                          }}
                           className="w-full"
                         />
                       </div>
