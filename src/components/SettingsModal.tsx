@@ -257,8 +257,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   {/* Customer Information */}
                   <div>
-                    <h3 className="text-sm font-medium text-text-secondary mb-4">Kundeopplysninger</h3>
+                    <h3 className="text-sm font-medium text-text-secondary mb-4">Kundeopplysninger for tilbud</h3>
                     <div className="space-y-3">
+                      <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="text-blue-400 text-sm">
+                            <p className="font-medium mb-1">Kundeopplysninger for denne kalkylen</p>
+                            <p className="text-blue-400/80 text-sm">
+                              Disse opplysningene brukes på tilbud og andre dokumenter generert fra denne kalkylen.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                       <div>
                         <label className="input-label">Kunde</label>
                         <input

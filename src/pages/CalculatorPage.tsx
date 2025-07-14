@@ -226,8 +226,10 @@ const CalculatorPage: React.FC = () => {
         // For existing calculators, use the saved entries and settings
         setEntries(calculator.entries || []);
         
-        // Update customer info from the project's customer
-        if (customer) {
+        // Use saved customer info if available, otherwise use project's customer info
+        if (calculator.settings?.customerInfo) {
+          setCustomerInfo(calculator.settings.customerInfo);
+        } else if (customer) {
           setCustomerInfo({
             kunde: customer.name,
             adresse: customer.address,
@@ -333,7 +335,7 @@ const CalculatorPage: React.FC = () => {
         summary: summary,
         settings: {
           companyInfo: companyInfo,
-          customerInfo: customerInfo,
+          customerInfo: customerInfo, // Ensure customer info is saved
           calculationSettings: calculationSettings
         }
       };
@@ -689,6 +691,7 @@ const CalculatorPage: React.FC = () => {
         <button
           onClick={() => setIsSettingsOpen(true)}
           className="btn-secondary flex items-center gap-2"
+          title="Rediger firma- og kundeopplysninger"
         >
           <Settings size={16} />
           <span>Innstillinger</span>
