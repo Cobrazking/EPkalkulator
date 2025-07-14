@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottom: '1px solid #e2e8f0',
   },
-    justifyContent: 'space-between',
   tableHeaderCell: {
     fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
@@ -106,27 +105,26 @@ const styles = StyleSheet.create({
   tableRowMain: {
     flexDirection: 'row',
     padding: 10,
-    justifyContent: 'space-between',
   },
   tableRowAlt: {
     backgroundColor: '#f8fafc', 
   },
   tableRowComment: {
-    marginLeft: 20,
-    marginRight: 10,
-    marginBottom: 5,
+    paddingLeft: 20,
+    paddingRight: 10,
+    paddingBottom: 5,
   },
   postCell: {
     width: '12%',
     paddingRight: 4,
   },
   descriptionCell: {
-    width: '40%',
+    width: '38%',
     paddingRight: 4,
     flexGrow: 1,
   },
   numberCell: {
-    width: '10%',
+    width: '15%',
     textAlign: 'right',
     fontSize: 10,
     paddingLeft: 4,
@@ -306,15 +304,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
               {/* Table */}
               <View style={styles.table}>
-                <View style={styles.tableHeader}>
-                  <View style={{ flexDirection: 'row', flex: 1 }}>
-                    <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
-                    <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
-                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
-                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
+                <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
+                <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
+                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
+                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
+                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
                   </View>
                 </View>
 
@@ -367,27 +361,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
               {/* Total Section - only on last page */}
               {pageIndex === entriesByPage.length - 1 && (
-                <View style={styles.totalSection} wrap={false}>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>Subtotal eks. mva</Text>
-                    <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
-                  </View>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>MVA 25%</Text>
-                    <Text style={styles.totalAmount}>{formatCurrency(totalSum * 0.25)}</Text>
-                  </View>
-                  <View style={[styles.totalRow, styles.grandTotalRow]}>
-                    <Text style={styles.grandTotalLabel}>Total sum inkl. mva</Text>
-                    <Text style={styles.grandTotalAmount}>{formatCurrency(totalSum * 1.25)}</Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Footer - only on last page */}
-              {pageIndex === entriesByPage.length - 1 && (
-                <View style={styles.footer} fixed={false}>
-                  <Text style={styles.footerText}>
-                    Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
+                    <Text style={[styles.postCell, styles.summaryCell]}>TOTAL</Text>
+                    <Text style={[styles.descriptionCell, styles.summaryCell]}></Text>
+                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                    <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
                   </Text>
                 </View>
               )}
