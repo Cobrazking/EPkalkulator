@@ -5,19 +5,19 @@ import { formatNumber } from '../utils/calculations';
 
 // Register fonts
 Font.register({
-  family: 'Helvetica-Light',
+  family: 'Open Sans',
   src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UN_r8OUuhpKKSTjw.woff2'
 });
 
 Font.register({
-  family: 'Helvetica-Bold',
+  family: 'Open Sans-Bold',
   src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UNirkOUuhpKKSTjw.woff2'
 });
 
 const styles = StyleSheet.create({
   page: {
     padding: 0,
-    fontFamily: 'Helvetica-Light',
+    fontFamily: 'Open Sans',
     fontSize: 10,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     color: '#ffffff',
     marginBottom: 8,
   },
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 14,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     marginBottom: 12,
     color: '#1e293b',
     textTransform: 'uppercase',
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   tableHeaderCell: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     color: '#ffffff',
     fontSize: 9,
     textTransform: 'uppercase',
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     color: '#1e293b',
     minWidth: 80,
     textAlign: 'right',
@@ -185,12 +185,12 @@ const styles = StyleSheet.create({
   },
   grandTotalLabel: {
     fontSize: 14,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     color: '#1e293b',
   },
   grandTotalAmount: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
     color: '#3b82f6',
     minWidth: 80,
     textAlign: 'right',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   accent: {
     color: '#3b82f6',
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
   },
   summaryRow: {
     backgroundColor: '#3b82f6',
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   summaryCell: {
     color: '#ffffff',
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Open Sans-Bold',
   },
 });
 
@@ -309,6 +309,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
                   <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
                   <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold', color: '#3b82f6' }]}>{formatCurrency(entry.sum)}</Text>
+                  <Text style={[styles.numberCell, { fontFamily: 'Open Sans-Bold', color: '#3b82f6' }]}>{formatCurrency(entry.sum)}</Text>
                 </View>
                 {entry.kommentar && (
                   <View style={[styles.tableRowComment, index % 2 === 1 && styles.tableRowAlt]}>
