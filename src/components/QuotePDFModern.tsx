@@ -1,7 +1,18 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
 import { formatNumber } from '../utils/calculations';
+
+// Register fonts
+Font.register({
+  family: 'Helvetica-Light',
+  src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UN_r8OUuhpKKSTjw.woff2'
+});
+
+Font.register({
+  family: 'Helvetica-Bold',
+  src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UNirkOUuhpKKSTjw.woff2'
+});
 
 const styles = StyleSheet.create({
   page: {
