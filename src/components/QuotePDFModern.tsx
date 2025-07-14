@@ -8,11 +8,11 @@ Font.register({
   family: 'Open Sans',
   fonts: [
     {
-      src: 'https://fonts.gstatic.com/s/opensans/v18/mem8YaGs126MiZpBA-UFVZ0bf8pkAg.woff2',
+      src: 'https://cdn.jsdelivr.net/gh/google/fonts@latest/ofl/opensans/OpenSans-Regular.woff2',
       fontWeight: 400
     },
     {
-      src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UNirkOUuhpKKSTjw.woff2',
+      src: 'https://cdn.jsdelivr.net/gh/google/fonts@latest/ofl/opensans/OpenSans-Bold.woff2',
       fontWeight: 700
     }
   ]
