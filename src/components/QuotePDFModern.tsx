@@ -89,10 +89,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottom: '1px solid #e2e8f0',
   },
+    justifyContent: 'space-between',
   tableHeaderCell: {
     fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
     fontSize: 9,
+  },
+  tableHeaderRight: {
+    textAlign: 'right',
   },
   tableRow: {
     borderBottomWidth: 1,
@@ -102,6 +106,7 @@ const styles = StyleSheet.create({
   tableRowMain: {
     flexDirection: 'row',
     padding: 10,
+    justifyContent: 'space-between',
   },
   tableRowAlt: {
     backgroundColor: '#f8fafc', 
@@ -113,16 +118,19 @@ const styles = StyleSheet.create({
   },
   postCell: {
     width: '12%',
-    paddingRight: 8,
+    paddingRight: 4,
   },
   descriptionCell: {
-    width: '35%',
-    paddingRight: 8,
+    width: '40%',
+    paddingRight: 4,
+    flexGrow: 1,
   },
   numberCell: {
-    width: '12%',
+    width: '10%',
     textAlign: 'right',
     fontSize: 10,
+    paddingLeft: 4,
+    paddingRight: 4,
   },
   commentText: {
     fontSize: 9,
@@ -299,25 +307,33 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
               {/* Table */}
               <View style={styles.table}>
                 <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
-                  <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
-                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
-                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
-                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
+                  <View style={{ flexDirection: 'row', flex: 1 }}>
+                    <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
+                    <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
+                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
+                    <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
+                  </View>
                 </View>
 
                 {pageEntries.map((entry, index) => (
                   <View key={`${entry.id}-${index}`} style={styles.tableRow}>
                     <View style={[styles.tableRowMain, index % 2 === 1 && styles.tableRowAlt]}>
-                      <View style={styles.postCell}>
-                        <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
+                      <View style={{ flexDirection: 'row', flex: 1 }}>
+                        <View style={styles.postCell}>
+                          <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
+                        </View>
+                        <View style={styles.descriptionCell}>
+                          <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
+                        </View>
                       </View>
-                      <View style={styles.descriptionCell}>
-                        <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
+                        <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
+                        <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
                       </View>
-                      <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
-                      <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
-                      <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
                     </View>
                     {entry.kommentar && (
                       <View style={[styles.tableRowComment, index % 2 === 1 ? { backgroundColor: '#f8fafc' } : {}]}>
@@ -331,15 +347,19 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                 {pageIndex === entriesByPage.length - 1 && (
                   <View style={[styles.tableRow, styles.summaryRow]}>
                     <View style={styles.tableRowMain}>
-                      <View style={styles.postCell}>
-                        <Text style={styles.summaryCell}>TOTAL</Text>
+                      <View style={{ flexDirection: 'row', flex: 1 }}>
+                        <View style={styles.postCell}>
+                          <Text style={styles.summaryCell}>TOTAL</Text>
+                        </View>
+                        <View style={styles.descriptionCell}>
+                          <Text style={styles.summaryCell}></Text>
+                        </View>
                       </View>
-                      <View style={styles.descriptionCell}>
-                        <Text style={styles.summaryCell}></Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                        <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                        <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
                       </View>
-                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                      <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
                     </View>
                   </View>
                 )}
