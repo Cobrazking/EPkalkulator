@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy, Edit, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { supabase } from '../lib/supabase';
 
 import { useProject } from '../contexts/ProjectContext';
 import SummaryCard from '../components/SummaryCard';
