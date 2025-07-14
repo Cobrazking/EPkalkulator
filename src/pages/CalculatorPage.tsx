@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy, Edit } from 'lucide-react';
+import { ArrowLeft, Save, Download, Upload, FileSpreadsheet, FileText, Settings, Copy, Edit, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 import { useProject } from '../contexts/ProjectContext';
@@ -70,6 +70,7 @@ const CalculatorPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPDFSelectorOpen, setIsPDFSelectorOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [summary, setSummary] = useState<CalculationSummary>({
@@ -90,6 +91,7 @@ const CalculatorPage: React.FC = () => {
   // Initialize entries after settings are loaded and calculator is determined
   useEffect(() => {
     if (settingsLoaded) {
+      setHasUnsavedChanges(false);
       if (calculatorId && calculator) {
         // For existing calculators, use the saved entries
         setEntries(calculator.entries || []);
@@ -243,48 +245,65 @@ const CalculatorPage: React.FC = () => {
   }, [customer]);
 
   useEffect(() => {
-    setSummary(calculateSummary(entries));
+    const newSummary = calculateSummary(entries);
+    setSummary(newSummary);
+    if (entries.length > 0) {
+      setHasUnsavedChanges(true);
+    }
   }, [entries]);
 
-  // Auto-save calculator with debouncing
+  // Add warning when navigating away with unsaved changes
   useEffect(() => {
-    if (projectId && entries.length > 0 && currentOrganization && !state.loading && settingsLoaded) {
-      const saveTimer = setTimeout(async () => {
-        try {
-          setIsSaving(true);
-          
-          const calculatorData = {
-            organizationId: currentOrganization.id,
-            projectId,
-            name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
-            description: calculator?.description,
-            entries,
-            summary
-          };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        const message = 'Du har ulagrede endringer. Er du sikker på at du vil forlate siden?';
+        e.returnValue = message;
+        return message;
+      }
+    };
 
-          if (calculatorId && calculator) {
-            // Update existing calculator
-            await updateCalculator({
-              ...calculator,
-              ...calculatorData
-            });
-          } else if (!calculatorId) {
-            // Create new calculator and redirect
-            const newCalculatorId = await addCalculator(calculatorData);
-            navigate(`/projects/${projectId}/calculator/${newCalculatorId}`, { replace: true });
-          }
-          
-          setLastSaved(new Date());
-        } catch (error) {
-          console.error('Failed to save calculator:', error);
-        } finally {
-          setIsSaving(false);
-        }
-      }, 2000);
-
-      return () => clearTimeout(saveTimer);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     }
-  }, [entries, summary, projectId, calculatorId, calculator, addCalculator, updateCalculator, currentOrganization, state.loading, navigate, settingsLoaded]);
+  }, [hasUnsavedChanges]);
+
+  // Manual save function
+  const handleSave = async () => {
+    if (!projectId || !currentOrganization || !settingsLoaded) return;
+    
+    try {
+      setIsSaving(true);
+      
+      const calculatorData = {
+        organizationId: currentOrganization.id,
+        projectId,
+        name: calculator?.name || `Kalkyle ${new Date().toLocaleDateString('nb-NO')}`,
+        description: calculator?.description,
+        entries,
+        summary
+      };
+
+      if (calculatorId && calculator) {
+        // Update existing calculator
+        await updateCalculator({
+          ...calculator,
+          ...calculatorData
+        });
+      } else if (!calculatorId) {
+        // Create new calculator and redirect
+        const newCalculatorId = await addCalculator(calculatorData);
+        navigate(`/projects/${projectId}/calculator/${newCalculatorId}`, { replace: true });
+      }
+      
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to save calculator:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (state.loading || !settingsLoaded) {
     return (
@@ -330,12 +349,14 @@ const CalculatorPage: React.FC = () => {
         }
         return entry;
       });
+      setHasUnsavedChanges(true);
       return updated;
     });
   };
 
   const handleDeleteEntry = (id: string) => {
     setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+    setHasUnsavedChanges(true);
   };
 
   const handleAddEntry = () => {
@@ -356,6 +377,7 @@ const CalculatorPage: React.FC = () => {
     
     const calculatedEntry = calculateRow(newEntry);
     setEntries(prevEntries => [...prevEntries, calculatedEntry]);
+    setHasUnsavedChanges(true);
   };
 
   const handleDuplicateEntry = (entry: CalculationEntry) => {
@@ -372,6 +394,7 @@ const CalculatorPage: React.FC = () => {
       newEntries.splice(index + 1, 0, duplicatedEntry);
       return newEntries;
     });
+    setHasUnsavedChanges(true);
   };
 
   const handleReorderEntries = (startIndex: number, endIndex: number) => {
@@ -392,6 +415,7 @@ const CalculatorPage: React.FC = () => {
       
       return newEntries;
     });
+    setHasUnsavedChanges(true);
   };
 
   const handleDuplicateCalculator = () => {
@@ -516,6 +540,12 @@ const CalculatorPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-text-primary">
               {calculator?.name || 'Ny kalkyle'}
+              {hasUnsavedChanges && (
+                <span className="ml-2 text-sm text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/30 inline-flex items-center gap-1">
+                  <AlertTriangle size={12} />
+                  Ulagrede endringer
+                </span>
+              )}
             </h1>
             {isSaving && (
               <div className="flex items-center gap-2 text-sm text-text-muted">
@@ -523,7 +553,7 @@ const CalculatorPage: React.FC = () => {
                 <span>Lagrer...</span>
               </div>
             )}
-            {lastSaved && !isSaving && (
+            {lastSaved && !isSaving && !hasUnsavedChanges && (
               <div className="text-sm text-text-muted">
                 Sist lagret: {lastSaved.toLocaleTimeString('nb-NO')}
               </div>
@@ -538,8 +568,18 @@ const CalculatorPage: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-wrap gap-2"
+        className="flex flex-wrap gap-2 items-center"
       >
+        <button 
+          onClick={handleSave}
+          className="btn-primary flex items-center gap-2"
+          title="Lagre kalkyle"
+          disabled={isSaving || !hasUnsavedChanges}
+        >
+          <Save size={16} />
+          <span>{isSaving ? 'Lagrer...' : 'Lagre'}</span>
+        </button>
+        
         <button 
           onClick={handleImport}
           className="btn-secondary flex items-center gap-2"
