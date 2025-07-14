@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   header: {
-    marginBottom: 30,
+    marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -40,10 +40,10 @@ const styles = StyleSheet.create({
   infoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   infoBlock: {
-    maxWidth: '40%',
+    maxWidth: '45%',
   },
   infoTitle: {
     fontSize: 12,
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   },
   table: {
     marginBottom: 30,
+    width: '100%',
   },
   tableHeader: {
     flexDirection: 'row',
@@ -72,9 +73,10 @@ const styles = StyleSheet.create({
     color: '#111',
   },
   tableRow: {
-    marginBottom: 12,
+    marginBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    breakInside: 'avoid',
   },
   tableRowMain: {
     flexDirection: 'row',
@@ -89,18 +91,18 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   postCell: {
-    width: '15%',
+    width: '12%',
     paddingRight: 8,
     flexShrink: 0,
   },
   descriptionCell: {
-    width: '40%',
+    width: '38%',
     paddingRight: 8,
     flexShrink: 0,
     flexGrow: 1,
   },
   numberCell: {
-    width: '15%',
+    width: '12%',
     textAlign: 'right',
     flexShrink: 0,
   },
@@ -112,9 +114,8 @@ const styles = StyleSheet.create({
   },
   totalSection: {
     marginTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 20,
+    paddingTop: 10,
+    breakInside: 'avoid',
   },
   totalRow: {
     flexDirection: 'row',
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontWeight: 'bold',
-    marginRight: 20,
+    marginRight: 10,
   },
   totalAmount: {
     fontWeight: 'bold',
@@ -132,15 +133,23 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 40,
-    left: 40,
-    right: 40,
+    bottom: 30,
+    left: 30,
+    right: 30,
     fontSize: 8,
     color: '#666',
     textAlign: 'center',
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+  },
+  text: {
+    fontSize: 10,
+    lineHeight: 1.4,
+  },
+  textWrap: {
+    maxWidth: '100%',
+    wordBreak: 'break-word',
   },
   text: {
     fontSize: 10,
@@ -240,7 +249,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
           ))}
         </View>
 
-        <View style={styles.totalSection}>
+        <View style={styles.totalSection} wrap={false}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total sum eks. mva</Text>
             <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
@@ -255,7 +264,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
           </View>
         </View>
 
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed>
           <Text>
             Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
           </Text>

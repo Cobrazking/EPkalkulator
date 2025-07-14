@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   table: {
     marginBottom: 30,
-    borderRadius: 8,
+    borderRadius: 6,
     overflow: 'hidden',
     border: '1px solid #e2e8f0',
   },
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   tableRow: {
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
+    breakInside: 'avoid',
   },
   tableRowMain: {
     flexDirection: 'row',
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 8,
     border: '1px solid #e2e8f0',
+    breakInside: 'avoid',
   },
   totalRow: {
     flexDirection: 'row',
@@ -182,8 +184,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     backgroundColor: '#1e293b',
-    padding: 20,
+    padding: 15,
     marginTop: 40,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   footerText: {
     fontSize: 10,
@@ -198,6 +204,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     backgroundColor: '#1e293b',
     color: '#ffffff',
+    breakInside: 'avoid',
   },
   summaryCell: {
     color: '#ffffff',
@@ -317,7 +324,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
           </View>
 
           {/* Total Section */}
-          <View style={styles.totalSection}>
+          <View style={styles.totalSection} wrap={false}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal eks. mva</Text>
               <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
@@ -334,7 +341,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
             Tilbudet er gyldig i 30 dager fra {currentDate}. Alle priser er oppgitt i NOK inkludert merverdiavgift.
             {'\n'}Takk for at du vurderer våre tjenester. Vi ser frem til å høre fra deg.
