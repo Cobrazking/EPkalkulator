@@ -6,14 +6,14 @@ import { formatNumber } from '../utils/calculations';
 const styles = StyleSheet.create({
   page: {
     padding: 0,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Helvetica-Light',
     fontSize: 10,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#2563eb',
-    padding: 40,
+    backgroundColor: '#1e293b',
+    padding: 30,
     marginBottom: 0,
   },
   headerContent: {
@@ -35,13 +35,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#e2e8f0',
+    color: '#cbd5e1',
     marginBottom: 4,
   },
   date: {
@@ -50,23 +50,25 @@ const styles = StyleSheet.create({
   },
   contentSection: {
     padding: 40,
+    paddingTop: 30,
   },
   infoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 30,
     gap: 40,
   },
   infoBlock: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 8,
-    borderLeft: '4px solid #2563eb',
+    border: '1px solid #e2e8f0',
+    borderLeft: '3px solid #3b82f6',
   },
   infoTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 12,
     color: '#1e293b',
     textTransform: 'uppercase',
@@ -81,16 +83,16 @@ const styles = StyleSheet.create({
   table: {
     marginBottom: 30,
     borderRadius: 6,
-    overflow: 'hidden',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #e5e7eb',
+    overflow: 'hidden'
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#1e293b',
+    backgroundColor: '#3b82f6',
     padding: 12,
   },
   tableHeaderCell: {
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     fontSize: 9,
     textTransform: 'uppercase',
@@ -98,7 +100,7 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: '#f1f5f9',
     breakInside: 'avoid',
   },
   tableRowMain: {
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   tableRowAlt: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f8fafc', 
   },
   tableRowComment: {
     paddingLeft: 24,
@@ -130,17 +132,17 @@ const styles = StyleSheet.create({
   },
   commentText: {
     fontSize: 9,
-    color: '#64748b',
+    color: '#475569',
     fontStyle: 'italic',
     paddingTop: 4,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
     padding: 8,
     borderRadius: 4,
     marginTop: 4,
   },
   totalSection: {
     marginTop: 30,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 8,
     border: '1px solid #e2e8f0',
@@ -155,57 +157,58 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 12,
-    color: '#475569',
+    color: '#64748b',
   },
   totalAmount: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
     minWidth: 80,
     textAlign: 'right',
   },
   grandTotalRow: {
     borderTopWidth: 2,
-    borderTopColor: '#2563eb',
+    borderTopColor: '#3b82f6',
     paddingTop: 12,
     marginTop: 8,
   },
   grandTotalLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#1e293b',
   },
   grandTotalAmount: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2563eb',
+    fontFamily: 'Helvetica-Bold',
+    color: '#3b82f6',
     minWidth: 80,
     textAlign: 'right',
   },
   footer: {
     marginTop: 40,
     padding: 20,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#f1f5f9',
     borderRadius: 8,
+    border: '1px solid #e2e8f0',
   },
   footerText: {
     fontSize: 10,
-    color: '#cbd5e1',
+    color: '#64748b',
     textAlign: 'center',
     lineHeight: 1.4,
   },
   accent: {
-    color: '#2563eb',
-    fontWeight: 'bold',
+    color: '#3b82f6',
+    fontFamily: 'Helvetica-Bold',
   },
   summaryRow: {
-    backgroundColor: '#1e293b',
+    backgroundColor: '#3b82f6',
     color: '#ffffff',
     breakInside: 'avoid',
   },
   summaryCell: {
     color: '#ffffff',
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
   },
 });
 
@@ -290,11 +293,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                     <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
                   </View>
                   <View style={styles.descriptionCell}>
-                    <Text style={{ fontSize: 10, color: '#1e293b', fontWeight: 'medium' }}>{entry.beskrivelse || '-'}</Text>
+                    <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
                   </View>
                   <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
                   <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
-                  <Text style={[styles.numberCell, { fontWeight: 'bold', color: '#2563eb' }]}>{formatCurrency(entry.sum)}</Text>
+                  <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold', color: '#3b82f6' }]}>{formatCurrency(entry.sum)}</Text>
                 </View>
                 {entry.kommentar && (
                   <View style={[styles.tableRowComment, index % 2 === 1 && styles.tableRowAlt]}>
@@ -338,10 +341,9 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
         </View>
 
         {/* Footer - only on last page */}
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed={false}>
           <Text style={styles.footerText}>
             Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra 14. juli 2025.
-            {'\n'}Takk for at du vurderer våre tjenester. Vi ser frem til å høre fra deg.
           </Text>
         </View>
       </Page>
