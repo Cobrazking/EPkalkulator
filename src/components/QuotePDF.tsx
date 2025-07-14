@@ -208,10 +208,10 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
 
           <View style={styles.infoBlock}>
             <Text style={styles.infoTitle}>Kunde</Text>
-            <Text style={styles.infoText}>{customerInfo.kunde}</Text>
-            <Text style={styles.infoText}>{customerInfo.adresse}</Text>
-            <Text style={styles.infoText}>{customerInfo.epost}</Text>
-            <Text style={styles.infoText}>{customerInfo.tlf}</Text>
+            <Text style={styles.infoText}>{customerInfo.kunde || ''}</Text>
+            {customerInfo.adresse && <Text style={styles.infoText}>{customerInfo.adresse}</Text>}
+            {customerInfo.epost && <Text style={styles.infoText}>{customerInfo.epost}</Text>}
+            {customerInfo.tlf && <Text style={styles.infoText}>{customerInfo.tlf}</Text>}
           </View>
         </View>
 
