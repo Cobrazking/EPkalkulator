@@ -350,6 +350,14 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                     <Text style={styles.totalLabel}>Totalt ekskl. mva</Text>
                     <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
                   </View>
+                  <View style={styles.totalRow}>
+                    <Text style={[styles.totalLabel, { fontSize: 9 }]}>MVA 25%</Text>
+                    <Text style={[styles.totalAmount, { fontSize: 9 }]}>{formatCurrency(totalSum * 0.25)}</Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={[styles.totalLabel, { fontSize: 9 }]}>Totalt inkl. mva</Text>
+                    <Text style={[styles.totalAmount, { fontSize: 9 }]}>{formatCurrency(totalSum * 1.25)}</Text>
+                  </View>
                 </View>
               )}
             </View>
