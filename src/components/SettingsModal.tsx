@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Save } from 'lucide-react';
 import { CompanyInfo, CustomerInfo, CalculationSettings } from '../types';
 
 interface SettingsModalProps {
@@ -13,6 +13,7 @@ interface SettingsModalProps {
   onUpdateCompanyInfo: (info: CompanyInfo) => void;
   onUpdateCustomerInfo: (info: CustomerInfo) => void;
   onUpdateCalculationSettings: (settings: CalculationSettings) => void;
+  onSave?: () => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -24,6 +25,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateCompanyInfo,
   onUpdateCustomerInfo,
   onUpdateCalculationSettings,
+  onSave,
 }) => {
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -258,10 +260,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-end gap-2">
+                  {onSave && (
+                    <button
+                      type="button"
+                      className="btn-primary flex items-center gap-2"
+                      onClick={() => {
+                        onSave();
+                        onClose();
+                      }}
+                    >
+                      <Save size={16} />
+                      Lagre
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="btn-secondary"
+                    className={onSave ? "btn-secondary" : "btn-primary"}
                     onClick={onClose}
                   >
                     Lukk

@@ -675,6 +675,7 @@ const CalculatorPage: React.FC = () => {
         companyInfo={companyInfo}
         customerInfo={customerInfo}
         calculationSettings={calculationSettings}
+        onSave={handleSave}
         onUpdateCompanyInfo={setCompanyInfo}
         onUpdateCustomerInfo={setCustomerInfo}
         onUpdateCalculationSettings={setCalculationSettings}
