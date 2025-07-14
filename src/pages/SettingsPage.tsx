@@ -614,9 +614,12 @@ const SettingsPage: React.FC = () => {
                   {currentUser && (
                     <div className="flex items-center gap-1">
                       <Shield size={12} />
-                      <span>
-                        {currentUser.role === 'admin' ? 'Administrator' : 
-                         currentUser.role === 'manager' ? 'Manager' : 'Bruker'}
+                          Kontaktperson, e-post, telefon og referansenummer kan redigeres direkte i kalkylen under innstillinger. 
+                        Logoen brukes på tilbud og andre dokumenter. Endringer her vil påvirke alle kalkyler. Anbefalt størrelse: 200x200px eller større.
+                        Dette navnet brukes på tilbud og andre dokumenter. Endringer her vil påvirke alle kalkyler.
+                        <p className="text-blue-400/80 text-sm mt-2">
+                          <strong>Merk:</strong> Firmanavn og logo definert her vil overstyre innstillingene i alle kalkyler.
+                        </p>
                       </span>
                     </div>
                   )}

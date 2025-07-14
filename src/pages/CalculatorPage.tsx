@@ -80,51 +80,142 @@ const CalculatorPage: React.FC = () => {
     bidrag: 0,
     totalKostprisTimer: 0
   });
-
-  // Load user-specific settings
+  
+  // Load user-specific global settings
   useEffect(() => {
-    if (currentOrganization && !settingsLoaded && calculatorId && calculator) {
-      // Load settings from the calculator
-      if (calculator.settings) {
-        // If calculator has settings, use them
-        if (calculator.settings.companyInfo) {
-          setCompanyInfo(calculator.settings.companyInfo);
-        }
-        if (calculator.settings.customerInfo) {
-          setCustomerInfo(calculator.settings.customerInfo);
-        }
-        if (calculator.settings.calculationSettings) {
-          setCalculationSettings(calculator.settings.calculationSettings);
-        }
-      } else {
-        // If no settings in calculator, use defaults
-        if (currentOrganization) {
-          setCompanyInfo({
-            firma: currentOrganization.name || '',
-            navn: '',
-            epost: currentOrganization.email || '',
-            tlf: currentOrganization.phone || '',
-            refNr: '',
-            tilbudstittel: '',
-            logo: currentOrganization.logo
-          });
-        }
+    if (currentOrganization && !settingsLoaded) {
+      try {
+        // Get current user ID for the specific organization
+        supabase.auth.getUser().then(({ data: userData, error: userError }) => {
+          if (userError) throw userError;
+          
+          supabase
+            .from('users')
+            .select('id')
+            .eq('auth_user_id', userData.user?.id)
+            .eq('organization_id', currentOrganization.id)
+            .single()
+            .then(({ data: users, error: usersError }) => {
+              if (usersError) {
+                console.error('Failed to get user ID:', usersError);
+                return;
+              }
+              
+              // Load user settings
+              supabase
+                .from('user_settings')
+                .select('*')
+                .eq('user_id', users.id)
+                .then(({ data: settingsArray, error: settingsError }) => {
+                  if (settingsError) {
+                    console.error('Failed to load settings:', settingsError);
+                    return;
+                  }
+                  
+                  // Get the first settings record if it exists
+                  const settings = settingsArray && settingsArray.length > 0 ? settingsArray[0] : null;
+                  
+                  if (settings && settings.company_info) {
+                    // Store global settings for reference
+                    const globalCompanyInfo = {
+                      firma: settings.company_info.firma || currentOrganization.name || '',
+                      logo: settings.company_info.logo
+                    };
+                    
+                    // If we have a calculator, merge global settings with calculator-specific settings
+                    if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                      setCompanyInfo({
+                        // Global settings (always override)
+                        firma: globalCompanyInfo.firma,
+                        logo: globalCompanyInfo.logo,
+                        // Calculator-specific settings
+                        navn: calculator.settings.companyInfo.navn || '',
+                        epost: calculator.settings.companyInfo.epost || currentOrganization.email || '',
+                        tlf: calculator.settings.companyInfo.tlf || currentOrganization.phone || '',
+                        refNr: calculator.settings.companyInfo.refNr || '',
+                        tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                      });
+                    } else {
+                      // For new calculators, use global settings as defaults
+                      setCompanyInfo({
+                        firma: globalCompanyInfo.firma,
+                        logo: globalCompanyInfo.logo,
+                        navn: '',
+                        epost: currentOrganization.email || '',
+                        tlf: currentOrganization.phone || '',
+                        refNr: '',
+                        tilbudstittel: ''
+                      });
+                    }
+                    
+                    // Load calculation settings
+                    if (calculatorId && calculator && calculator.settings?.calculationSettings) {
+                      setCalculationSettings(calculator.settings.calculationSettings);
+                    } else if (settings.calculation_settings) {
+                      setCalculationSettings({
+                        defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
+                        defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
+                        defaultPaslag: settings.calculation_settings.defaultPaslag || 20
+                      });
+                    }
+                  } else {
+                    // No global settings found, use organization defaults
+                    const defaultCompanyInfo = {
+                      firma: currentOrganization.name || '',
+                      logo: currentOrganization.logo
+                    };
+                    
+                    if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                      setCompanyInfo({
+                        // Global defaults
+                        firma: defaultCompanyInfo.firma,
+                        logo: defaultCompanyInfo.logo,
+                        // Calculator-specific settings
+                        navn: calculator.settings.companyInfo.navn || '',
+                        epost: calculator.settings.companyInfo.epost || currentOrganization.email || '',
+                        tlf: calculator.settings.companyInfo.tlf || currentOrganization.phone || '',
+                        refNr: calculator.settings.companyInfo.refNr || '',
+                        tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                      });
+                      
+                      if (calculator.settings?.calculationSettings) {
+                        setCalculationSettings(calculator.settings.calculationSettings);
+                      }
+                    } else {
+                      // For new calculators with no global settings
+                      setCompanyInfo({
+                        firma: defaultCompanyInfo.firma,
+                        logo: defaultCompanyInfo.logo,
+                        navn: '',
+                        epost: currentOrganization.email || '',
+                        tlf: currentOrganization.phone || '',
+                        refNr: '',
+                        tilbudstittel: ''
+                      });
+                    }
+                  }
+                  
+                  // Update customer info from the project's customer
+                  if (customer) {
+                    setCustomerInfo({
+                      kunde: customer.name,
+                      adresse: customer.address,
+                      epost: customer.email,
+                      tlf: customer.phone
+                    });
+                  }
+                  
+                  setSettingsLoaded(true);
+                });
+            });
+        });
+      } catch (error) {
+        console.error('Failed to load global settings:', error);
+        setSettingsLoaded(true); // Continue with defaults
       }
-      setSettingsLoaded(true);
-    } else if (currentOrganization && !settingsLoaded && !calculatorId) {
-      // For new calculators, use organization defaults
-      setCompanyInfo({
-        firma: currentOrganization.name || '',
-        navn: '',
-        epost: currentOrganization.email || '',
-        tlf: currentOrganization.phone || '',
-        refNr: '',
-        tilbudstittel: '',
-        logo: currentOrganization.logo
-      });
-      setSettingsLoaded(true);
     }
-  }, [currentOrganization, settingsLoaded, calculatorId, calculator]);
+  }, [currentOrganization, calculatorId, calculator, customer, settingsLoaded]);
+
 
   // Initialize entries after settings are loaded and calculator is determined
   useEffect(() => {
@@ -230,7 +321,15 @@ const CalculatorPage: React.FC = () => {
     
     try {
       setIsSaving(true);
-            
+      
+      // Preserve global company info settings (firma and logo)
+      // by only saving the calculator-specific settings
+      const calculatorCompanyInfo = {
+        ...companyInfo,
+        // Don't save firma and logo as they come from global settings
+        // They'll be loaded from global settings when the calculator is opened
+      };
+      
       const calculatorData = {
         organizationId: currentOrganization.id,
         projectId,
@@ -239,7 +338,7 @@ const CalculatorPage: React.FC = () => {
         entries: entries,
         summary: summary,
         settings: {
-          companyInfo,
+          companyInfo: calculatorCompanyInfo,
           customerInfo,
           calculationSettings
         }

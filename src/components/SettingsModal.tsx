@@ -127,6 +127,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div>
                     <h3 className="text-sm font-medium text-text-secondary mb-4">Firmaopplysninger</h3>
                     <div className="space-y-3">
+                      <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="text-blue-400 text-sm">
+                            <p className="font-medium mb-1">Firma og logo</p>
+                            <p className="text-blue-400/80 text-sm">
+                              Firma og logo hentes fra globale innstillinger. Endre disse i hovedinnstillingene.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                       <div>
                         <label className="input-label">Tilbudstittel</label>
                         <input
@@ -140,32 +150,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="mb-4">
                         <label className="input-label">Firmalogo</label>
                         <div className="mt-2 flex items-center gap-4">
-                          {companyInfo.logo ? (
+                          {companyInfo.logo && (
                             <div className="relative">
                               <img 
                                 src={companyInfo.logo} 
                                 alt="Firmalogo" 
-                                className="h-16 w-auto object-contain rounded"
+                                className="h-16 w-auto object-contain rounded opacity-75"
                               />
-                              <button
-                                onClick={handleRemoveLogo}
-                                className="absolute -top-2 -right-2 p-1 bg-background-lighter rounded-full border border-border hover:bg-background"
-                                title="Fjern logo"
-                              >
-                                <X size={14} />
-                              </button>
                             </div>
-                          ) : (
-                            <label className="flex items-center justify-center w-32 h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary-400 transition-colors">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleLogoUpload}
-                                className="hidden"
-                              />
-                              <Upload size={20} className="text-text-muted" />
-                            </label>
                           )}
+                          <div className="text-sm text-text-muted">
+                            Logo kan endres i hovedinnstillingene.
+                          </div>
                         </div>
                       </div>
                       <div>
@@ -173,9 +169,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="text"
                           value={companyInfo.firma}
-                          onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, firma: e.target.value })}
                           className="w-full"
+                          disabled={true}
+                          title="Firma kan endres i hovedinnstillingene"
                         />
+                        <p className="text-xs text-text-muted mt-1">
+                          Firmanavn kan endres i hovedinnstillingene
+                        </p>
                       </div>
                       <div>
                         <label className="input-label">Navn</label>
