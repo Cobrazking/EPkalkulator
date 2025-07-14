@@ -367,7 +367,6 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                     <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
                   </View>
                 </View>
-                </View>
               )}
             </View>
           )}
