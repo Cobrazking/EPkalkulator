@@ -115,16 +115,16 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   postCell: {
-    width: '12%',
+    width: '15%',
     paddingRight: 4,
   },
   descriptionCell: {
-    width: '38%',
+    width: '45%',
     paddingRight: 4,
     flexGrow: 1,
   },
   numberCell: {
-    width: '15%',
+    width: '13%',
     textAlign: 'right',
     fontSize: 10,
     paddingLeft: 4,
@@ -315,19 +315,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                 {pageEntries.map((entry, index) => (
                   <View key={`${entry.id}-${index}`} style={styles.tableRow}>
                     <View style={[styles.tableRowMain, index % 2 === 1 && styles.tableRowAlt]}>
-                      <View style={{ flexDirection: 'row', flex: 1 }}>
-                        <View style={styles.postCell}>
-                          <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
-                        </View>
-                        <View style={styles.descriptionCell}>
-                          <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                        <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
-                        <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
-                        <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
-                      </View>
+                      <Text style={[styles.postCell, { fontSize: 10, color: '#475569' }]}>{entry.post || '-'}</Text>
+                      <Text style={[styles.descriptionCell, { fontSize: 10, color: '#1e293b' }]}>{entry.beskrivelse || '-'}</Text>
+                      <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
+                      <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
+                      <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
                     </View>
                     {entry.kommentar && (
                       <View style={[styles.tableRowComment, index % 2 === 1 ? { backgroundColor: '#f8fafc' } : {}]}>
@@ -341,19 +333,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                 {pageIndex === entriesByPage.length - 1 && (
                   <View style={[styles.tableRow, styles.summaryRow]}>
                     <View style={styles.tableRowMain}>
-                      <View style={{ flexDirection: 'row', flex: 1 }}>
-                        <View style={styles.postCell}>
-                          <Text style={styles.summaryCell}>TOTAL</Text>
-                        </View>
-                        <View style={styles.descriptionCell}>
-                          <Text style={styles.summaryCell}></Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                        <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                        <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                        <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
-                      </View>
+                      <Text style={[styles.postCell, styles.summaryCell]}>TOTAL</Text>
+                      <Text style={[styles.descriptionCell, styles.summaryCell]}></Text>
+                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                      <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
                     </View>
                   </View>
                 )}
