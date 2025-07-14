@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
 import { formatNumber } from '../utils/calculations';
 
@@ -102,16 +102,14 @@ const styles = StyleSheet.create({
   tableRowMain: {
     flexDirection: 'row',
     padding: 10,
-    backgroundColor: '#ffffff',
   },
   tableRowAlt: {
     backgroundColor: '#f8fafc', 
   },
   tableRowComment: {
-    paddingLeft: 20,
-    paddingRight: 10,
-    paddingBottom: 10,
-    // Remove any background color property to ensure transparency
+    marginLeft: 20,
+    marginRight: 10,
+    marginBottom: 5,
   },
   postCell: {
     width: '12%',
@@ -129,8 +127,7 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 9,
     color: '#64748b',
-    fontStyle: 'italic',
-    paddingTop: 2,
+    fontStyle: 'italic'
   },
   totalSection: {
     marginTop: 20,
@@ -229,27 +226,25 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
   const totalSum = validEntries.reduce((acc, entry) => acc + entry.sum, 0);
   const currentDate = new Date().toLocaleDateString('nb-NO', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric'
   });
 
   // Calculate how many entries to show per page (approximately)
   // This is a rough estimate - adjust based on your needs
-  const ENTRIES_PER_PAGE = 15;
-  const totalPages = Math.ceil(validEntries.length / ENTRIES_PER_PAGE);
+  const ENTRIES_PER_PAGE = 10; // Reduced to fit fewer entries per page
+  const totalPages = Math.max(1, Math.ceil(validEntries.length / ENTRIES_PER_PAGE));
   
   // Split entries into pages
   const entriesByPage = [];
   for (let i = 0; i < totalPages; i++) {
     const pageEntries = validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE);
-    if (pageEntries.length > 0) {
-      entriesByPage.push(pageEntries);
-    }
+    entriesByPage.push(pageEntries);
   }
 
   return (
     <Document>
-      {entriesByPage.map((pageEntries, pageIndex) => pageEntries.length > 0 ? (
+      {entriesByPage.map((pageEntries, pageIndex) => (
         <Page key={`page-${pageIndex}`} size="A4" style={styles.page}>
           {/* Header Section - only on first page */}
           {pageIndex === 0 && (
@@ -269,118 +264,117 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
             </View>
           )}
 
-          {/* Content Section */}
-          <View style={styles.contentSection}>
-            {/* Info Section - only on first page */}
-            {pageIndex === 0 ? (
-              <View style={styles.infoSection}>
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoTitle}>Fra</Text>
-                  <Text style={styles.infoText}>{companyInfo.firma}</Text>
-                  <Text style={styles.infoText}>{companyInfo.navn}</Text>
-                  <Text style={styles.infoText}>{companyInfo.epost}</Text>
-                  <Text style={styles.infoText}>{companyInfo.tlf}</Text>
-                  {companyInfo.refNr && (
-                    <Text style={styles.infoText}>Ref.nr: {companyInfo.refNr}</Text>
-                  )}
-                </View>
-
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoTitle}>Til</Text>
-                  <Text style={styles.infoText}>{customerInfo.kunde}</Text>
-                  <Text style={styles.infoText}>{customerInfo.adresse}</Text>
-                  <Text style={styles.infoText}>{customerInfo.epost}</Text>
-                  <Text style={styles.infoText}>{customerInfo.tlf}</Text>
-                </View>
-              </View>
-            ) : null}
-
-            {/* Page number indicator for multi-page documents */}
-            {totalPages > 1 && (
-              <Text style={styles.pageNumber}>Side {pageIndex + 1} av {totalPages}</Text>
-            )}
-
-            {/* Table */}
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
-                <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
-                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
-                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
-                <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
-              </View>
-
-              {pageEntries.map((entry, index) => (
-                <View key={`${entry.id}-${index}`} style={styles.tableRow}>
-                  <View style={[styles.tableRowMain, index % 2 === 1 && styles.tableRowAlt]}>
-                    <View style={styles.postCell}>
-                      <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
-                    </View>
-                    <View style={styles.descriptionCell}>
-                      <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
-                    </View>
-                    <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
-                    <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
-                    <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
+          {/* Content Section with conditional rendering */}
+          {pageEntries.length > 0 && (
+            <View style={styles.contentSection}>
+              {/* Info Section - only on first page */}
+              {pageIndex === 0 && (
+                <View style={styles.infoSection}>
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoTitle}>Fra</Text>
+                    <Text style={styles.infoText}>{companyInfo.firma}</Text>
+                    <Text style={styles.infoText}>{companyInfo.navn}</Text>
+                    <Text style={styles.infoText}>{companyInfo.epost}</Text>
+                    <Text style={styles.infoText}>{companyInfo.tlf}</Text>
+                    {companyInfo.refNr && (
+                      <Text style={styles.infoText}>Ref.nr: {companyInfo.refNr}</Text>
+                    )}
                   </View>
-                  {entry.kommentar && (
-                    <View style={[styles.tableRowComment, index % 2 === 1 && styles.tableRowAlt]}>
-                      <Text style={styles.commentText}>{entry.kommentar}</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
 
-              {/* Summary Row - only on last page */}
-              {pageIndex === entriesByPage.length - 1 ? (
-                <View style={[styles.tableRow, styles.summaryRow]}>
-                  <View style={styles.tableRowMain}>
-                    <View style={styles.postCell}>
-                      <Text style={styles.summaryCell}>TOTAL</Text>
-                    </View>
-                    <View style={styles.descriptionCell}>
-                      <Text style={styles.summaryCell}></Text>
-                    </View>
-                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                    <Text style={[styles.numberCell, styles.summaryCell]}></Text>
-                    <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoTitle}>Til</Text>
+                    <Text style={styles.infoText}>{customerInfo.kunde}</Text>
+                    <Text style={styles.infoText}>{customerInfo.adresse}</Text>
+                    <Text style={styles.infoText}>{customerInfo.epost}</Text>
+                    <Text style={styles.infoText}>{customerInfo.tlf}</Text>
                   </View>
                 </View>
-              ) : null}
+              )}
+
+              {/* Page number indicator for multi-page documents */}
+              {totalPages > 1 && (
+                <Text style={styles.pageNumber}>Side {pageIndex + 1} av {totalPages}</Text>
+              )}
+
+              {/* Table */}
+              <View style={styles.table}>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderCell, styles.postCell]}>Post</Text>
+                  <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>Beskrivelse</Text>
+                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Antall</Text>
+                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Enhetspris</Text>
+                  <Text style={[styles.tableHeaderCell, styles.numberCell]}>Sum</Text>
+                </View>
+
+                {pageEntries.map((entry, index) => (
+                  <View key={`${entry.id}-${index}`} style={styles.tableRow}>
+                    <View style={[styles.tableRowMain, index % 2 === 1 && styles.tableRowAlt]}>
+                      <View style={styles.postCell}>
+                        <Text style={{ fontSize: 10, color: '#475569' }}>{entry.post || '-'}</Text>
+                      </View>
+                      <View style={styles.descriptionCell}>
+                        <Text style={{ fontSize: 10, color: '#1e293b' }}>{entry.beskrivelse || '-'}</Text>
+                      </View>
+                      <Text style={styles.numberCell}>{formatNumber(entry.antall)}</Text>
+                      <Text style={styles.numberCell}>{formatCurrency(entry.enhetspris)}</Text>
+                      <Text style={[styles.numberCell, { fontFamily: 'Helvetica-Bold' }]}>{formatCurrency(entry.sum)}</Text>
+                    </View>
+                    {entry.kommentar && (
+                      <View style={[styles.tableRowComment, index % 2 === 1 ? { backgroundColor: '#f8fafc' } : {}]}>
+                        <Text style={styles.commentText}>{entry.kommentar}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+
+                {/* Summary Row - only on last page */}
+                {pageIndex === entriesByPage.length - 1 && (
+                  <View style={[styles.tableRow, styles.summaryRow]}>
+                    <View style={styles.tableRowMain}>
+                      <View style={styles.postCell}>
+                        <Text style={styles.summaryCell}>TOTAL</Text>
+                      </View>
+                      <View style={styles.descriptionCell}>
+                        <Text style={styles.summaryCell}></Text>
+                      </View>
+                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                      <Text style={[styles.numberCell, styles.summaryCell]}></Text>
+                      <Text style={[styles.numberCell, styles.summaryCell]}>{formatCurrency(totalSum)}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Total Section - only on last page */}
+              {pageIndex === entriesByPage.length - 1 && (
+                <View style={styles.totalSection} wrap={false}>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Subtotal eks. mva</Text>
+                    <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>MVA 25%</Text>
+                    <Text style={styles.totalAmount}>{formatCurrency(totalSum * 0.25)}</Text>
+                  </View>
+                  <View style={[styles.totalRow, styles.grandTotalRow]}>
+                    <Text style={styles.grandTotalLabel}>Total sum inkl. mva</Text>
+                    <Text style={styles.grandTotalAmount}>{formatCurrency(totalSum * 1.25)}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Footer - only on last page */}
+              {pageIndex === entriesByPage.length - 1 && (
+                <View style={styles.footer} fixed={false}>
+                  <Text style={styles.footerText}>
+                    Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
+                  </Text>
+                </View>
+              )}
             </View>
-
-            {/* Total Section - only on last page */}
-            {pageIndex === entriesByPage.length - 1 ? (
-              <View style={styles.totalSection} wrap={false}>
-                <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Subtotal eks. mva</Text>
-                  <Text style={styles.totalAmount}>{formatCurrency(totalSum)}</Text>
-                </View>
-                <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>MVA 25%</Text>
-                  <Text style={styles.totalAmount}>{formatCurrency(totalSum * 0.25)}</Text>
-                </View>
-                <View style={[styles.totalRow, styles.grandTotalRow]}>
-                  <Text style={styles.grandTotalLabel}>Total sum inkl. mva</Text>
-                  <Text style={styles.grandTotalAmount}>{formatCurrency(totalSum * 1.25)}</Text>
-                </View>
-              </View>
-            ) : null}
-
-            {/* Footer - only on last page */}
-            {pageIndex === entriesByPage.length - 1 ? (
-              <View style={styles.footer} fixed={false}>
-                <Text style={styles.footerText}>
-                  Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          
-          {/* Only add page break if not the last page */}
-          {pageIndex < entriesByPage.length - 1 && <Text style={{ height: 0 }} break />}
+          )}
         </Page>
-      ) : null)}
+      ))}
     </Document>
   );
 };
