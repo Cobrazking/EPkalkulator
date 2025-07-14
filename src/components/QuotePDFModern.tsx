@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 10,
     paddingBottom: 10,
-    backgroundColor: 'inherit', // Inherit from parent to maintain row color
+    // Remove any background color property to ensure transparency
   },
   postCell: {
     width: '12%',
@@ -129,9 +129,8 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 9,
     color: '#64748b',
-    fontStyle: 'italic', 
+    fontStyle: 'italic',
     paddingTop: 2,
-    // Remove the background color and border that was causing the issue
   },
   totalSection: {
     marginTop: 20,
@@ -242,12 +241,15 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
   // Split entries into pages
   const entriesByPage = [];
   for (let i = 0; i < totalPages; i++) {
-    entriesByPage.push(validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE));
+    const pageEntries = validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE);
+    if (pageEntries.length > 0) {
+      entriesByPage.push(pageEntries);
+    }
   }
 
   return (
     <Document>
-      {entriesByPage.map((pageEntries, pageIndex) => (
+      {entriesByPage.map((pageEntries, pageIndex) => pageEntries.length > 0 ? (
         <Page key={`page-${pageIndex}`} size="A4" style={styles.page}>
           {/* Header Section - only on first page */}
           {pageIndex === 0 && (
@@ -376,9 +378,9 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
           </View>
           
           {/* Only add page break if not the last page */}
-          {pageIndex < entriesByPage.length - 1 ? <Text break /> : null}
+          {pageIndex < entriesByPage.length - 1 && <Text style={{ height: 0 }} break />}
         </Page>
-      ))}
+      ) : null)}
     </Document>
   );
 };
