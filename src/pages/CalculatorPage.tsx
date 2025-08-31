@@ -74,6 +74,7 @@ const CalculatorPage: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -322,6 +323,30 @@ const CalculatorPage: React.FC = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     }
   }, [hasUnsavedChanges]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (autoSaveEnabled && hasUnsavedChanges && !isSaving && settingsLoaded) {
+      const autoSaveTimer = setTimeout(() => {
+        handleSave();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [autoSaveEnabled, hasUnsavedChanges, isSaving, settingsLoaded, entries, companyInfo, customerInfo, calculationSettings]);
+
+  // Load auto-save preference from localStorage
+  useEffect(() => {
+    const savedAutoSave = localStorage.getItem('autoSaveEnabled');
+    if (savedAutoSave !== null) {
+      setAutoSaveEnabled(JSON.parse(savedAutoSave));
+    }
+  }, []);
+
+  // Save auto-save preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('autoSaveEnabled', JSON.stringify(autoSaveEnabled));
+  }, [autoSaveEnabled]);
 
   // Manual save function
   const handleSave = async () => {
@@ -614,19 +639,19 @@ const CalculatorPage: React.FC = () => {
               {hasUnsavedChanges && (
                 <span className="ml-2 text-sm text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/30 inline-flex items-center gap-1">
                   <AlertTriangle size={12} />
-                  Ulagrede endringer
+                  {autoSaveEnabled ? 'Lagrer automatisk...' : 'Ulagrede endringer'}
                 </span>
               )}
             </h1>
             {isSaving && (
               <div className="flex items-center gap-2 text-sm text-text-muted">
                 <div className="w-4 h-4 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
-                <span>Lagrer...</span>
+                <span>{autoSaveEnabled ? 'Auto-lagrer...' : 'Lagrer...'}</span>
               </div>
             )}
             {lastSaved && !isSaving && !hasUnsavedChanges && (
               <div className="text-sm text-text-muted">
-                Sist lagret: {lastSaved.toLocaleTimeString('nb-NO')}
+                {autoSaveEnabled ? 'Auto-lagret' : 'Sist lagret'}: {lastSaved.toLocaleTimeString('nb-NO')}
               </div>
             )}
           </div>
@@ -641,14 +666,38 @@ const CalculatorPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="flex flex-wrap gap-2 items-center"
       >
+        {/* Auto-save toggle */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-background-lighter/50 rounded-lg border border-border">
+          <input
+            type="checkbox"
+            id="autoSave"
+            checked={autoSaveEnabled}
+            onChange={(e) => setAutoSaveEnabled(e.target.checked)}
+            className="rounded border-border text-primary-500 focus:ring-primary-400"
+          />
+          <label htmlFor="autoSave" className="text-sm text-text-primary cursor-pointer">
+            Auto-lagring
+          </label>
+          {autoSaveEnabled && (
+            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+              På
+            </span>
+          )}
+        </div>
+
         <button 
           onClick={handleSave}
-          className="btn-primary flex items-center gap-2"
+          className={`${autoSaveEnabled ? 'btn-secondary' : 'btn-primary'} flex items-center gap-2`}
           title="Lagre kalkyle"
-          disabled={isSaving || !hasUnsavedChanges}
+          disabled={isSaving || (!hasUnsavedChanges && !autoSaveEnabled)}
         >
           <Save size={16} />
-          <span>{isSaving ? 'Lagrer...' : 'Lagre'}</span>
+          <span>
+            {isSaving 
+              ? (autoSaveEnabled ? 'Auto-lagrer...' : 'Lagrer...') 
+              : (autoSaveEnabled ? 'Lagre nå' : 'Lagre')
+            }
+          </span>
         </button>
         
         <button 
