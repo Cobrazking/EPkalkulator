@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#f9fafb',
-    padding: 30,
+    padding: 25,
     marginBottom: 0,
     borderBottom: '1px solid #e2e8f0',
   },
@@ -50,35 +50,35 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   contentSection: {
-    padding: 30,
+    padding: 25,
   },
   infoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 20,
     gap: 20,
   },
   infoBlock: {
     flex: 1,
     backgroundColor: '#ffffff',
-    padding: 15,
+    padding: 12,
     borderRadius: 4,
     border: '1px solid #e2e8f0',
   },
   infoTitle: {
     fontSize: 12,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 10,
+    marginBottom: 8,
     color: '#1e293b',
   },
   infoText: {
-    marginBottom: 5,
+    marginBottom: 4,
     fontSize: 10,
     color: '#475569',
     lineHeight: 1.4,
   },
   table: {
-    marginBottom: 30,
+    marginBottom: 20,
     borderRadius: 4,
     border: '1px solid #e5e7eb',
     overflow: 'hidden'
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#f1f5f9',
-    padding: 10,
+    padding: 8,
     borderBottom: '1px solid #e2e8f0',
   },
   tableHeaderCell: {
@@ -104,15 +104,15 @@ const styles = StyleSheet.create({
   },
   tableRowMain: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 8,
   },
   tableRowAlt: {
     backgroundColor: '#f8fafc', 
   },
   tableRowComment: {
-    paddingLeft: 20,
-    paddingRight: 10,
-    paddingBottom: 5,
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingBottom: 4,
   },
   postCell: {
     width: '15%',
@@ -136,9 +136,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic'
   },
   totalSection: {
-    marginTop: 20,
+    marginTop: 15,
     backgroundColor: '#ffffff',
-    padding: 15,
+    padding: 12,
     borderRadius: 4,
     border: '1px solid #e2e8f0',
     breakInside: 'avoid',
@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
-    paddingVertical: 3,
+    marginBottom: 4,
+    paddingVertical: 2,
   },
   totalLabel: {
     fontSize: 10,
@@ -164,8 +164,8 @@ const styles = StyleSheet.create({
   grandTotalRow: {
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
-    paddingTop: 10,
-    marginTop: 6,
+    paddingTop: 8,
+    marginTop: 4,
   },
   grandTotalLabel: {
     fontSize: 12,
@@ -180,8 +180,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   footer: {
-    marginTop: 30,
-    padding: 15,
+    marginTop: 20,
+    padding: 12,
     backgroundColor: '#f8fafc',
     borderRadius: 4,
     border: '1px solid #e2e8f0',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   pageNumber: {
     position: 'absolute',
     fontSize: 8,
-    bottom: 20,
+    bottom: 15,
     left: 0,
     right: 0,
     textAlign: 'center',
@@ -238,7 +238,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
   // Calculate how many entries to show per page (approximately)
   // This is a rough estimate - adjust based on your needs
-  const ENTRIES_PER_PAGE = 10; // Reduced to fit fewer entries per page
+  const ENTRIES_PER_PAGE = 15; // Increased to better utilize page space
   const totalPages = Math.max(1, Math.ceil(validEntries.length / ENTRIES_PER_PAGE));
   
   // Split entries into pages
@@ -279,9 +279,9 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   <View style={styles.infoBlock}>
                     <Text style={styles.infoTitle}>Fra</Text>
                     <Text style={styles.infoText}>{companyInfo.firma}</Text>
-                    <Text style={styles.infoText}>{companyInfo.navn}</Text>
-                    <Text style={styles.infoText}>{companyInfo.epost}</Text>
-                    <Text style={styles.infoText}>{companyInfo.tlf}</Text>
+                    {companyInfo.navn && <Text style={styles.infoText}>{companyInfo.navn}</Text>}
+                    {companyInfo.epost && <Text style={styles.infoText}>{companyInfo.epost}</Text>}
+                    {companyInfo.tlf && <Text style={styles.infoText}>{companyInfo.tlf}</Text>}
                     {companyInfo.refNr && (
                       <Text style={styles.infoText}>Ref.nr: {companyInfo.refNr}</Text>
                     )}
@@ -289,17 +289,12 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
                   <View style={styles.infoBlock}>
                     <Text style={styles.infoTitle}>Til</Text>
-                    <Text style={styles.infoText}>{customerInfo.kunde || ''}</Text>
+                    <Text style={styles.infoText}>{customerInfo.kunde || 'Kunde ikke spesifisert'}</Text>
                     {customerInfo.adresse && <Text style={styles.infoText}>{customerInfo.adresse}</Text>}
                     {customerInfo.epost && <Text style={styles.infoText}>{customerInfo.epost}</Text>}
                     {customerInfo.tlf && <Text style={styles.infoText}>{customerInfo.tlf}</Text>}
                   </View>
                 </View>
-              )}
-
-              {/* Page number indicator for multi-page documents */}
-              {totalPages > 1 && (
-                <Text style={styles.pageNumber}>Side {pageIndex + 1} av {totalPages}</Text>
               )}
 
               {/* Table */}
@@ -360,7 +355,21 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   </View>
                 </View>
               )}
+
+              {/* Footer - only on last page */}
+              {pageIndex === entriesByPage.length - 1 && (
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>
+                    Alle priser er oppgitt i NOK. Tilbudet er gyldig i 30 dager fra {currentDate}.
+                  </Text>
+                </View>
+              )}
             </View>
+          )}
+          
+          {/* Page number indicator for multi-page documents */}
+          {totalPages > 1 && (
+            <Text style={styles.pageNumber}>Side {pageIndex + 1} av {totalPages}</Text>
           )}
         </Page>
       ))}
