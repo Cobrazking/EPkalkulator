@@ -683,8 +683,13 @@ const CalculatorPage: React.FC = () => {
             Auto-lagring
           </label>
           {autoSaveEnabled && (
-            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
               På
+            </span>
+          )}
+          {!autoSaveEnabled && (
+            <span className="text-xs text-text-muted bg-background-darker/50 px-2 py-1 rounded-full border border-border">
+              Av
             </span>
           )}
         </div>
