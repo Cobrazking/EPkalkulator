@@ -338,7 +338,7 @@ const CalculatorPage: React.FC = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-    }
+    };
   }, [hasUnsavedChanges]);
 
   // Auto-save functionality
@@ -350,6 +350,7 @@ const CalculatorPage: React.FC = () => {
 
       return () => clearTimeout(autoSaveTimer);
     }
+  }, [autoSaveEnabled, hasUnsavedChanges, isSaving, settingsLoaded, initialLoad]);
 
   // Manual save function
   const handleSave = async () => {
@@ -682,13 +683,8 @@ const CalculatorPage: React.FC = () => {
             Auto-lagring
           </label>
           {autoSaveEnabled && (
-            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
+            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
               På
-            </span>
-          )}
-          {!autoSaveEnabled && (
-            <span className="text-xs text-text-muted bg-background-darker/50 px-2 py-1 rounded-full border border-border">
-              Av
             </span>
           )}
         </div>
