@@ -83,13 +83,24 @@ const CalculatorPage: React.FC = () => {
     totalKostprisTimer: 0
   });
 
-  // Load auto-save preference from localStorage on component mount
+  // Load auto-save preference from localStorage immediately on component mount
   useEffect(() => {
-    const savedAutoSave = localStorage.getItem('epkalk_autoSaveEnabled');
-    if (savedAutoSave !== null) {
-      setAutoSaveEnabled(JSON.parse(savedAutoSave));
-    } else {
-      // Default to auto-save enabled for better user experience
+    try {
+      const savedAutoSave = localStorage.getItem('epkalk_autoSaveEnabled');
+      console.log('🔄 Loading auto-save preference from localStorage:', savedAutoSave);
+      
+      if (savedAutoSave !== null) {
+        const enabled = JSON.parse(savedAutoSave);
+        console.log('✅ Auto-save preference loaded:', enabled);
+        setAutoSaveEnabled(enabled);
+      } else {
+        // Default to auto-save enabled for better user experience
+        console.log('🆕 No auto-save preference found, defaulting to enabled');
+        setAutoSaveEnabled(true);
+        localStorage.setItem('epkalk_autoSaveEnabled', 'true');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load auto-save preference:', error);
       setAutoSaveEnabled(true);
       localStorage.setItem('epkalk_autoSaveEnabled', 'true');
     }
@@ -97,7 +108,12 @@ const CalculatorPage: React.FC = () => {
 
   // Save auto-save preference to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('epkalk_autoSaveEnabled', JSON.stringify(autoSaveEnabled));
+    try {
+      console.log('💾 Saving auto-save preference to localStorage:', autoSaveEnabled);
+      localStorage.setItem('epkalk_autoSaveEnabled', JSON.stringify(autoSaveEnabled));
+    } catch (error) {
+      console.error('❌ Failed to save auto-save preference:', error);
+    }
   }, [autoSaveEnabled]);
   
   // Load user-specific global settings
@@ -676,7 +692,11 @@ const CalculatorPage: React.FC = () => {
             type="checkbox"
             id="autoSave"
             checked={autoSaveEnabled}
-            onChange={(e) => setAutoSaveEnabled(e.target.checked)}
+            onChange={(e) => {
+              const newValue = e.target.checked;
+              console.log('🔄 Auto-save toggle changed to:', newValue);
+              setAutoSaveEnabled(newValue);
+            }}
             className="rounded border-border text-primary-500 focus:ring-primary-400"
           />
           <label htmlFor="autoSave" className="text-sm text-text-primary cursor-pointer">
