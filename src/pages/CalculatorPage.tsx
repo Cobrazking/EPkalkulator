@@ -82,6 +82,23 @@ const CalculatorPage: React.FC = () => {
     bidrag: 0,
     totalKostprisTimer: 0
   });
+
+  // Load auto-save preference from localStorage on component mount
+  useEffect(() => {
+    const savedAutoSave = localStorage.getItem('epkalk_autoSaveEnabled');
+    if (savedAutoSave !== null) {
+      setAutoSaveEnabled(JSON.parse(savedAutoSave));
+    } else {
+      // Default to auto-save enabled for better user experience
+      setAutoSaveEnabled(true);
+      localStorage.setItem('epkalk_autoSaveEnabled', 'true');
+    }
+  }, []);
+
+  // Save auto-save preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('epkalk_autoSaveEnabled', JSON.stringify(autoSaveEnabled));
+  }, [autoSaveEnabled]);
   
   // Load user-specific global settings
   useEffect(() => {
@@ -326,27 +343,13 @@ const CalculatorPage: React.FC = () => {
 
   // Auto-save functionality
   useEffect(() => {
-    if (autoSaveEnabled && hasUnsavedChanges && !isSaving && settingsLoaded) {
+    if (autoSaveEnabled && hasUnsavedChanges && !isSaving && settingsLoaded && !initialLoad) {
       const autoSaveTimer = setTimeout(() => {
         handleSave();
       }, 2000); // Auto-save after 2 seconds of inactivity
 
       return () => clearTimeout(autoSaveTimer);
     }
-  }, [autoSaveEnabled, hasUnsavedChanges, isSaving, settingsLoaded, entries, companyInfo, customerInfo, calculationSettings]);
-
-  // Load auto-save preference from localStorage
-  useEffect(() => {
-    const savedAutoSave = localStorage.getItem('autoSaveEnabled');
-    if (savedAutoSave !== null) {
-      setAutoSaveEnabled(JSON.parse(savedAutoSave));
-    }
-  }, []);
-
-  // Save auto-save preference to localStorage
-  useEffect(() => {
-    localStorage.setItem('autoSaveEnabled', JSON.stringify(autoSaveEnabled));
-  }, [autoSaveEnabled]);
 
   // Manual save function
   const handleSave = async () => {
@@ -679,8 +682,13 @@ const CalculatorPage: React.FC = () => {
             Auto-lagring
           </label>
           {autoSaveEnabled && (
-            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
               På
+            </span>
+          )}
+          {!autoSaveEnabled && (
+            <span className="text-xs text-text-muted bg-background-darker/50 px-2 py-1 rounded-full border border-border">
+              Av
             </span>
           )}
         </div>
