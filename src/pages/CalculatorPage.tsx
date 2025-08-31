@@ -95,15 +95,15 @@ const CalculatorPage: React.FC = () => {
         console.log('✅ Auto-save preference loaded:', enabled);
         setAutoSaveEnabled(enabled);
       } else {
-        // Default to auto-save disabled
-        console.log('🆕 No auto-save preference found, defaulting to disabled');
-        setAutoSaveEnabled(false);
-        localStorage.setItem('epkalk_autoSaveEnabled', 'false');
+        // Default to auto-save enabled
+        console.log('🆕 No auto-save preference found, defaulting to enabled');
+        setAutoSaveEnabled(true);
+        localStorage.setItem('epkalk_autoSaveEnabled', 'true');
       }
     } catch (error) {
       console.error('❌ Failed to load auto-save preference:', error);
-      setAutoSaveEnabled(false);
-      localStorage.setItem('epkalk_autoSaveEnabled', 'false');
+      setAutoSaveEnabled(true);
+      localStorage.setItem('epkalk_autoSaveEnabled', 'true');
     }
   }, []);
 
