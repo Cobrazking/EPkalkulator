@@ -83,36 +83,38 @@ const CalculatorPage: React.FC = () => {
     totalKostprisTimer: 0
   });
 
-  // Load auto-save preference from localStorage immediately on component mount
+  // Load global auto-save preference from localStorage immediately on component mount
   useEffect(() => {
+    console.log('🔄 Loading global auto-save preference...');
     try {
       const savedAutoSave = localStorage.getItem('epkalk_autoSaveEnabled');
-      console.log('🔄 Loading auto-save preference from localStorage:', savedAutoSave);
+      console.log('📖 Auto-save preference from localStorage:', savedAutoSave);
       
       if (savedAutoSave !== null) {
         const enabled = JSON.parse(savedAutoSave);
-        console.log('✅ Auto-save preference loaded:', enabled);
+        console.log('✅ Global auto-save preference loaded:', enabled);
         setAutoSaveEnabled(enabled);
       } else {
-        // Default to auto-save enabled for better user experience
-        console.log('🆕 No auto-save preference found, defaulting to enabled');
-        setAutoSaveEnabled(true);
-        localStorage.setItem('epkalk_autoSaveEnabled', 'true');
+        // Default to auto-save disabled to match user expectation
+        console.log('🆕 No global auto-save preference found, defaulting to disabled');
+        setAutoSaveEnabled(false);
+        localStorage.setItem('epkalk_autoSaveEnabled', 'false');
       }
     } catch (error) {
-      console.error('❌ Failed to load auto-save preference:', error);
-      setAutoSaveEnabled(true);
-      localStorage.setItem('epkalk_autoSaveEnabled', 'true');
+      console.error('❌ Failed to load global auto-save preference:', error);
+      setAutoSaveEnabled(false);
+      localStorage.setItem('epkalk_autoSaveEnabled', 'false');
     }
   }, []);
 
-  // Save auto-save preference to localStorage whenever it changes
+  // Save global auto-save preference to localStorage whenever it changes
   useEffect(() => {
     try {
-      console.log('💾 Saving auto-save preference to localStorage:', autoSaveEnabled);
+      console.log('💾 Saving global auto-save preference to localStorage:', autoSaveEnabled);
       localStorage.setItem('epkalk_autoSaveEnabled', JSON.stringify(autoSaveEnabled));
+      console.log('✅ Global auto-save preference saved successfully');
     } catch (error) {
-      console.error('❌ Failed to save auto-save preference:', error);
+      console.error('❌ Failed to save global auto-save preference:', error);
     }
   }, [autoSaveEnabled]);
   
@@ -694,13 +696,13 @@ const CalculatorPage: React.FC = () => {
             checked={autoSaveEnabled}
             onChange={(e) => {
               const newValue = e.target.checked;
-              console.log('🔄 Auto-save toggle changed to:', newValue);
+              console.log('🔄 Global auto-save toggle changed to:', newValue);
               setAutoSaveEnabled(newValue);
             }}
             className="rounded border-border text-primary-500 focus:ring-primary-400"
           />
           <label htmlFor="autoSave" className="text-sm text-text-primary cursor-pointer">
-            Auto-lagring
+            Global auto-lagring
           </label>
           {autoSaveEnabled && (
             <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
