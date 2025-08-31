@@ -74,7 +74,7 @@ const CalculatorPage: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true); // Default to enabled
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -95,13 +95,14 @@ const CalculatorPage: React.FC = () => {
         console.log('✅ Auto-save preference loaded:', enabled);
         setAutoSaveEnabled(enabled);
       } else {
-        // Default to auto-save enabled
-        console.log('🆕 No auto-save preference found, defaulting to enabled');
+        // Default to auto-save enabled (På)
+        console.log('🆕 No auto-save preference found, defaulting to enabled (På)');
         setAutoSaveEnabled(true);
         localStorage.setItem('epkalk_autoSaveEnabled', 'true');
       }
     } catch (error) {
       console.error('❌ Failed to load auto-save preference:', error);
+      // Default to enabled even on error
       setAutoSaveEnabled(true);
       localStorage.setItem('epkalk_autoSaveEnabled', 'true');
     }
