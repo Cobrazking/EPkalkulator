@@ -192,9 +192,12 @@ const CalculatorPage: React.FC = () => {
                     // Store global settings for reference
                     const globalCompanyInfo = {
                       firma: settings.company_info.firma || currentOrganization.name || '',
-                      logo: settings.company_info.logo
+                      logo: settings.company_info.logo,
+                      navn: settings.company_info.navn || '',
+                      epost: settings.company_info.epost || currentOrganization.email || '',
+                      tlf: settings.company_info.tlf || currentOrganization.phone || ''
                     };
-                    
+
                     // Only set companyInfo if not already initialized (prevents overwriting user input)
                     if (!dataInitializedRef.current.companyInfo) {
                       // If we have a calculator, merge global settings with calculator-specific settings
@@ -203,21 +206,21 @@ const CalculatorPage: React.FC = () => {
                           // Use calculator-specific firma if available, otherwise use global
                           firma: calculator.settings.companyInfo.firma || globalCompanyInfo.firma,
                           logo: calculator.settings.companyInfo.logo || globalCompanyInfo.logo, // Use calculator logo if available, otherwise global
-                          // Calculator-specific settings or use current user info
-                          navn: calculator.settings.companyInfo.navn || currentUser?.name || '',
-                          epost: calculator.settings.companyInfo.epost || currentUser?.email || currentOrganization.email || '',
-                          tlf: calculator.settings.companyInfo.tlf || currentUser?.phone || currentOrganization.phone || '',
+                          // Calculator-specific settings or fallback to global user settings
+                          navn: calculator.settings.companyInfo.navn || globalCompanyInfo.navn,
+                          epost: calculator.settings.companyInfo.epost || globalCompanyInfo.epost,
+                          tlf: calculator.settings.companyInfo.tlf || globalCompanyInfo.tlf,
                           refNr: calculator.settings.companyInfo.refNr || '',
                           tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
                         });
                       } else {
-                        // For new calculators, use global settings and current user info as defaults
+                        // For new calculators, use global settings from user_settings
                         setCompanyInfo({
                           firma: globalCompanyInfo.firma, // Default to global, but can be overridden
                           logo: globalCompanyInfo.logo, // For new calculators, start with global logo
-                          navn: currentUser?.name || '',
-                          epost: currentUser?.email || currentOrganization.email || '',
-                          tlf: currentUser?.phone || currentOrganization.phone || '',
+                          navn: globalCompanyInfo.navn,
+                          epost: globalCompanyInfo.epost,
+                          tlf: globalCompanyInfo.tlf,
                           refNr: '',
                           tilbudstittel: ''
                         });
@@ -239,7 +242,10 @@ const CalculatorPage: React.FC = () => {
                     // No global settings found, use organization defaults
                     const defaultCompanyInfo = {
                       firma: currentOrganization.name || '',
-                      logo: currentOrganization.logo
+                      logo: currentOrganization.logo,
+                      navn: '',
+                      epost: currentOrganization.email || '',
+                      tlf: currentOrganization.phone || ''
                     };
 
                     // Only set companyInfo if not already initialized (prevents overwriting user input)
@@ -249,10 +255,10 @@ const CalculatorPage: React.FC = () => {
                           // Global defaults
                           firma: defaultCompanyInfo.firma, // Always use global firma
                           logo: calculator.settings.companyInfo.logo || defaultCompanyInfo.logo, // Use calculator logo if available
-                          // Calculator-specific settings or use current user info
-                          navn: calculator.settings.companyInfo.navn || currentUser?.name || '',
-                          epost: calculator.settings.companyInfo.epost || currentUser?.email || currentOrganization.email || '',
-                          tlf: calculator.settings.companyInfo.tlf || currentUser?.phone || currentOrganization.phone || '',
+                          // Calculator-specific settings or use organization defaults
+                          navn: calculator.settings.companyInfo.navn || defaultCompanyInfo.navn,
+                          epost: calculator.settings.companyInfo.epost || defaultCompanyInfo.epost,
+                          tlf: calculator.settings.companyInfo.tlf || defaultCompanyInfo.tlf,
                           refNr: calculator.settings.companyInfo.refNr || '',
                           tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
                         });
@@ -265,9 +271,9 @@ const CalculatorPage: React.FC = () => {
                         setCompanyInfo({
                           firma: defaultCompanyInfo.firma, // Default to organization name, but can be overridden
                           logo: defaultCompanyInfo.logo,
-                          navn: currentUser?.name || '',
-                          epost: currentUser?.email || currentOrganization.email || '',
-                          tlf: currentUser?.phone || currentOrganization.phone || '',
+                          navn: defaultCompanyInfo.navn,
+                          epost: defaultCompanyInfo.epost,
+                          tlf: defaultCompanyInfo.tlf,
                           refNr: '',
                           tilbudstittel: ''
                         });

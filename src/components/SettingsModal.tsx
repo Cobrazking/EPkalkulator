@@ -132,9 +132,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                         <div className="flex items-start gap-3">
                           <div className="text-blue-400 text-sm">
-                            <p className="font-medium mb-1">Firma og logo (kan overstyres)</p>
+                            <p className="font-medium mb-1">Firmaopplysninger</p>
                             <p className="text-blue-400/80 text-sm">
-                              Firma og logo kan overstyres for denne kalkylen.
+                              Disse verdiene hentes automatisk fra dine globale innstillinger, men kan overstyres for denne kalkylen hvis nødvendig.
                             </p>
                           </div>
                         </div>

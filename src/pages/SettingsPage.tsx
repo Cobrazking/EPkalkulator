@@ -236,7 +236,7 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Auto-save with debouncing - only for firma and logo changes
+  // Auto-save with debouncing
   useEffect(() => {
     if (!isLoading && currentOrganization) {
       const saveTimer = setTimeout(() => {
@@ -245,7 +245,7 @@ const SettingsPage: React.FC = () => {
 
       return () => clearTimeout(saveTimer);
     }
-  }, [companyInfo.firma, companyInfo.logo, calculationSettings, isLoading, currentOrganization]);
+  }, [companyInfo.firma, companyInfo.navn, companyInfo.epost, companyInfo.tlf, companyInfo.logo, calculationSettings, isLoading, currentOrganization]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -424,6 +424,51 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div>
+              <label className="input-label">Prosjektlederens navn</label>
+              <input
+                type="text"
+                value={companyInfo.navn}
+                onChange={(e) => setCompanyInfo({ ...companyInfo, navn: e.target.value })}
+                className="w-full"
+                placeholder="Navn på prosjektleder"
+                disabled={isSaving}
+              />
+              <p className="text-xs text-text-muted mt-1">
+                Dette navnet brukes automatisk i nye kalkyler som kontaktperson
+              </p>
+            </div>
+
+            <div>
+              <label className="input-label">E-post</label>
+              <input
+                type="email"
+                value={companyInfo.epost}
+                onChange={(e) => setCompanyInfo({ ...companyInfo, epost: e.target.value })}
+                className="w-full"
+                placeholder="epost@firma.no"
+                disabled={isSaving}
+              />
+              <p className="text-xs text-text-muted mt-1">
+                E-post brukes automatisk i nye kalkyler
+              </p>
+            </div>
+
+            <div>
+              <label className="input-label">Telefon</label>
+              <input
+                type="tel"
+                value={companyInfo.tlf}
+                onChange={(e) => setCompanyInfo({ ...companyInfo, tlf: e.target.value })}
+                className="w-full"
+                placeholder="+47 123 45 678"
+                disabled={isSaving}
+              />
+              <p className="text-xs text-text-muted mt-1">
+                Telefonnummer brukes automatisk i nye kalkyler
+              </p>
+            </div>
+
+            <div>
               <label className="input-label">Firmalogo</label>
               <div className="mt-2 flex items-center gap-4">
                 {companyInfo.logo ? (
@@ -479,17 +524,18 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Info about other fields */}
+            {/* Info about fields */}
             <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-blue-400 text-sm font-medium mb-1">Andre firmaopplysninger</p>
+                  <p className="text-blue-400 text-sm font-medium mb-1">Hvordan innstillingene fungerer</p>
                   <p className="text-blue-400/80 text-sm">
-                    Kontaktperson, e-post, telefon og referansenummer kan redigeres direkte i kalkylen under innstillinger.
+                    Disse innstillingene brukes automatisk når du oppretter nye kalkyler.
                    <br /><br />
-                   <strong>Merk:</strong> Firmanavn og logo kan overstyres i hver enkelt kalkyle.
-                    Dette gir deg fleksibilitet til å tilpasse informasjonen for hver kalkyle.
+                   <strong>Automatisk utfylling:</strong> Navn, e-post og telefon blir automatisk hentet fra disse innstillingene når du laster ned PDF-er.
+                   <br /><br />
+                   <strong>Overstyring:</strong> Alle felter kan overstyres i hver enkelt kalkyle under innstillinger, hvis du trenger å tilpasse dem.
                   </p>
                 </div>
               </div>
