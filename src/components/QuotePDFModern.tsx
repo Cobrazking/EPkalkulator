@@ -380,13 +380,17 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
   // Calculate how many entries to show per page (approximately)
   // This is a rough estimate - adjust based on your needs
   const ENTRIES_PER_PAGE = 15; // Increased to better utilize page space
-  const totalPages = Math.max(1, Math.ceil(validEntries.length / ENTRIES_PER_PAGE));
-  
-  // Split entries into pages
+
+  // Split entries into pages, only creating pages if there are entries
   const entriesByPage = [];
-  for (let i = 0; i < totalPages; i++) {
-    const pageEntries = validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE);
-    entriesByPage.push(pageEntries);
+  if (validEntries.length > 0) {
+    const totalPages = Math.ceil(validEntries.length / ENTRIES_PER_PAGE);
+    for (let i = 0; i < totalPages; i++) {
+      const pageEntries = validEntries.slice(i * ENTRIES_PER_PAGE, (i + 1) * ENTRIES_PER_PAGE);
+      if (pageEntries.length > 0) {
+        entriesByPage.push(pageEntries);
+      }
+    }
   }
 
   return (
@@ -434,7 +438,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
         </Page>
       )}
 
-      {entriesByPage.map((pageEntries, pageIndex) => (
+      {entriesByPage.length > 0 && entriesByPage.map((pageEntries, pageIndex) => (
         <Page key={`page-${pageIndex}`} size="A4" style={styles.page}>
           {/* Header Section - only on first page */}
           {pageIndex === 0 && (
@@ -454,9 +458,8 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
             </View>
           )}
 
-          {/* Content Section with conditional rendering */}
-          {pageEntries.length > 0 && (
-            <View style={styles.contentSection}>
+          {/* Content Section */}
+          <View style={styles.contentSection}>
               {/* Info Section - only on first page */}
               {pageIndex === 0 && (
                 <View style={styles.infoSection}>
@@ -548,12 +551,11 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
                   </Text>
                 </View>
               )}
-            </View>
-          )}
-          
+          </View>
+
           {/* Page number indicator for multi-page documents */}
-          {totalPages > 1 && (
-            <Text style={styles.pageNumber}>Side {pageIndex + 1} av {totalPages}</Text>
+          {entriesByPage.length > 1 && (
+            <Text style={styles.pageNumber}>Side {pageIndex + 1} av {entriesByPage.length}</Text>
           )}
         </Page>
       ))}
