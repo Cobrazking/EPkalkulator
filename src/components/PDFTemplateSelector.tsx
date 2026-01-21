@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { X, FileText, Download, Eye } from 'lucide-react';
+import { X, FileText, Download, Eye, ChevronLeft } from 'lucide-react';
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import QuotePDF from './QuotePDF';
 import QuotePDFModern from './QuotePDFModern';
@@ -16,6 +16,29 @@ interface PDFTemplateSelectorProps {
   projectName: string;
 }
 
+const DEFAULT_COVER_TEXT = `Kjære kunde,
+
+Vi takker for muligheten til å levere vårt tilbud på det aktuelle prosjektet.
+
+Dette tilbudet er utarbeidet basert på informasjonen vi har mottatt og omfatter de tjenester og produkter som er beskrevet i vedlagte spesifikasjon.
+
+Vårt tilbud er basert på:
+• Profesjonell gjennomføring av arbeidet
+• Kvalitetssikrede produkter og materialer
+• Erfarne medarbeidere
+• Konkurransedyktige priser
+
+Vi håper dette tilbudet møter deres forventninger og ser frem til et godt samarbeid.`;
+
+const DEFAULT_CLOSING_TEXT = `Tilbudets gyldighet: 30 dager fra dato
+
+Leveringsbetingelser:
+• Arbeidet utføres i henhold til avtalt tidsplan
+• Fakturering skjer etter avtale
+• Betalingsbetingelser: 30 dager netto
+
+Med vennlig hilsen`;
+
 const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
   isOpen,
   onClose,
@@ -26,6 +49,9 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
 }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<'standard' | 'modern'>('standard');
   const [showPreview, setShowPreview] = useState(false);
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [coverText, setCoverText] = useState(DEFAULT_COVER_TEXT);
+  const [closingText, setClosingText] = useState(DEFAULT_CLOSING_TEXT);
 
   const templates = [
     {
@@ -93,7 +119,7 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
                 </div>
 
                 <div className="p-6">
-                  {!showPreview ? (
+                  {!showPreview && !showTextEditor ? (
                     <>
                       {/* Template Selection */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -143,35 +169,87 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex justify-between">
+                      <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => setShowPreview(true)}
+                          onClick={onClose}
+                          className="btn-secondary"
+                        >
+                          Avbryt
+                        </button>
+
+                        <button
+                          onClick={() => setShowTextEditor(true)}
+                          className="btn-primary flex items-center gap-2"
+                        >
+                          <FileText size={16} />
+                          Neste: Rediger tekst
+                        </button>
+                      </div>
+                    </>
+                  ) : showTextEditor ? (
+                    <>
+                      {/* Text Editor */}
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-medium text-text-primary mb-2">
+                            Forside-tekst
+                          </label>
+                          <textarea
+                            value={coverText}
+                            onChange={(e) => setCoverText(e.target.value)}
+                            rows={10}
+                            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none font-mono text-sm"
+                            placeholder="Skriv inn forside-teksten her..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-text-primary mb-2">
+                            Avsluttende tekst
+                          </label>
+                          <textarea
+                            value={closingText}
+                            onChange={(e) => setClosingText(e.target.value)}
+                            rows={10}
+                            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none font-mono text-sm"
+                            placeholder="Skriv inn avsluttende tekst her..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-between mt-6">
+                        <button
+                          onClick={() => setShowTextEditor(false)}
                           className="btn-secondary flex items-center gap-2"
                         >
-                          <Eye size={16} />
-                          Forhåndsvis
+                          <ChevronLeft size={16} />
+                          Tilbake
                         </button>
 
                         <div className="flex gap-2">
                           <button
-                            onClick={onClose}
-                            className="btn-secondary"
+                            onClick={() => setShowPreview(true)}
+                            className="btn-secondary flex items-center gap-2"
                           >
-                            Avbryt
+                            <Eye size={16} />
+                            Forhåndsvis
                           </button>
-                          
+
                           <PDFDownloadLink
                             document={
-                              <SelectedComponent 
-                                entries={entries} 
-                                companyInfo={companyInfo} 
+                              <SelectedComponent
+                                entries={entries}
+                                companyInfo={companyInfo}
                                 customerInfo={customerInfo}
+                                coverText={coverText}
+                                closingText={closingText}
                               />
                             }
                             fileName={getFileName()}
                           >
                             {({ loading }) => (
-                              <button 
+                              <button
                                 className="btn-primary flex items-center gap-2"
                                 disabled={loading}
                               >
@@ -191,43 +269,55 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
                           Forhåndsvisning: {selectedTemplateData?.name}
                         </h4>
                         <button
-                          onClick={() => setShowPreview(false)}
-                          className="btn-secondary"
+                          onClick={() => {
+                            setShowPreview(false);
+                            setShowTextEditor(true);
+                          }}
+                          className="btn-secondary flex items-center gap-2"
                         >
-                          Tilbake til valg
+                          <ChevronLeft size={16} />
+                          Tilbake til redigering
                         </button>
                       </div>
 
                       <div className="border border-border rounded-lg overflow-hidden" style={{ height: '600px' }}>
                         <PDFViewer width="100%" height="100%">
-                          <SelectedComponent 
-                            entries={entries} 
+                          <SelectedComponent
+                            entries={entries}
                             companyInfo={companyInfo}
                             customerInfo={customerInfo}
+                            coverText={coverText}
+                            closingText={closingText}
                           />
                         </PDFViewer>
                       </div>
 
                       <div className="flex justify-between mt-4">
                         <button
-                          onClick={() => setShowPreview(false)}
-                          className="btn-secondary"
+                          onClick={() => {
+                            setShowPreview(false);
+                            setShowTextEditor(true);
+                          }}
+                          className="btn-secondary flex items-center gap-2"
                         >
-                          Endre mal
+                          <ChevronLeft size={16} />
+                          Rediger tekst
                         </button>
 
                         <PDFDownloadLink
                           document={
-                            <SelectedComponent 
+                            <SelectedComponent
                               entries={entries}
-                              companyInfo={companyInfo} 
+                              companyInfo={companyInfo}
                               customerInfo={customerInfo}
+                              coverText={coverText}
+                              closingText={closingText}
                             />
                           }
                           fileName={getFileName()}
                         >
                           {({ loading }) => (
-                            <button 
+                            <button
                               className="btn-primary flex items-center gap-2"
                               disabled={loading}
                             >

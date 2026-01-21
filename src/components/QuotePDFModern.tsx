@@ -11,6 +11,42 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
   },
+  coverPage: {
+    padding: 60,
+    fontFamily: 'Helvetica',
+    fontSize: 11,
+    color: '#1a1a1a',
+    backgroundColor: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  coverTitle: {
+    fontSize: 32,
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: 40,
+    color: '#1e293b',
+    textAlign: 'center',
+  },
+  coverText: {
+    fontSize: 11,
+    lineHeight: 1.6,
+    marginBottom: 10,
+    color: '#475569',
+  },
+  closingPage: {
+    padding: 60,
+    fontFamily: 'Helvetica',
+    fontSize: 11,
+    color: '#1a1a1a',
+    backgroundColor: '#ffffff',
+  },
+  closingText: {
+    fontSize: 11,
+    lineHeight: 1.6,
+    marginBottom: 10,
+    color: '#475569',
+  },
   header: {
     backgroundColor: '#f9fafb',
     padding: 25,
@@ -219,13 +255,15 @@ interface QuotePDFModernProps {
   entries: CalculationEntry[];
   companyInfo: CompanyInfo;
   customerInfo: CustomerInfo;
+  coverText?: string;
+  closingText?: string;
 }
 
 const formatCurrency = (value: number): string => {
   return `${formatNumber(value)} kr`;
 };
 
-const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, customerInfo }) => {
+const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, customerInfo, coverText, closingText }) => {
   // Only filter out entries with zero values
   const validEntries = entries.filter(entry => entry.antall > 0 || entry.enhetspris > 0 || entry.sum > 0);
 
@@ -250,6 +288,18 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
 
   return (
     <Document>
+      {/* Cover Page */}
+      {coverText && (
+        <Page size="A4" style={styles.coverPage}>
+          <Text style={styles.coverTitle}>TILBUD</Text>
+          <View>
+            {coverText.split('\n').map((line, index) => (
+              <Text key={index} style={styles.coverText}>{line}</Text>
+            ))}
+          </View>
+        </Page>
+      )}
+
       {entriesByPage.map((pageEntries, pageIndex) => (
         <Page key={`page-${pageIndex}`} size="A4" style={styles.page}>
           {/* Header Section - only on first page */}
@@ -373,6 +423,26 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
           )}
         </Page>
       ))}
+
+      {/* Closing Page */}
+      {closingText && (
+        <Page size="A4" style={styles.closingPage}>
+          <View>
+            {closingText.split('\n').map((line, index) => (
+              <Text key={index} style={styles.closingText}>{line}</Text>
+            ))}
+          </View>
+
+          {companyInfo.firma && (
+            <View style={{ marginTop: 40 }}>
+              <Text style={styles.closingText}>{companyInfo.firma}</Text>
+              {companyInfo.navn && <Text style={styles.closingText}>{companyInfo.navn}</Text>}
+              {companyInfo.epost && <Text style={styles.closingText}>{companyInfo.epost}</Text>}
+              {companyInfo.tlf && <Text style={styles.closingText}>{companyInfo.tlf}</Text>}
+            </View>
+          )}
+        </Page>
+      )}
     </Document>
   );
 };

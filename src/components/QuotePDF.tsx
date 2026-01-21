@@ -10,6 +10,40 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#333',
   },
+  coverPage: {
+    padding: 60,
+    fontFamily: 'Helvetica',
+    fontSize: 11,
+    color: '#333',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  coverTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 40,
+    color: '#111',
+    textAlign: 'center',
+  },
+  coverText: {
+    fontSize: 11,
+    lineHeight: 1.6,
+    marginBottom: 10,
+    color: '#333',
+  },
+  closingPage: {
+    padding: 60,
+    fontFamily: 'Helvetica',
+    fontSize: 11,
+    color: '#333',
+  },
+  closingText: {
+    fontSize: 11,
+    lineHeight: 1.6,
+    marginBottom: 10,
+    color: '#333',
+  },
   header: {
     marginBottom: 20,
     flexDirection: 'row',
@@ -154,13 +188,15 @@ interface QuotePDFProps {
   entries: CalculationEntry[];
   companyInfo: CompanyInfo;
   customerInfo: CustomerInfo;
+  coverText?: string;
+  closingText?: string;
 }
 
 const formatCurrency = (value: number): string => {
   return `${formatNumber(value)} Kr`;
 };
 
-const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo }) => {
+const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo, coverText, closingText }) => {
   // Only filter out entries with zero values
   const validEntries = entries.filter(entry => entry.antall > 0 || entry.enhetspris > 0 || entry.sum > 0);
 
@@ -173,6 +209,19 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
 
   return (
     <Document>
+      {/* Cover Page */}
+      {coverText && (
+        <Page size="A4" style={styles.coverPage}>
+          <Text style={styles.coverTitle}>TILBUD</Text>
+          <View>
+            {coverText.split('\n').map((line, index) => (
+              <Text key={index} style={styles.coverText}>{line}</Text>
+            ))}
+          </View>
+        </Page>
+      )}
+
+      {/* Main Quote Page */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -259,6 +308,26 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo 
           </Text>
         </View>
       </Page>
+
+      {/* Closing Page */}
+      {closingText && (
+        <Page size="A4" style={styles.closingPage}>
+          <View>
+            {closingText.split('\n').map((line, index) => (
+              <Text key={index} style={styles.closingText}>{line}</Text>
+            ))}
+          </View>
+
+          {companyInfo.firma && (
+            <View style={{ marginTop: 40 }}>
+              <Text style={styles.closingText}>{companyInfo.firma}</Text>
+              {companyInfo.navn && <Text style={styles.closingText}>{companyInfo.navn}</Text>}
+              {companyInfo.epost && <Text style={styles.closingText}>{companyInfo.epost}</Text>}
+              {companyInfo.tlf && <Text style={styles.closingText}>{companyInfo.tlf}</Text>}
+            </View>
+          )}
+        </Page>
+      )}
     </Document>
   );
 };
