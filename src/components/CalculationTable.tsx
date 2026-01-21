@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, memo } from 'react';
+import React, { useMemo, useCallback, memo, useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -23,12 +23,23 @@ const CalculationTable: React.FC<CalculationTableProps> = memo(({
   onReorderEntries,
   onDuplicateEntry
 }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Calculate totals using useMemo
   const totals = useMemo(() => ({
     sum: entries.reduce((acc, entry) => acc + entry.sum, 0),
     kostMateriell: entries.reduce((acc, entry) => acc + (entry.kostMateriell * entry.antall), 0),
     salgsprisRessurs: entries.reduce((acc, entry) => acc + (entry.timepris * entry.timer * entry.antall), 0),
-    salgsprisMateriell: entries.reduce((acc, entry) => 
+    salgsprisMateriell: entries.reduce((acc, entry) =>
       acc + (entry.kostMateriell * entry.antall * (1 + entry.paslagMateriell / 100)), 0),
     timer: entries.reduce((acc, entry) => acc + (entry.timer * entry.antall), 0)
   }), [entries]);
@@ -51,6 +62,77 @@ const CalculationTable: React.FC<CalculationTableProps> = memo(({
       window.location.reload();
     }
   }, []);
+
+  if (isMobile) {
+    return (
+      <div className="w-full space-y-3">
+        {entries.map((entry, index) => (
+          <CalculationRow
+            key={`${entry.id}-${index}`}
+            entry={entry}
+            index={index}
+            onUpdate={onUpdateEntry}
+            onDelete={onDeleteEntry}
+            onDuplicate={onDuplicateEntry}
+            onMoveUp={() => handleMoveUp(index)}
+            onMoveDown={() => handleMoveDown(index)}
+            isFirst={index === 0}
+            isLast={index === entries.length - 1}
+          />
+        ))}
+
+        {/* Totals summary for mobile */}
+        <div className="card bg-primary-400/10 border-primary-400/30">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-3">Totaler</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-text-muted">Timer totalt:</p>
+                <p className="font-semibold text-text-primary">{formatNumber(totals.timer)}</p>
+              </div>
+              <div>
+                <p className="text-text-muted">Kost materiell:</p>
+                <p className="font-semibold text-text-primary">{formatNumber(totals.kostMateriell)} kr</p>
+              </div>
+              <div>
+                <p className="text-text-muted">Salgspris materiell:</p>
+                <p className="font-semibold text-text-primary">{formatNumber(totals.salgsprisMateriell)} kr</p>
+              </div>
+              <div>
+                <p className="text-text-muted">Salgspris ressurs:</p>
+                <p className="font-semibold text-text-primary">{formatNumber(totals.salgsprisRessurs)} kr</p>
+              </div>
+              <div className="col-span-2 pt-3 border-t border-primary-400/30">
+                <p className="text-text-muted">Sum total:</p>
+                <p className="text-2xl font-bold text-primary-300">{formatNumber(totals.sum)} kr</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-2">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onAddEntry}
+            className="btn-primary flex items-center justify-center gap-2 w-full py-3"
+          >
+            <Plus size={20} />
+            <span>Legg til rad</span>
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleReset}
+            className="text-text-muted hover:text-red-400 text-sm flex items-center justify-center gap-2 px-3 py-2 rounded-md transition-colors"
+          >
+            <Trash2 size={14} />
+            <span>Tilbakestill alle poster</span>
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full card">
@@ -92,7 +174,7 @@ const CalculationTable: React.FC<CalculationTableProps> = memo(({
                 isLast={index === entries.length - 1}
               />
             ))}
-            
+
             <tr className="bg-background-darker font-semibold">
               <td className="sticky left-0 bg-background-darker p-2"></td>
               <td className="text-text-muted p-2">SUMMER</td>
@@ -114,7 +196,7 @@ const CalculationTable: React.FC<CalculationTableProps> = memo(({
           </tbody>
         </table>
       </div>
-      
+
       <div className="p-3 flex justify-center border-t border-border">
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -141,7 +223,6 @@ const CalculationTable: React.FC<CalculationTableProps> = memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Deep comparison for entries array
   return JSON.stringify(prevProps.entries) === JSON.stringify(nextProps.entries);
 });
 
