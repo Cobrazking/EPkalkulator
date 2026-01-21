@@ -691,114 +691,189 @@ const CalculatorPage: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-wrap gap-2 items-center lg:flex-row"
+        className="space-y-3"
       >
-        {/* Auto-save toggle */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-background-lighter/50 rounded-lg border border-border">
-          <input
-            type="checkbox"
-            id="autoSave"
-            checked={autoSaveEnabled}
-            onChange={(e) => {
-              const newValue = e.target.checked;
-              console.log('🔄 User toggled auto-save to:', newValue);
-              setAutoSaveEnabled(newValue);
-            }}
-            className="rounded border-border text-primary-500 focus:ring-primary-400"
-          />
-          <label htmlFor="autoSave" className="text-sm text-text-primary cursor-pointer">
-            Autolagring
-          </label>
-          {autoSaveEnabled && (
-            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
-              På
+        {/* Primary actions - always visible */}
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Auto-save toggle */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-background-lighter/50 rounded-lg border border-border">
+            <input
+              type="checkbox"
+              id="autoSave"
+              checked={autoSaveEnabled}
+              onChange={(e) => {
+                const newValue = e.target.checked;
+                console.log('🔄 User toggled auto-save to:', newValue);
+                setAutoSaveEnabled(newValue);
+              }}
+              className="rounded border-border text-primary-500 focus:ring-primary-400"
+            />
+            <label htmlFor="autoSave" className="text-sm text-text-primary cursor-pointer whitespace-nowrap">
+              Autolagring
+            </label>
+            {autoSaveEnabled && (
+              <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full border border-green-400/30">
+                På
+              </span>
+            )}
+            {!autoSaveEnabled && (
+              <span className="text-xs text-text-muted bg-background-darker/50 px-2 py-1 rounded-full border border-border">
+                Av
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleSave}
+            className={`${autoSaveEnabled ? 'btn-secondary' : 'btn-primary'} flex items-center gap-2 whitespace-nowrap`}
+            title="Lagre kalkyle"
+            disabled={isSaving || (!hasUnsavedChanges && !autoSaveEnabled)}
+          >
+            <Save size={16} />
+            <span className="hidden sm:inline">
+              {isSaving
+                ? (autoSaveEnabled ? 'Auto-lagrer...' : 'Lagrer...')
+                : (autoSaveEnabled ? 'Lagre nå' : 'Lagre')
+              }
             </span>
-          )}
-          {!autoSaveEnabled && (
-            <span className="text-xs text-text-muted bg-background-darker/50 px-2 py-1 rounded-full border border-border">
-              Av
-            </span>
-          )}
+            <span className="sm:hidden">Lagre</span>
+          </button>
+
+          <button
+            onClick={() => setIsPDFSelectorOpen(true)}
+            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          >
+            <FileText size={16} />
+            <span className="hidden sm:inline">Last ned tilbud</span>
+            <span className="sm:hidden">PDF</span>
+          </button>
+
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="btn-secondary flex items-center gap-2 lg:hidden"
+            title="Rediger firma- og kundeopplysninger"
+          >
+            <Settings size={16} />
+          </button>
         </div>
 
-        <button 
-          onClick={handleSave}
-          className={`${autoSaveEnabled ? 'btn-secondary' : 'btn-primary'} flex items-center gap-2`}
-          title="Lagre kalkyle"
-          disabled={isSaving || (!hasUnsavedChanges && !autoSaveEnabled)}
-        >
-          <Save size={16} />
-          <span>
-            {isSaving 
-              ? (autoSaveEnabled ? 'Auto-lagrer...' : 'Lagrer...') 
-              : (autoSaveEnabled ? 'Lagre nå' : 'Lagre')
-            }
-          </span>
-        </button>
-        
-        <button 
-          onClick={handleImport}
-          className="btn-secondary flex items-center gap-2"
-          title="Importer data"
-        >
-          <Upload size={16} />
-          <span>Importer</span>
-        </button>
-        
-        <button 
-          onClick={handleExport}
-          className="btn-secondary flex items-center gap-2"
-          title="Eksporter data"
-        >
-          <Download size={16} />
-          <span>Eksporter</span>
-        </button>
+        {/* Secondary actions - collapsible on mobile, always visible on desktop */}
+        <div className="hidden lg:flex flex-wrap gap-2 items-center">
+          <button
+            onClick={handleImport}
+            className="btn-secondary flex items-center gap-2"
+            title="Importer data"
+          >
+            <Upload size={16} />
+            <span>Importer</span>
+          </button>
 
-        <button 
-          onClick={() => exportToExcel(entries, summary)}
-          className="btn-secondary flex items-center gap-2"
-          title="Eksporter til Excel"
-        >
-          <FileSpreadsheet size={16} />
-          <span>Excel</span>
-        </button>
+          <button
+            onClick={handleExport}
+            className="btn-secondary flex items-center gap-2"
+            title="Eksporter data"
+          >
+            <Download size={16} />
+            <span>Eksporter</span>
+          </button>
 
-        <button
-          onClick={handleEditCalculator}
-          className="btn-secondary flex items-center gap-2"
-          disabled={!calculatorId}
-          title={!calculatorId ? "Lagre kalkylen først for å redigere" : "Rediger kalkyle"}
-        >
-          <Edit size={16} />
-          <span>Rediger</span>
-        </button>
+          <button
+            onClick={() => exportToExcel(entries, summary)}
+            className="btn-secondary flex items-center gap-2"
+            title="Eksporter til Excel"
+          >
+            <FileSpreadsheet size={16} />
+            <span>Excel</span>
+          </button>
 
-        <button
-          onClick={handleDuplicateCalculator}
-          className="btn-secondary flex items-center gap-2"
-          disabled={!calculatorId}
-          title={!calculatorId ? "Lagre kalkylen først for å duplisere" : "Dupliser kalkyle"}
-        >
-          <Copy size={16} />
-          <span>Dupliser</span>
-        </button>
+          <button
+            onClick={handleEditCalculator}
+            className="btn-secondary flex items-center gap-2"
+            disabled={!calculatorId}
+            title={!calculatorId ? "Lagre kalkylen først for å redigere" : "Rediger kalkyle"}
+          >
+            <Edit size={16} />
+            <span>Rediger</span>
+          </button>
 
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="btn-secondary flex items-center gap-2"
-          title="Rediger firma- og kundeopplysninger"
-        >
-          <Settings size={16} />
-          <span>Innstillinger</span>
-        </button>
+          <button
+            onClick={handleDuplicateCalculator}
+            className="btn-secondary flex items-center gap-2"
+            disabled={!calculatorId}
+            title={!calculatorId ? "Lagre kalkylen først for å duplisere" : "Dupliser kalkyle"}
+          >
+            <Copy size={16} />
+            <span>Dupliser</span>
+          </button>
 
-        <button
-          onClick={() => setIsPDFSelectorOpen(true)}
-          className="btn-secondary flex items-center gap-2"
-        >
-          <FileText size={16} />
-          <span>Last ned tilbud</span>
-        </button>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="btn-secondary flex items-center gap-2"
+            title="Rediger firma- og kundeopplysninger"
+          >
+            <Settings size={16} />
+            <span>Innstillinger</span>
+          </button>
+        </div>
+
+        {/* Mobile secondary actions - in a grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 lg:hidden">
+          <button
+            onClick={handleImport}
+            className="btn-secondary flex items-center justify-center gap-2"
+            title="Importer data"
+          >
+            <Upload size={16} />
+            <span>Importer</span>
+          </button>
+
+          <button
+            onClick={handleExport}
+            className="btn-secondary flex items-center justify-center gap-2"
+            title="Eksporter data"
+          >
+            <Download size={16} />
+            <span>Eksporter</span>
+          </button>
+
+          <button
+            onClick={() => exportToExcel(entries, summary)}
+            className="btn-secondary flex items-center justify-center gap-2"
+            title="Eksporter til Excel"
+          >
+            <FileSpreadsheet size={16} />
+            <span>Excel</span>
+          </button>
+
+          <button
+            onClick={handleEditCalculator}
+            className="btn-secondary flex items-center justify-center gap-2"
+            disabled={!calculatorId}
+            title={!calculatorId ? "Lagre kalkylen først for å redigere" : "Rediger kalkyle"}
+          >
+            <Edit size={16} />
+            <span>Rediger</span>
+          </button>
+
+          <button
+            onClick={handleDuplicateCalculator}
+            className="btn-secondary flex items-center justify-center gap-2"
+            disabled={!calculatorId}
+            title={!calculatorId ? "Lagre kalkylen først for å duplisere" : "Dupliser kalkyle"}
+          >
+            <Copy size={16} />
+            <span>Dupliser</span>
+          </button>
+
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="btn-secondary flex items-center justify-center gap-2"
+            title="Rediger firma- og kundeopplysninger"
+          >
+            <Settings size={16} />
+            <span>Innstillinger</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Summary */}
