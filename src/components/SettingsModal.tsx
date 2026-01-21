@@ -262,9 +262,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                         <div className="flex items-start gap-3">
                           <div className="text-blue-400 text-sm">
-                            <p className="font-medium mb-1">Kundeopplysninger for denne kalkylen</p>
+                            <p className="font-medium mb-1">Automatisk fra kundekort</p>
                             <p className="text-blue-400/80 text-sm">
-                              Disse opplysningene brukes på tilbud og andre dokumenter generert fra denne kalkylen.
+                              Kundeopplysningene hentes automatisk fra kundekortet for dette prosjektet. For å endre disse opplysningene, gå til Kunder-siden og rediger kundekortet.
                             </p>
                           </div>
                         </div>
@@ -274,11 +274,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="text"
                           value={customerInfo.kunde}
-                          onChange={(e) => {
-                            const newCustomerInfo = { ...customerInfo, kunde: e.target.value };
-                            onUpdateCustomerInfo(newCustomerInfo);
-                          }}
-                          className="w-full"
+                          readOnly
+                          disabled
+                          className="w-full bg-background-darker/50 cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -286,11 +284,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="text"
                           value={customerInfo.adresse}
-                          onChange={(e) => {
-                            const newCustomerInfo = { ...customerInfo, adresse: e.target.value };
-                            onUpdateCustomerInfo(newCustomerInfo);
-                          }}
-                          className="w-full"
+                          readOnly
+                          disabled
+                          className="w-full bg-background-darker/50 cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -298,11 +294,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="email"
                           value={customerInfo.epost}
-                          onChange={(e) => {
-                            const newCustomerInfo = { ...customerInfo, epost: e.target.value };
-                            onUpdateCustomerInfo(newCustomerInfo);
-                          }}
-                          className="w-full"
+                          readOnly
+                          disabled
+                          className="w-full bg-background-darker/50 cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -310,11 +304,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <input
                           type="tel"
                           value={customerInfo.tlf}
-                          onChange={(e) => {
-                            const newCustomerInfo = { ...customerInfo, tlf: e.target.value };
-                            onUpdateCustomerInfo(newCustomerInfo);
-                          }}
-                          className="w-full"
+                          readOnly
+                          disabled
+                          className="w-full bg-background-darker/50 cursor-not-allowed"
                         />
                       </div>
                     </div>

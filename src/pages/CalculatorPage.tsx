@@ -77,8 +77,7 @@ const CalculatorPage: React.FC = () => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true); // Default to enabled
   const dataInitializedRef = React.useRef({
-    companyInfo: false,
-    customerInfo: false
+    companyInfo: false
   });
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
@@ -282,17 +281,7 @@ const CalculatorPage: React.FC = () => {
                     }
                   }
 
-                  // Update customer info from the project's customer
-                  // Only set customerInfo if not already initialized (prevents overwriting user input)
-                  if (customer && !dataInitializedRef.current.customerInfo) {
-                    setCustomerInfo({
-                      kunde: customer.name || '',
-                      adresse: customer.address || '',
-                      epost: customer.email || '',
-                      tlf: customer.phone || ''
-                    });
-                    dataInitializedRef.current.customerInfo = true;
-                  }
+                  // Customer info is always loaded from the customer object via the useEffect below
                   
                   setSettingsLoaded(true);
                 });
@@ -314,26 +303,8 @@ const CalculatorPage: React.FC = () => {
         // For existing calculators, use the saved entries and settings
         setEntries(calculator.entries || []);
 
-        // Use saved customer info if available, otherwise use project's customer info
-        // Only set customerInfo if not already initialized (prevents overwriting user input)
-        if (!dataInitializedRef.current.customerInfo) {
-          if (calculator.settings?.customerInfo) {
-            setCustomerInfo({
-              kunde: calculator.settings.customerInfo.kunde || customer?.name || '',
-              adresse: calculator.settings.customerInfo.adresse || customer?.address || '',
-              epost: calculator.settings.customerInfo.epost || customer?.email || '',
-              tlf: calculator.settings.customerInfo.tlf || customer?.phone || ''
-            });
-          } else if (customer) {
-            setCustomerInfo({
-              kunde: customer.name,
-              adresse: customer.address,
-              epost: customer.email,
-              tlf: customer.phone
-            });
-          }
-          dataInitializedRef.current.customerInfo = true;
-        }
+        // Customer info is always loaded from the customer object via the useEffect below
+        // No need to load it from calculator.settings
         setInitialLoad(false);
       } else {
         // For new calculators, create entries with current user settings
@@ -376,14 +347,14 @@ const CalculatorPage: React.FC = () => {
     }
   }, [settingsLoaded, calculatorId, calculator, calculationSettings]);
 
-  // Update customer info when customer changes
+  // Always update customer info when customer changes (not stored in calculator settings)
   useEffect(() => {
-    if (customer && initialLoad) {
+    if (customer) {
       setCustomerInfo({
-        kunde: customer.name,
-        adresse: customer.address,
-        epost: customer.email,
-        tlf: customer.phone
+        kunde: customer.name || '',
+        adresse: customer.address || '',
+        epost: customer.email || '',
+        tlf: customer.phone || ''
       });
     }
   }, [customer]);
@@ -433,7 +404,7 @@ const CalculatorPage: React.FC = () => {
     try {
       setIsSaving(true);
       
-      // Save all company info and customer info with the calculator
+      // Save company info with the calculator (customer info is always loaded from customer object)
       const calculatorData = {
         organizationId: currentOrganization.id,
         projectId,
@@ -443,12 +414,6 @@ const CalculatorPage: React.FC = () => {
         summary: summary,
         settings: {
           companyInfo: companyInfo,
-          customerInfo: {
-            kunde: customerInfo.kunde || '',
-            adresse: customerInfo.adresse || '',
-            epost: customerInfo.epost || '',
-            tlf: customerInfo.tlf || ''
-          },
           calculationSettings: calculationSettings
         }
       };
