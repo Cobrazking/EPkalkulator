@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
   },
   coverText: {
     fontSize: 11,
-    lineHeight: 1.7,
-    marginBottom: 10,
+    lineHeight: 1.4,
+    marginBottom: 5,
     color: '#374151',
   },
   coverFooter: {
