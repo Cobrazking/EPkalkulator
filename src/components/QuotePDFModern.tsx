@@ -398,14 +398,9 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
           <View style={styles.coverHeaderSection}>
             <View style={styles.coverCompanyInfo}>
               <Text style={styles.coverCompanyName}>{companyInfo.firma || 'Firma'}</Text>
-              <View>
-                {companyInfo.epost && (
-                  <Text style={styles.coverContactText}>{companyInfo.epost}</Text>
-                )}
-                {companyInfo.tlf && (
-                  <Text style={styles.coverContactText}>{companyInfo.tlf}</Text>
-                )}
-              </View>
+              {companyInfo.logo && (
+                <Image src={companyInfo.logo} style={{ width: 80, height: 'auto', maxHeight: 60 }} />
+              )}
             </View>
           </View>
 

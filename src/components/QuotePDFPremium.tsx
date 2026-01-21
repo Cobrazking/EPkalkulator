@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
 import { formatNumber } from '../utils/calculations';
 
@@ -324,14 +324,9 @@ const QuotePDFPremium: React.FC<QuotePDFPremiumProps> = ({
           <View style={styles.coverHeader}>
             <View style={styles.coverLogoSection}>
               <Text style={styles.coverCompanyName}>{companyInfo.firma || 'FIRMA'}</Text>
-              <View>
-                {companyInfo.epost && (
-                  <Text style={styles.coverContact}>{companyInfo.epost}</Text>
-                )}
-                {companyInfo.tlf && (
-                  <Text style={styles.coverContact}>{companyInfo.tlf}</Text>
-                )}
-              </View>
+              {companyInfo.logo && (
+                <Image src={companyInfo.logo} style={{ width: 80, height: 'auto', maxHeight: 60 }} />
+              )}
             </View>
           </View>
 
