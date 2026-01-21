@@ -687,11 +687,11 @@ const CalculatorPage: React.FC = () => {
       </div>
 
       {/* Action Buttons */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-wrap gap-2 items-center"
+        className="flex flex-wrap gap-2 items-center lg:flex-row"
       >
         {/* Auto-save toggle */}
         <div className="flex items-center gap-2 px-3 py-2 bg-background-lighter/50 rounded-lg border border-border">

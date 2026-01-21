@@ -148,14 +148,6 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     wordBreak: 'break-word',
   },
-  text: {
-    fontSize: 10,
-    lineHeight: 1.4,
-  },
-  textWrap: {
-    maxWidth: '100%',
-    wordBreak: 'break-word',
-  },
 });
 
 interface QuotePDFProps {

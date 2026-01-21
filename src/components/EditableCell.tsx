@@ -71,9 +71,9 @@ const EditableCell: React.FC<EditableCellProps> = memo(({
   const alignmentClass = type === 'number' || type === 'percent' ? 'justify-center text-center' : 'justify-start text-left';
   
   return (
-    <div 
+    <div
       onClick={() => setIsEditing(true)}
-      className={`min-h-[40px] flex items-center w-full ${alignmentClass} ${className}`}
+      className={`min-h-[40px] lg:min-h-[40px] min-h-[44px] flex items-center w-full ${alignmentClass} ${className}`}
     >
       {isEditing ? (
         <motion.input
@@ -85,14 +85,15 @@ const EditableCell: React.FC<EditableCellProps> = memo(({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className={`w-full px-2 py-1 rounded text-text-primary border-none focus:ring-2 focus:ring-primary-400 bg-background ${type === 'number' || type === 'percent' ? 'text-center font-sans' : 'text-left'}`}
+          className={`w-full px-3 py-2 lg:px-2 lg:py-1 rounded text-text-primary border-none focus:ring-2 focus:ring-primary-400 bg-background text-base lg:text-sm ${type === 'number' || type === 'percent' ? 'text-center font-sans' : 'text-left'}`}
           placeholder={placeholder}
+          inputMode={type === 'number' || type === 'percent' ? 'decimal' : 'text'}
         />
       ) : (
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={`w-full truncate ${type === 'number' || type === 'percent' ? 'text-center font-sans' : 'text-left'}`}
+          className={`w-full truncate text-base lg:text-sm ${type === 'number' || type === 'percent' ? 'text-center font-sans' : 'text-left'}`}
         >
           {value === '' ? (
             <span className="text-text-muted italic">{placeholder}</span>
