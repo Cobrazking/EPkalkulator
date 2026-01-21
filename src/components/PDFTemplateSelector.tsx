@@ -5,6 +5,7 @@ import { X, FileText, Download, Eye, ChevronLeft } from 'lucide-react';
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import QuotePDF from './QuotePDF';
 import QuotePDFModern from './QuotePDFModern';
+import QuotePDFPremium from './QuotePDFPremium';
 import { CalculationEntry, CompanyInfo, CustomerInfo } from '../types';
 
 interface PDFTemplateSelectorProps {
@@ -47,7 +48,7 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
   customerInfo,
   projectName
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<'standard' | 'modern'>('standard');
+  const [selectedTemplate, setSelectedTemplate] = useState<'standard' | 'modern' | 'premium'>('standard');
   const [showPreview, setShowPreview] = useState(false);
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [coverText, setCoverText] = useState(DEFAULT_COVER_TEXT);
@@ -58,15 +59,22 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
       id: 'standard' as const,
       name: 'Standard tilbudsbrev',
       description: 'Klassisk og enkel layout med fokus på innhold',
-      preview: '/api/placeholder/300/400', // Placeholder for preview image
+      preview: '/api/placeholder/300/400',
       component: QuotePDF
     },
     {
       id: 'modern' as const,
       name: 'Tilbudsbrev MAL2',
       description: 'Moderne design med farger og profesjonell layout',
-      preview: '/api/placeholder/300/400', // Placeholder for preview image
+      preview: '/api/placeholder/300/400',
       component: QuotePDFModern
+    },
+    {
+      id: 'premium' as const,
+      name: 'Tilbudsbrev MAL3',
+      description: 'Premium design med mørk forside og profesjonell struktur',
+      preview: '/api/placeholder/300/400',
+      component: QuotePDFPremium
     }
   ];
 
@@ -74,7 +82,9 @@ const PDFTemplateSelector: React.FC<PDFTemplateSelectorProps> = ({
   const SelectedComponent = selectedTemplateData?.component || QuotePDF;
 
   const getFileName = () => {
-    const templateSuffix = selectedTemplate === 'modern' ? '-mal2' : '';
+    let templateSuffix = '';
+    if (selectedTemplate === 'modern') templateSuffix = '-mal2';
+    if (selectedTemplate === 'premium') templateSuffix = '-mal3';
     return `tilbud-${projectName}${templateSuffix}-${new Date().toISOString().slice(0, 10)}.pdf`;
   };
 

@@ -12,40 +12,144 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   coverPage: {
-    padding: 60,
+    padding: 0,
     fontFamily: 'Helvetica',
     fontSize: 11,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
     display: 'flex',
     flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  coverHeaderSection: {
+    backgroundColor: '#f1f5f9',
+    padding: 40,
+    paddingBottom: 30,
+  },
+  coverCompanyInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  coverCompanyName: {
+    fontSize: 22,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
+  },
+  coverContactText: {
+    fontSize: 9,
+    color: '#64748b',
+    textAlign: 'right',
+  },
+  coverMainSection: {
+    flex: 1,
+    padding: 40,
     justifyContent: 'center',
   },
   coverTitle: {
-    fontSize: 32,
+    fontSize: 52,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 40,
+    marginBottom: 15,
     color: '#1e293b',
-    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  coverSubtitle: {
+    fontSize: 18,
+    color: '#64748b',
+    marginBottom: 50,
+  },
+  coverInfoBox: {
+    backgroundColor: '#f8fafc',
+    padding: 25,
+    borderRadius: 4,
+    borderLeft: '4px solid #3b82f6',
+  },
+  coverInfoLabel: {
+    fontSize: 10,
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  coverInfoText: {
+    fontSize: 12,
+    color: '#1e293b',
+    marginBottom: 6,
+    lineHeight: 1.5,
   },
   coverText: {
     fontSize: 11,
-    lineHeight: 1.6,
+    lineHeight: 1.7,
     marginBottom: 10,
     color: '#475569',
   },
+  coverFooterSection: {
+    backgroundColor: '#f1f5f9',
+    padding: 40,
+    paddingTop: 20,
+  },
+  coverFooterText: {
+    fontSize: 9,
+    color: '#64748b',
+  },
   closingPage: {
-    padding: 60,
+    padding: 50,
     fontFamily: 'Helvetica',
     fontSize: 11,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  closingHeader: {
+    backgroundColor: '#f1f5f9',
+    padding: 30,
+    marginBottom: 40,
+    borderRadius: 4,
+  },
+  closingTitle: {
+    fontSize: 26,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
+  },
+  closingContent: {
+    flex: 1,
   },
   closingText: {
     fontSize: 11,
-    lineHeight: 1.6,
+    lineHeight: 1.7,
     marginBottom: 10,
     color: '#475569',
+  },
+  closingContactSection: {
+    marginTop: 40,
+    padding: 25,
+    backgroundColor: '#f8fafc',
+    borderRadius: 4,
+    borderLeft: '4px solid #3b82f6',
+  },
+  closingContactTitle: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
+    marginBottom: 15,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  closingContactInfo: {
+    fontSize: 11,
+    color: '#475569',
+    marginBottom: 6,
+    lineHeight: 1.5,
+  },
+  closingFooter: {
+    marginTop: 30,
+    paddingTop: 20,
+    borderTop: '2px solid #e2e8f0',
+    fontSize: 10,
+    color: '#64748b',
+    textAlign: 'center',
   },
   header: {
     backgroundColor: '#f9fafb',
@@ -291,11 +395,47 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
       {/* Cover Page */}
       {coverText && (
         <Page size="A4" style={styles.coverPage}>
-          <Text style={styles.coverTitle}>TILBUD</Text>
-          <View>
-            {coverText.split('\n').map((line, index) => (
-              <Text key={index} style={styles.coverText}>{line}</Text>
-            ))}
+          <View style={styles.coverHeaderSection}>
+            <View style={styles.coverCompanyInfo}>
+              <Text style={styles.coverCompanyName}>{companyInfo.firma || 'Firma'}</Text>
+              <View>
+                {companyInfo.epost && (
+                  <Text style={styles.coverContactText}>{companyInfo.epost}</Text>
+                )}
+                {companyInfo.tlf && (
+                  <Text style={styles.coverContactText}>{companyInfo.tlf}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.coverMainSection}>
+            <Text style={styles.coverTitle}>TILBUD</Text>
+            <Text style={styles.coverSubtitle}>{companyInfo.tilbudstittel || 'Pristilbud'}</Text>
+
+            <View style={styles.coverInfoBox}>
+              <Text style={styles.coverInfoLabel}>Tilbud til</Text>
+              <Text style={styles.coverInfoText}>{customerInfo.kunde || 'Kunde'}</Text>
+              {customerInfo.adresse && (
+                <Text style={styles.coverInfoText}>{customerInfo.adresse}</Text>
+              )}
+              {customerInfo.epost && (
+                <Text style={styles.coverInfoText}>{customerInfo.epost}</Text>
+              )}
+              {customerInfo.tlf && (
+                <Text style={styles.coverInfoText}>{customerInfo.tlf}</Text>
+              )}
+            </View>
+
+            <View style={{ marginTop: 30 }}>
+              {coverText.split('\n').map((line, index) => (
+                <Text key={index} style={styles.coverText}>{line || ' '}</Text>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.coverFooterSection}>
+            <Text style={styles.coverFooterText}>Dato: {currentDate}</Text>
           </View>
         </Page>
       )}
@@ -427,20 +567,31 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
       {/* Closing Page */}
       {closingText && (
         <Page size="A4" style={styles.closingPage}>
-          <View>
-            {closingText.split('\n').map((line, index) => (
-              <Text key={index} style={styles.closingText}>{line}</Text>
-            ))}
+          <View style={styles.closingHeader}>
+            <Text style={styles.closingTitle}>Vilkår & Betingelser</Text>
           </View>
 
-          {companyInfo.firma && (
-            <View style={{ marginTop: 40 }}>
-              <Text style={styles.closingText}>{companyInfo.firma}</Text>
-              {companyInfo.navn && <Text style={styles.closingText}>{companyInfo.navn}</Text>}
-              {companyInfo.epost && <Text style={styles.closingText}>{companyInfo.epost}</Text>}
-              {companyInfo.tlf && <Text style={styles.closingText}>{companyInfo.tlf}</Text>}
+          <View style={styles.closingContent}>
+            <View>
+              {closingText.split('\n').map((line, index) => (
+                <Text key={index} style={styles.closingText}>{line || ' '}</Text>
+              ))}
             </View>
-          )}
+
+            {companyInfo.firma && (
+              <View style={styles.closingContactSection}>
+                <Text style={styles.closingContactTitle}>Kontaktinformasjon</Text>
+                <Text style={styles.closingContactInfo}>{companyInfo.firma}</Text>
+                {companyInfo.navn && <Text style={styles.closingContactInfo}>{companyInfo.navn}</Text>}
+                {companyInfo.epost && <Text style={styles.closingContactInfo}>E-post: {companyInfo.epost}</Text>}
+                {companyInfo.tlf && <Text style={styles.closingContactInfo}>Telefon: {companyInfo.tlf}</Text>}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.closingFooter}>
+            <Text>Vi ser frem til et godt samarbeid</Text>
+          </View>
         </Page>
       )}
     </Document>
