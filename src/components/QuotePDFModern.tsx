@@ -42,9 +42,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   coverMainSection: {
-    flex: 1,
     padding: 40,
-    justifyContent: 'center',
+    paddingTop: 30,
   },
   coverTitle: {
     fontSize: 52,
@@ -56,7 +55,7 @@ const styles = StyleSheet.create({
   coverSubtitle: {
     fontSize: 18,
     color: '#64748b',
-    marginBottom: 50,
+    marginBottom: 35,
   },
   coverInfoBox: {
     backgroundColor: '#f8fafc',
@@ -422,7 +421,7 @@ const QuotePDFModern: React.FC<QuotePDFModernProps> = ({ entries, companyInfo, c
               )}
             </View>
 
-            <View style={{ marginTop: 30 }}>
+            <View style={{ marginTop: 20 }}>
               {coverText.split('\n').map((line, index) => (
                 <Text key={index} style={styles.coverText}>{line || ' '}</Text>
               ))}
