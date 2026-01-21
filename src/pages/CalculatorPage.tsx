@@ -65,6 +65,7 @@ const CalculatorPage: React.FC = () => {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(initialCompanyInfo);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(initialCustomerInfo);
   const [calculationSettings, setCalculationSettings] = useState<CalculationSettings>(initialSettings);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -75,6 +76,10 @@ const CalculatorPage: React.FC = () => {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true); // Default to enabled
+  const dataInitializedRef = React.useRef({
+    companyInfo: false,
+    customerInfo: false
+  });
   const [summary, setSummary] = useState<CalculationSummary>({
     totalSum: 0,
     fortjeneste: 0,
@@ -114,7 +119,7 @@ const CalculatorPage: React.FC = () => {
     try {
       localStorage.setItem('epkalk_autoSaveEnabled', JSON.stringify(autoSaveEnabled));
       console.log('✅ Auto-save preference saved to localStorage');
-      
+
       // Verify it was saved correctly
       const verification = localStorage.getItem('epkalk_autoSaveEnabled');
       console.log('🔍 Verification - value in localStorage:', verification);
@@ -122,6 +127,32 @@ const CalculatorPage: React.FC = () => {
       console.error('❌ Failed to save auto-save preference:', error);
     }
   }, [autoSaveEnabled]);
+
+  // Fetch current user info from users table
+  useEffect(() => {
+    if (currentOrganization) {
+      supabase.auth.getUser().then(({ data: userData, error: userError }) => {
+        if (userError) {
+          console.error('Failed to get auth user:', userError);
+          return;
+        }
+
+        supabase
+          .from('users')
+          .select('*')
+          .eq('auth_user_id', userData.user?.id)
+          .eq('organization_id', currentOrganization.id)
+          .single()
+          .then(({ data: user, error }) => {
+            if (error) {
+              console.error('Failed to fetch current user:', error);
+              return;
+            }
+            setCurrentUser(user);
+          });
+      });
+    }
+  }, [currentOrganization]);
   
   // Load user-specific global settings
   useEffect(() => {
@@ -164,30 +195,34 @@ const CalculatorPage: React.FC = () => {
                       logo: settings.company_info.logo
                     };
                     
-                    // If we have a calculator, merge global settings with calculator-specific settings
-                    if (calculatorId && calculator && calculator.settings?.companyInfo) {
-                      setCompanyInfo({
-                        // Use calculator-specific firma if available, otherwise use global
-                        firma: calculator.settings.companyInfo.firma || globalCompanyInfo.firma,
-                        logo: calculator.settings.companyInfo.logo || globalCompanyInfo.logo, // Use calculator logo if available, otherwise global
-                        // Calculator-specific settings
-                        navn: calculator.settings.companyInfo.navn || '',
-                        epost: calculator.settings.companyInfo.epost || currentOrganization.email || '',
-                        tlf: calculator.settings.companyInfo.tlf || currentOrganization.phone || '',
-                        refNr: calculator.settings.companyInfo.refNr || '',
-                        tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
-                      });
-                    } else {
-                      // For new calculators, use global settings as defaults
-                      setCompanyInfo({
-                        firma: globalCompanyInfo.firma, // Default to global, but can be overridden
-                        logo: globalCompanyInfo.logo, // For new calculators, start with global logo
-                        navn: '',
-                        epost: currentOrganization.email || '',
-                        tlf: currentOrganization.phone || '',
-                        refNr: '',
-                        tilbudstittel: ''
-                      });
+                    // Only set companyInfo if not already initialized (prevents overwriting user input)
+                    if (!dataInitializedRef.current.companyInfo) {
+                      // If we have a calculator, merge global settings with calculator-specific settings
+                      if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                        setCompanyInfo({
+                          // Use calculator-specific firma if available, otherwise use global
+                          firma: calculator.settings.companyInfo.firma || globalCompanyInfo.firma,
+                          logo: calculator.settings.companyInfo.logo || globalCompanyInfo.logo, // Use calculator logo if available, otherwise global
+                          // Calculator-specific settings or use current user info
+                          navn: calculator.settings.companyInfo.navn || currentUser?.name || '',
+                          epost: calculator.settings.companyInfo.epost || currentUser?.email || currentOrganization.email || '',
+                          tlf: calculator.settings.companyInfo.tlf || currentUser?.phone || currentOrganization.phone || '',
+                          refNr: calculator.settings.companyInfo.refNr || '',
+                          tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                        });
+                      } else {
+                        // For new calculators, use global settings and current user info as defaults
+                        setCompanyInfo({
+                          firma: globalCompanyInfo.firma, // Default to global, but can be overridden
+                          logo: globalCompanyInfo.logo, // For new calculators, start with global logo
+                          navn: currentUser?.name || '',
+                          epost: currentUser?.email || currentOrganization.email || '',
+                          tlf: currentUser?.phone || currentOrganization.phone || '',
+                          refNr: '',
+                          tilbudstittel: ''
+                        });
+                      }
+                      dataInitializedRef.current.companyInfo = true;
                     }
                     
                     // Load calculation settings
@@ -206,45 +241,51 @@ const CalculatorPage: React.FC = () => {
                       firma: currentOrganization.name || '',
                       logo: currentOrganization.logo
                     };
-                    
-                    if (calculatorId && calculator && calculator.settings?.companyInfo) {
-                      setCompanyInfo({
-                        // Global defaults
-                        firma: defaultCompanyInfo.firma, // Always use global firma
-                        logo: calculator.settings.companyInfo.logo || defaultCompanyInfo.logo, // Use calculator logo if available
-                        // Calculator-specific settings
-                        navn: calculator.settings.companyInfo.navn || '',
-                        epost: calculator.settings.companyInfo.epost || currentOrganization.email || '',
-                        tlf: calculator.settings.companyInfo.tlf || currentOrganization.phone || '',
-                        refNr: calculator.settings.companyInfo.refNr || '',
-                        tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
-                      });
-                      
-                      if (calculator.settings?.calculationSettings) {
+
+                    // Only set companyInfo if not already initialized (prevents overwriting user input)
+                    if (!dataInitializedRef.current.companyInfo) {
+                      if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                        setCompanyInfo({
+                          // Global defaults
+                          firma: defaultCompanyInfo.firma, // Always use global firma
+                          logo: calculator.settings.companyInfo.logo || defaultCompanyInfo.logo, // Use calculator logo if available
+                          // Calculator-specific settings or use current user info
+                          navn: calculator.settings.companyInfo.navn || currentUser?.name || '',
+                          epost: calculator.settings.companyInfo.epost || currentUser?.email || currentOrganization.email || '',
+                          tlf: calculator.settings.companyInfo.tlf || currentUser?.phone || currentOrganization.phone || '',
+                          refNr: calculator.settings.companyInfo.refNr || '',
+                          tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                        });
+
+                        if (calculator.settings?.calculationSettings) {
                         setCalculationSettings(calculator.settings.calculationSettings);
                       }
-                    } else {
-                      // For new calculators with no global settings
-                      setCompanyInfo({
-                        firma: defaultCompanyInfo.firma, // Default to organization name, but can be overridden
-                        logo: defaultCompanyInfo.logo,
-                        navn: '',
-                        epost: currentOrganization.email || '',
-                        tlf: currentOrganization.phone || '',
-                        refNr: '',
-                        tilbudstittel: ''
-                      });
+                      } else {
+                        // For new calculators with no global settings
+                        setCompanyInfo({
+                          firma: defaultCompanyInfo.firma, // Default to organization name, but can be overridden
+                          logo: defaultCompanyInfo.logo,
+                          navn: currentUser?.name || '',
+                          epost: currentUser?.email || currentOrganization.email || '',
+                          tlf: currentUser?.phone || currentOrganization.phone || '',
+                          refNr: '',
+                          tilbudstittel: ''
+                        });
+                      }
+                      dataInitializedRef.current.companyInfo = true;
                     }
                   }
-                  
+
                   // Update customer info from the project's customer
-                  if (customer) {
+                  // Only set customerInfo if not already initialized (prevents overwriting user input)
+                  if (customer && !dataInitializedRef.current.customerInfo) {
                     setCustomerInfo({
                       kunde: customer.name || '',
                       adresse: customer.address || '',
                       epost: customer.email || '',
                       tlf: customer.phone || ''
                     });
+                    dataInitializedRef.current.customerInfo = true;
                   }
                   
                   setSettingsLoaded(true);
@@ -256,7 +297,7 @@ const CalculatorPage: React.FC = () => {
         setSettingsLoaded(true); // Continue with defaults
       }
     }
-  }, [currentOrganization, calculatorId, calculator, customer, settingsLoaded]);
+  }, [currentOrganization, calculatorId, calculator, customer, currentUser, settingsLoaded]);
 
 
   // Initialize entries after settings are loaded and calculator is determined
@@ -266,22 +307,26 @@ const CalculatorPage: React.FC = () => {
       if (calculatorId && calculator) {
         // For existing calculators, use the saved entries and settings
         setEntries(calculator.entries || []);
-        
+
         // Use saved customer info if available, otherwise use project's customer info
-        if (calculator.settings?.customerInfo) {
-          setCustomerInfo({
-            kunde: calculator.settings.customerInfo.kunde || customer?.name || '',
-            adresse: calculator.settings.customerInfo.adresse || customer?.address || '',
-            epost: calculator.settings.customerInfo.epost || customer?.email || '',
-            tlf: calculator.settings.customerInfo.tlf || customer?.phone || ''
-          });
-        } else if (customer) {
-          setCustomerInfo({
-            kunde: customer.name,
-            adresse: customer.address,
-            epost: customer.email,
-            tlf: customer.phone
-          });
+        // Only set customerInfo if not already initialized (prevents overwriting user input)
+        if (!dataInitializedRef.current.customerInfo) {
+          if (calculator.settings?.customerInfo) {
+            setCustomerInfo({
+              kunde: calculator.settings.customerInfo.kunde || customer?.name || '',
+              adresse: calculator.settings.customerInfo.adresse || customer?.address || '',
+              epost: calculator.settings.customerInfo.epost || customer?.email || '',
+              tlf: calculator.settings.customerInfo.tlf || customer?.phone || ''
+            });
+          } else if (customer) {
+            setCustomerInfo({
+              kunde: customer.name,
+              adresse: customer.address,
+              epost: customer.email,
+              tlf: customer.phone
+            });
+          }
+          dataInitializedRef.current.customerInfo = true;
         }
         setInitialLoad(false);
       } else {
