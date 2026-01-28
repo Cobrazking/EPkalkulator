@@ -153,7 +153,12 @@ const CalculatorPage: React.FC = () => {
       });
     }
   }, [currentOrganization]);
-  
+
+  // Reset dataInitializedRef when calculator changes
+  useEffect(() => {
+    dataInitializedRef.current.companyInfo = false;
+  }, [calculatorId]);
+
   // Load user-specific global settings
   useEffect(() => {
     if (currentOrganization && !settingsLoaded) {
