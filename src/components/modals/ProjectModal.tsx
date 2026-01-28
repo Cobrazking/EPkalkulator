@@ -68,19 +68,28 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       name: formData.name,
       description: formData.description,
       customerId: formData.customerId,
-      createdBy: formData.createdBy || undefined,
+      createdBy: formData.createdBy === '' ? undefined : formData.createdBy,
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
       budget: formData.budget ? Number(formData.budget) : undefined
     };
 
+    console.log('📝 Submitting project:', {
+      isUpdate: !!project,
+      formDataCreatedBy: formData.createdBy,
+      projectDataCreatedBy: projectData.createdBy
+    });
+
     if (project) {
-      updateProject({
+      const updatedProject = {
         ...project,
         ...projectData
-      });
+      };
+      console.log('🔄 Calling updateProject with:', updatedProject);
+      updateProject(updatedProject);
     } else {
+      console.log('➕ Calling addProject with:', projectData);
       addProject({
         ...projectData,
         organizationId: currentOrganization.id

@@ -885,13 +885,17 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         start_date: project.startDate,
         end_date: project.endDate,
         budget: project.budget,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Always include created_by to allow removing/changing the owner
+        created_by: project.createdBy || null
       };
 
-      // Include created_by if it's set
-      if (project.createdBy !== undefined) {
-        snakeCaseData.created_by = project.createdBy || null;
-      }
+      console.log('🔄 Updating project:', {
+        projectId: project.id,
+        createdBy: project.createdBy,
+        snakeCaseCreatedBy: snakeCaseData.created_by,
+        allData: snakeCaseData
+      });
 
       const { data, error } = await supabase
         .from('projects')
@@ -900,9 +904,16 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Update error:', error);
+        throw error;
+      }
 
-      console.log('✅ Project updated:', data);
+      console.log('✅ Project updated successfully:', {
+        id: data.id,
+        name: data.name,
+        created_by: data.created_by
+      });
       const camelCaseProject = toCamelCase(data);
       dispatch({ type: 'UPDATE_PROJECT', payload: camelCaseProject });
     } catch (error) {
