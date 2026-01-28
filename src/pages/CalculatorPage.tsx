@@ -207,16 +207,19 @@ const CalculatorPage: React.FC = () => {
                     if (!dataInitializedRef.current.companyInfo) {
                       // If we have a calculator, merge global settings with calculator-specific settings
                       if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                        const calcSettings = calculator.settings.companyInfo;
                         setCompanyInfo({
                           // Use calculator-specific firma if available, otherwise use global
-                          firma: calculator.settings.companyInfo.firma || globalCompanyInfo.firma,
-                          logo: calculator.settings.companyInfo.logo || globalCompanyInfo.logo, // Use calculator logo if available, otherwise global
+                          firma: calcSettings.firma || globalCompanyInfo.firma,
+                          // For logo, refNr, and tilbudstittel: check if property exists in calculator settings
+                          // If it exists (even as undefined/null/empty), use it to override global
+                          logo: 'logo' in calcSettings ? calcSettings.logo : globalCompanyInfo.logo,
                           // Calculator-specific settings or fallback to global user settings
-                          navn: calculator.settings.companyInfo.navn || globalCompanyInfo.navn,
-                          epost: calculator.settings.companyInfo.epost || globalCompanyInfo.epost,
-                          tlf: calculator.settings.companyInfo.tlf || globalCompanyInfo.tlf,
-                          refNr: calculator.settings.companyInfo.refNr || '',
-                          tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                          navn: calcSettings.navn || globalCompanyInfo.navn,
+                          epost: calcSettings.epost || globalCompanyInfo.epost,
+                          tlf: calcSettings.tlf || globalCompanyInfo.tlf,
+                          refNr: 'refNr' in calcSettings ? (calcSettings.refNr || '') : '',
+                          tilbudstittel: 'tilbudstittel' in calcSettings ? (calcSettings.tilbudstittel || '') : ''
                         });
                       } else {
                         // For new calculators, use global settings from user_settings
@@ -256,16 +259,18 @@ const CalculatorPage: React.FC = () => {
                     // Only set companyInfo if not already initialized (prevents overwriting user input)
                     if (!dataInitializedRef.current.companyInfo) {
                       if (calculatorId && calculator && calculator.settings?.companyInfo) {
+                        const calcSettings = calculator.settings.companyInfo;
                         setCompanyInfo({
                           // Global defaults
-                          firma: defaultCompanyInfo.firma, // Always use global firma
-                          logo: calculator.settings.companyInfo.logo || defaultCompanyInfo.logo, // Use calculator logo if available
+                          firma: calcSettings.firma || defaultCompanyInfo.firma,
+                          // For logo, refNr, and tilbudstittel: check if property exists in calculator settings
+                          logo: 'logo' in calcSettings ? calcSettings.logo : defaultCompanyInfo.logo,
                           // Calculator-specific settings or use organization defaults
-                          navn: calculator.settings.companyInfo.navn || defaultCompanyInfo.navn,
-                          epost: calculator.settings.companyInfo.epost || defaultCompanyInfo.epost,
-                          tlf: calculator.settings.companyInfo.tlf || defaultCompanyInfo.tlf,
-                          refNr: calculator.settings.companyInfo.refNr || '',
-                          tilbudstittel: calculator.settings.companyInfo.tilbudstittel || ''
+                          navn: calcSettings.navn || defaultCompanyInfo.navn,
+                          epost: calcSettings.epost || defaultCompanyInfo.epost,
+                          tlf: calcSettings.tlf || defaultCompanyInfo.tlf,
+                          refNr: 'refNr' in calcSettings ? (calcSettings.refNr || '') : '',
+                          tilbudstittel: 'tilbudstittel' in calcSettings ? (calcSettings.tilbudstittel || '') : ''
                         });
 
                         if (calculator.settings?.calculationSettings) {
