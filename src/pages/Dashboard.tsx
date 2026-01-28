@@ -19,39 +19,35 @@ import {
 import { useProject } from '../contexts/ProjectContext';
 import { formatNumber, formatPercent } from '../utils/calculations';
 
-console.log('📊 Dashboard component loading...');
-
 const Dashboard: React.FC = () => {
-  console.log('🎨 Dashboard component rendering...');
-  
-  const { 
-    getCurrentOrganizationCustomers, 
-    getCurrentOrganizationProjects, 
+  const {
+    getCurrentOrganizationCustomers,
+    getCurrentOrganizationProjects,
     getCurrentOrganizationCalculators,
+    getCurrentOrganizationUsers,
     currentOrganization,
     getCustomerById,
     getProjectById,
+    getUserById,
     state,
     refreshData
   } = useProject();
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  console.log('🏢 Dashboard - currentOrganization:', currentOrganization);
 
   const customers = getCurrentOrganizationCustomers();
   const allProjects = getCurrentOrganizationProjects();
   const calculators = getCurrentOrganizationCalculators();
+  const users = getCurrentOrganizationUsers();
 
-  console.log('📈 Dashboard - customers:', customers.length);
-  console.log('📈 Dashboard - projects:', allProjects.length);
-  console.log('📈 Dashboard - calculators:', calculators.length);
-
-  // Filter projects by status
-  const filteredProjects = statusFilter === 'all' 
-    ? allProjects 
-    : allProjects.filter(project => project.status === statusFilter);
+  // Filter projects by status and user
+  const filteredProjects = allProjects.filter(project => {
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    const matchesUser = userFilter === 'all' || project.createdBy === userFilter;
+    return matchesStatus && matchesUser;
+  });
 
   // Get calculators for filtered projects only
   const filteredCalculators = calculators.filter(calc => 
@@ -207,9 +203,11 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-text-muted mt-1 text-sm sm:text-base">
             Oversikt for {currentOrganization.name}
-            {statusFilter !== 'all' && (
+            {(statusFilter !== 'all' || userFilter !== 'all') && (
               <span className="ml-2 px-2 py-1 bg-primary-500/20 text-primary-400 rounded-full text-xs">
-                Filtrert: {getStatusText(statusFilter)}
+                {statusFilter !== 'all' && `Status: ${getStatusText(statusFilter)}`}
+                {statusFilter !== 'all' && userFilter !== 'all' && ', '}
+                {userFilter !== 'all' && `Bruker: ${getUserById(userFilter)?.name || 'Ukjent'}`}
               </span>
             )}
           </p>
@@ -559,7 +557,42 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
+          {/* User Filter */}
+          {users.length > 1 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Users size={14} className="text-text-muted" />
+                <span className="text-xs text-text-muted">Filtrer etter bruker:</span>
+              </div>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
+                <button
+                  onClick={() => setUserFilter('all')}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                    userFilter === 'all'
+                      ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                      : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                  }`}
+                >
+                  Alle brukere
+                </button>
+                {users.map(user => (
+                  <button
+                    key={user.id}
+                    onClick={() => setUserFilter(user.id)}
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                      userFilter === user.id
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                    }`}
+                  >
+                    {user.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             {recentProjects.length > 0 ? (
               recentProjects.map((project) => (

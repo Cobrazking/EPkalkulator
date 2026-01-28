@@ -40,6 +40,7 @@ export interface Project {
   startDate: string;
   endDate?: string;
   budget?: number;
+  createdBy?: string; // User ID who created this project
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +58,7 @@ export interface Calculator {
     customerInfo?: any;
     calculationSettings?: any;
   };
+  createdBy?: string; // User ID who created this calculator
   createdAt: string;
   updatedAt: string;
 }
@@ -803,9 +805,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!projectData.organizationId) {
       throw new Error('organizationId is required when adding a project');
     }
-    
+
     try {
-      const snakeCaseData = {
+      const currentUserId = getCurrentUserId();
+      const snakeCaseData: any = {
         organization_id: projectData.organizationId,
         customer_id: projectData.customerId,
         name: projectData.name,
@@ -816,11 +819,28 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: projectData.budget
       };
 
-      const { data, error } = await supabase
+      // Add created_by if we have the current user's ID and column exists
+      if (currentUserId) {
+        snakeCaseData.created_by = currentUserId;
+      }
+
+      let { data, error } = await supabase
         .from('projects')
         .insert([snakeCaseData])
         .select()
         .single();
+
+      // If error is about missing column, retry without created_by
+      if (error && error.message?.includes('column') && error.message?.includes('created_by')) {
+        delete snakeCaseData.created_by;
+        const retry = await supabase
+          .from('projects')
+          .insert([snakeCaseData])
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
@@ -950,9 +970,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!calculatorData.organizationId) {
       throw new Error('organizationId is required when adding a calculator');
     }
-    
+
     try {
-      const snakeCaseData = {
+      const currentUserId = getCurrentUserId();
+      const snakeCaseData: any = {
         organization_id: calculatorData.organizationId,
         project_id: calculatorData.projectId,
         name: calculatorData.name,
@@ -962,11 +983,28 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         settings: calculatorData.settings
       };
 
-      const { data, error } = await supabase
+      // Add created_by if we have the current user's ID and column exists
+      if (currentUserId) {
+        snakeCaseData.created_by = currentUserId;
+      }
+
+      let { data, error } = await supabase
         .from('calculators')
         .insert([snakeCaseData])
         .select()
         .single();
+
+      // If error is about missing column, retry without created_by
+      if (error && error.message?.includes('column') && error.message?.includes('created_by')) {
+        delete snakeCaseData.created_by;
+        const retry = await supabase
+          .from('calculators')
+          .insert([snakeCaseData])
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
@@ -1380,8 +1418,15 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getProjectById = (id: string) => state.projects.find(project => project.id === id);
   const getCalculatorById = (id: string) => state.calculators.find(calculator => calculator.id === id);
   const getUserById = (id: string) => state.users.find(user => user.id === id);
-  
-  const getCurrentOrganizationCustomers = () => 
+
+  // Get current user's database ID from auth user ID
+  const getCurrentUserId = (): string | undefined => {
+    if (!user) return undefined;
+    const dbUser = state.users.find(u => u.authUserId === user.id);
+    return dbUser?.id;
+  };
+
+  const getCurrentOrganizationCustomers = () =>
     state.customers.filter(customer => customer.organizationId === state.currentOrganizationId);
   
   const getCurrentOrganizationProjects = () => 

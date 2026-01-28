@@ -23,17 +23,20 @@ import { useProject, Project } from '../contexts/ProjectContext';
 import ProjectModal from '../components/modals/ProjectModal';
 
 const ProjectsPage: React.FC = () => {
-  const { 
-    getCurrentOrganizationProjects, 
-    deleteProject, 
+  const {
+    getCurrentOrganizationProjects,
+    deleteProject,
     duplicateProject,
-    getCustomerById, 
+    getCustomerById,
     getCalculatorsByProject,
+    getUserById,
+    getCurrentOrganizationUsers,
     currentOrganization
   } = useProject();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('updated-desc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -43,14 +46,16 @@ const ProjectsPage: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
   const projects = getCurrentOrganizationProjects();
-  
-  // Filter projects based on search term and status
+  const users = getCurrentOrganizationUsers();
+
+  // Filter projects based on search term, status, and user
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          getCustomerById(project.customerId)?.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesUser = userFilter === 'all' || project.createdBy === userFilter;
+    return matchesSearch && matchesStatus && matchesUser;
   });
 
   // Sort projects based on selected sort option
@@ -119,7 +124,7 @@ const ProjectsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, sortOption, itemsPerPage]);
+  }, [searchTerm, statusFilter, userFilter, sortOption, itemsPerPage]);
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
@@ -241,6 +246,26 @@ const ProjectsPage: React.FC = () => {
           </select>
         </div>
 
+        {/* User Filter */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
+            <User size={16} />
+            <span>Bruker:</span>
+          </div>
+          <select
+            value={userFilter}
+            onChange={(e) => setUserFilter(e.target.value)}
+            className="px-4 py-3 bg-background-lighter border border-border rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-transparent"
+          >
+            <option value="all">Alle brukere</option>
+            {users.map(user => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Sort Options */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 text-sm text-text-muted whitespace-nowrap">
@@ -334,6 +359,12 @@ const ProjectsPage: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-semibold text-text-primary">{project.name}</h3>
                   <p className="text-sm text-text-muted">{getCustomerName(project.customerId)}</p>
+                  {project.createdBy && (
+                    <p className="text-xs text-text-muted/70 flex items-center gap-1 mt-0.5">
+                      <User size={12} />
+                      {getUserById(project.createdBy)?.name || 'Ukjent bruker'}
+                    </p>
+                  )}
                 </div>
               </div>
               
