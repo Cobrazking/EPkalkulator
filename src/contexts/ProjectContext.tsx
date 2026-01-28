@@ -489,7 +489,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Load calculators (explicitly select columns to avoid errors with missing optional columns)
         let { data: calculators, error: calculatorError } = await supabase
           .from('calculators')
-          .select('id, organization_id, project_id, name, description, entries, summary, created_at, updated_at, created_by, settings')
+          .select('*')
           .in('organization_id', organizations.map(org => org.id))
           .order('created_at', { ascending: false });
 
