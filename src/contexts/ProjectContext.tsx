@@ -898,9 +898,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.log('🔄 Updating project:', {
         projectId: project.id,
         createdBy: project.createdBy,
+        createdByType: typeof project.createdBy,
         snakeCaseCreatedBy: snakeCaseData.created_by,
+        snakeCaseCreatedByType: typeof snakeCaseData.created_by,
         allData: snakeCaseData
       });
+
+      console.log('📤 Sending to Supabase UPDATE:', JSON.stringify(snakeCaseData, null, 2));
 
       const { data, error } = await supabase
         .from('projects')
@@ -918,6 +922,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         id: data.id,
         name: data.name,
         created_by: data.created_by,
+        created_by_type: typeof data.created_by,
         rawData: data
       });
       const camelCaseProject = toCamelCase(data);
@@ -925,7 +930,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         id: camelCaseProject.id,
         name: camelCaseProject.name,
         createdBy: camelCaseProject.createdBy,
-        camelCaseProject
+        createdByType: typeof camelCaseProject.createdBy,
+        fullProject: camelCaseProject
       });
       dispatch({ type: 'UPDATE_PROJECT', payload: camelCaseProject });
     } catch (error) {

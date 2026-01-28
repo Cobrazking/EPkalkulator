@@ -80,7 +80,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       name: formData.name,
       description: formData.description,
       customerId: formData.customerId,
-      createdBy: formData.createdBy === '' ? undefined : formData.createdBy,
+      createdBy: formData.createdBy || null, // Use null instead of undefined
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
@@ -95,11 +95,26 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     });
 
     if (project) {
-      const updatedProject = {
+      const updatedProject: Project = {
         ...project,
-        ...projectData
+        name: projectData.name,
+        description: projectData.description,
+        customerId: projectData.customerId,
+        createdBy: projectData.createdBy === null ? undefined : projectData.createdBy,
+        status: projectData.status,
+        startDate: projectData.startDate,
+        endDate: projectData.endDate,
+        budget: projectData.budget
       };
-      console.log('🔄 Calling updateProject with:', updatedProject);
+      console.log('🔄 Calling updateProject with:', {
+        id: updatedProject.id,
+        name: updatedProject.name,
+        createdBy: updatedProject.createdBy,
+        createdByType: typeof updatedProject.createdBy,
+        isNull: updatedProject.createdBy === null,
+        isUndefined: updatedProject.createdBy === undefined,
+        fullProject: updatedProject
+      });
       updateProject(updatedProject);
     } else {
       console.log('➕ Calling addProject with:', projectData);
