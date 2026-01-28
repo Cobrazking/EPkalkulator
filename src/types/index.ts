@@ -35,6 +35,7 @@ export interface CompanyInfo {
 
 export interface CustomerInfo {
   kunde: string;
+  firma?: string;
   adresse: string;
   epost: string;
   tlf: string;

@@ -328,6 +328,9 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo,
 
             <View style={styles.coverInfoBox}>
               <Text style={styles.coverInfoLabel}>Tilbud til</Text>
+              {customerInfo.firma && (
+                <Text style={styles.coverInfoText}>{customerInfo.firma}</Text>
+              )}
               <Text style={styles.coverInfoText}>{customerInfo.kunde || 'Kunde'}</Text>
               {customerInfo.adresse && (
                 <Text style={styles.coverInfoText}>{customerInfo.adresse}</Text>
@@ -381,6 +384,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ entries, companyInfo, customerInfo,
 
           <View style={styles.infoBlock}>
             <Text style={styles.infoTitle}>Kunde</Text>
+            {customerInfo.firma && <Text style={styles.infoText}>{customerInfo.firma}</Text>}
             <Text style={styles.infoText}>{customerInfo.kunde || ''}</Text>
             {customerInfo.adresse && <Text style={styles.infoText}>{customerInfo.adresse}</Text>}
             {customerInfo.epost && <Text style={styles.infoText}>{customerInfo.epost}</Text>}

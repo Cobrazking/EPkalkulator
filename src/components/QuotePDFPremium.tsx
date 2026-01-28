@@ -334,6 +334,9 @@ const QuotePDFPremium: React.FC<QuotePDFPremiumProps> = ({
 
             <View style={styles.coverInfoBox}>
               <Text style={styles.coverInfoLabel}>Tilbud til</Text>
+              {customerInfo.firma && (
+                <Text style={styles.coverInfoText}>{customerInfo.firma}</Text>
+              )}
               <Text style={styles.coverInfoText}>{customerInfo.kunde || 'Kunde'}</Text>
               {customerInfo.adresse && (
                 <Text style={styles.coverInfoText}>{customerInfo.adresse}</Text>
@@ -379,6 +382,7 @@ const QuotePDFPremium: React.FC<QuotePDFPremiumProps> = ({
 
             <View style={styles.infoBlock}>
               <Text style={styles.infoTitle}>Til</Text>
+              {customerInfo.firma && <Text style={styles.infoText}>{customerInfo.firma}</Text>}
               <Text style={styles.infoText}>{customerInfo.kunde || 'Kunde'}</Text>
               {customerInfo.adresse && <Text style={styles.infoText}>{customerInfo.adresse}</Text>}
               {customerInfo.epost && <Text style={styles.infoText}>{customerInfo.epost}</Text>}

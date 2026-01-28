@@ -269,8 +269,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           </div>
                         </div>
                       </div>
+                      {customerInfo.firma && (
+                        <div>
+                          <label className="input-label">Firma</label>
+                          <input
+                            type="text"
+                            value={customerInfo.firma}
+                            readOnly
+                            disabled
+                            className="w-full bg-background-darker/50 cursor-not-allowed"
+                          />
+                        </div>
+                      )}
                       <div>
-                        <label className="input-label">Kunde</label>
+                        <label className="input-label">Kontaktperson</label>
                         <input
                           type="text"
                           value={customerInfo.kunde}

@@ -55,6 +55,7 @@ const CalculatorPage: React.FC = () => {
 
   const initialCustomerInfo: CustomerInfo = {
     kunde: customer?.name || '',
+    firma: customer?.company || '',
     adresse: customer?.address || '',
     epost: customer?.email || '',
     tlf: customer?.phone || ''
@@ -352,6 +353,7 @@ const CalculatorPage: React.FC = () => {
     if (customer) {
       setCustomerInfo({
         kunde: customer.name || '',
+        firma: customer.company || '',
         adresse: customer.address || '',
         epost: customer.email || '',
         tlf: customer.phone || ''
