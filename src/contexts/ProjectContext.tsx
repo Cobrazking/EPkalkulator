@@ -40,6 +40,7 @@ export interface Project {
   startDate: string;
   endDate?: string;
   budget?: number;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +58,7 @@ export interface Calculator {
     customerInfo?: any;
     calculationSettings?: any;
   };
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -834,6 +836,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: projectData.budget
       };
 
+      if (projectData.createdBy) {
+        snakeCaseData.created_by = projectData.createdBy;
+      } else if (currentUserId) {
+        snakeCaseData.created_by = currentUserId;
+      }
+
       const { data, error } = await supabase
         .from('projects')
         .insert([snakeCaseData])
@@ -853,6 +861,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProject = async (project: Project) => {
     try {
+      const createdByForDb = project.createdBy === undefined || project.createdBy === null || project.createdBy === ''
+        ? null
+        : project.createdBy;
+
       const snakeCaseData: any = {
         name: project.name,
         description: project.description,
@@ -861,6 +873,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         start_date: project.startDate,
         end_date: project.endDate,
         budget: project.budget,
+        created_by: createdByForDb,
         updated_at: new Date().toISOString()
       };
 
@@ -973,6 +986,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
+      const currentUserId = getCurrentUserId();
       const snakeCaseData: any = {
         organization_id: calculatorData.organizationId,
         project_id: calculatorData.projectId,
@@ -985,6 +999,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Add optional fields if they exist
       if (calculatorData.settings) {
         snakeCaseData.settings = calculatorData.settings;
+      }
+
+      if (calculatorData.createdBy) {
+        snakeCaseData.created_by = calculatorData.createdBy;
+      } else if (currentUserId) {
+        snakeCaseData.created_by = currentUserId;
       }
 
       const { data, error } = await supabase

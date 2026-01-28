@@ -1,16 +1,13 @@
-# Database Migration Required
+# ⚠️ VIKTIG: Kjør denne SQL-en for å aktivere prosjekteier-funksjonalitet
 
-For å få prosjekteier-funksjonaliteten til å fungere, må du kjøre denne SQL-en i Supabase Dashboard.
+Koden er nå oppdatert og klar, men kolonnen `created_by` mangler fortsatt i databasen.
 
-## Steg 1: Åpne Supabase SQL Editor
+## 📋 Instruksjoner
 
-1. Gå til: https://supabase.com/dashboard/project/dpqrzlxsfurcjrkuhcjo
-2. Klikk på "SQL Editor" i venstre sidebar
-3. Klikk "New Query"
-4. Lim inn SQL-en nedenfor
-5. Klikk "Run" (eller trykk Ctrl+Enter)
+### Steg 1: Åpne Supabase SQL Editor
+Gå til: **https://supabase.com/dashboard/project/dpqrzlxsfurcjrkuhcjo/sql/new**
 
-## Steg 2: Kjør denne SQL-en
+### Steg 2: Kopier og lim inn denne SQL-en
 
 ```sql
 -- Add created_by column to projects table
@@ -46,16 +43,19 @@ CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects(created_by);
 CREATE INDEX IF NOT EXISTS idx_calculators_created_by ON calculators(created_by);
 ```
 
-## Steg 3: Refresh applikasjonen
+### Steg 3: Kjør SQL-en
+Klikk på **"Run"** knappen (eller trykk `Ctrl+Enter`)
 
-Etter at SQL-en er kjørt, refresh nettsiden og prosjekteier-dropdown skal fungere!
+### Steg 4: Refresh applikasjonen
+Gå tilbake til applikasjonen og refresh siden. Prosjekteier-feltet skal nå fungere!
 
-## Feilsøking
+---
 
-Hvis du får en feil om at `users` tabellen ikke eksisterer, kan det være fordi kolonnen skal referere til en annen tabell. I så fall, kjør denne SQL-en i stedet:
+## 🔧 Feilsøking
+
+Hvis du får feil, prøv denne alternative SQL-en (uten foreign key constraint):
 
 ```sql
--- Alternative: No foreign key constraint
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_by uuid;
 ALTER TABLE calculators ADD COLUMN IF NOT EXISTS created_by uuid;
 
