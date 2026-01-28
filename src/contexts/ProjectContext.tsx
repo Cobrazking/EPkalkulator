@@ -958,7 +958,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         name: calculatorData.name,
         description: calculatorData.description,
         entries: calculatorData.entries,
-        summary: calculatorData.summary
+        summary: calculatorData.summary,
+        settings: calculatorData.settings
       };
 
       const { data, error } = await supabase
@@ -986,6 +987,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         description: calculator.description,
         entries: calculator.entries,
         summary: calculator.summary,
+        settings: calculator.settings,
         updated_at: new Date().toISOString()
       };
 
