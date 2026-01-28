@@ -76,11 +76,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       allFormData: formData
     });
 
+    // Convert empty string to undefined for createdBy
+    const createdByValue = formData.createdBy === '' ? undefined : formData.createdBy;
+
     const projectData = {
       name: formData.name,
       description: formData.description,
       customerId: formData.customerId,
-      createdBy: formData.createdBy || null, // Use null instead of undefined
+      createdBy: createdByValue,
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
@@ -90,6 +93,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     console.log('📝 Submitting project:', {
       isUpdate: !!project,
       formDataCreatedBy: formData.createdBy,
+      formDataCreatedByIsEmptyString: formData.createdBy === '',
+      createdByValue,
       projectDataCreatedBy: projectData.createdBy,
       projectDataCreatedByType: typeof projectData.createdBy
     });
@@ -100,7 +105,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         name: projectData.name,
         description: projectData.description,
         customerId: projectData.customerId,
-        createdBy: projectData.createdBy === null ? undefined : projectData.createdBy,
+        createdBy: projectData.createdBy,
         status: projectData.status,
         startDate: projectData.startDate,
         endDate: projectData.endDate,

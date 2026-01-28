@@ -882,6 +882,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProject = async (project: Project) => {
     try {
+      // Handle createdBy: undefined means "no owner", and we store that as NULL in DB
+      const createdByForDb = project.createdBy === undefined || project.createdBy === null || project.createdBy === ''
+        ? null
+        : project.createdBy;
+
       const snakeCaseData: any = {
         name: project.name,
         description: project.description,
@@ -892,13 +897,16 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: project.budget,
         updated_at: new Date().toISOString(),
         // Always include created_by to allow removing/changing the owner
-        created_by: project.createdBy || null
+        created_by: createdByForDb
       };
 
       console.log('🔄 Updating project:', {
         projectId: project.id,
         createdBy: project.createdBy,
         createdByType: typeof project.createdBy,
+        createdByIsUndefined: project.createdBy === undefined,
+        createdByIsNull: project.createdBy === null,
+        createdByForDb,
         snakeCaseCreatedBy: snakeCaseData.created_by,
         snakeCaseCreatedByType: typeof snakeCaseData.created_by,
         allData: snakeCaseData
