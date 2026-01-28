@@ -50,7 +50,9 @@ const CalculatorPage: React.FC = () => {
     navn: '',
     epost: '',
     tlf: '',
-    refNr: ''
+    refNr: '',
+    logo: undefined,
+    tilbudstittel: ''
   };
 
   const initialCustomerInfo: CustomerInfo = {
@@ -154,9 +156,10 @@ const CalculatorPage: React.FC = () => {
     }
   }, [currentOrganization]);
 
-  // Reset dataInitializedRef when calculator changes
+  // Reset dataInitializedRef and settingsLoaded when calculator changes
   useEffect(() => {
     dataInitializedRef.current.companyInfo = false;
+    setSettingsLoaded(false);
   }, [calculatorId]);
 
   // Load user-specific global settings
