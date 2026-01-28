@@ -40,7 +40,6 @@ export interface Project {
   startDate: string;
   endDate?: string;
   budget?: number;
-  createdBy?: string; // User ID who created this project
   createdAt: string;
   updatedAt: string;
 }
@@ -58,7 +57,6 @@ export interface Calculator {
     customerInfo?: any;
     calculationSettings?: any;
   };
-  createdBy?: string; // User ID who created this calculator
   createdAt: string;
   updatedAt: string;
 }
@@ -476,13 +474,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         console.log('✅ Projects loaded:', projects?.length || 0);
-        if (projects && projects.length > 0) {
-          console.log('📊 Sample project data:', {
-            firstProject: projects[0],
-            hasCreatedBy: 'created_by' in projects[0],
-            createdByValue: projects[0].created_by
-          });
-        }
         const camelCaseProjects = toCamelCase(projects || []);
         dispatch({ type: 'SET_PROJECTS', payload: camelCaseProjects });
 
@@ -843,31 +834,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: projectData.budget
       };
 
-      // Add created_by - prefer explicit createdBy from projectData, otherwise use current user
-      if (projectData.createdBy) {
-        snakeCaseData.created_by = projectData.createdBy;
-      } else if (currentUserId) {
-        snakeCaseData.created_by = currentUserId;
-      }
-
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('projects')
         .insert([snakeCaseData])
         .select()
         .single();
-
-      // If error is about missing column, retry without created_by
-      if (error && (error.message?.includes('column') || error.code === '42703')) {
-        console.log('⚠️ Column created_by does not exist in projects, retrying without it');
-        delete snakeCaseData.created_by;
-        const retry = await supabase
-          .from('projects')
-          .insert([snakeCaseData])
-          .select()
-          .single();
-        data = retry.data;
-        error = retry.error;
-      }
 
       if (error) throw error;
 
@@ -882,11 +853,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProject = async (project: Project) => {
     try {
-      // Handle createdBy: undefined means "no owner", and we store that as NULL in DB
-      const createdByForDb = project.createdBy === undefined || project.createdBy === null || project.createdBy === ''
-        ? null
-        : project.createdBy;
-
       const snakeCaseData: any = {
         name: project.name,
         description: project.description,
@@ -895,72 +861,23 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         start_date: project.startDate,
         end_date: project.endDate,
         budget: project.budget,
-        updated_at: new Date().toISOString(),
-        // Always include created_by to allow removing/changing the owner
-        created_by: createdByForDb
+        updated_at: new Date().toISOString()
       };
 
-      console.log('🔄 Updating project:', {
-        projectId: project.id,
-        createdBy: project.createdBy,
-        createdByType: typeof project.createdBy,
-        createdByIsUndefined: project.createdBy === undefined,
-        createdByIsNull: project.createdBy === null,
-        createdByForDb,
-        snakeCaseCreatedBy: snakeCaseData.created_by,
-        snakeCaseCreatedByType: typeof snakeCaseData.created_by,
-        allData: snakeCaseData
-      });
-
-      console.log('📤 Sending to Supabase UPDATE:', JSON.stringify(snakeCaseData, null, 2));
-
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('projects')
         .update(snakeCaseData)
         .eq('id', project.id)
         .select()
         .single();
 
-      // If error is about missing column, retry without created_by
-      if (error && (error.message?.includes('column') || error.code === '42703')) {
-        console.log('⚠️ Column created_by does not exist in projects, retrying without it');
-        delete snakeCaseData.created_by;
-        const retry = await supabase
-          .from('projects')
-          .update(snakeCaseData)
-          .eq('id', project.id)
-          .select()
-          .single();
-        data = retry.data;
-        error = retry.error;
-      }
-
-      console.log('📥 Raw response from Supabase:', {
-        data,
-        error,
-        dataCreatedBy: data?.created_by
-      });
-
       if (error) {
         console.error('❌ Update error:', error);
         throw error;
       }
 
-      console.log('✅ Project updated successfully from DB:', {
-        id: data.id,
-        name: data.name,
-        created_by: data.created_by,
-        created_by_type: typeof data.created_by,
-        rawData: data
-      });
+      console.log('✅ Project updated successfully');
       const camelCaseProject = toCamelCase(data);
-      console.log('✅ After toCamelCase conversion:', {
-        id: camelCaseProject.id,
-        name: camelCaseProject.name,
-        createdBy: camelCaseProject.createdBy,
-        createdByType: typeof camelCaseProject.createdBy,
-        fullProject: camelCaseProject
-      });
       dispatch({ type: 'UPDATE_PROJECT', payload: camelCaseProject });
     } catch (error) {
       console.error('❌ Failed to update project:', error);
@@ -992,9 +909,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const originalCalculators = state.calculators.filter(c => c.projectId === projectId);
-    
+
     try {
-      const currentUserId = getCurrentUserId();
       // Create new project
       const newProjectData: any = {
         organization_id: originalProject.organizationId,
@@ -1007,31 +923,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: originalProject.budget
       };
 
-      // Copy created_by from original project, or use current user
-      if (originalProject.createdBy) {
-        newProjectData.created_by = originalProject.createdBy;
-      } else if (currentUserId) {
-        newProjectData.created_by = currentUserId;
-      }
-
-      let { data: newProject, error: projectError } = await supabase
+      const { data: newProject, error: projectError } = await supabase
         .from('projects')
         .insert([newProjectData])
         .select()
         .single();
-
-      // If error is about missing column, retry without created_by
-      if (projectError && (projectError.message?.includes('column') || projectError.code === '42703')) {
-        console.log('⚠️ Column created_by does not exist in projects, retrying without it');
-        delete newProjectData.created_by;
-        const retry = await supabase
-          .from('projects')
-          .insert([newProjectData])
-          .select()
-          .single();
-        newProject = retry.data;
-        projectError = retry.error;
-      }
 
       if (projectError) throw projectError;
 
@@ -1077,11 +973,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
-      const currentUserId = getCurrentUserId();
-      console.log('👤 Current user ID for calculator:', currentUserId);
-      console.log('👥 All users in state:', state.users.map(u => ({ id: u.id, authUserId: u.authUserId, name: u.name })));
-      console.log('🔐 Auth user ID:', user?.id);
-
       const snakeCaseData: any = {
         organization_id: calculatorData.organizationId,
         project_id: calculatorData.projectId,
@@ -1096,36 +987,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         snakeCaseData.settings = calculatorData.settings;
       }
 
-      if (currentUserId) {
-        snakeCaseData.created_by = currentUserId;
-        console.log('✅ Adding created_by to calculator:', currentUserId);
-      } else {
-        console.log('⚠️ No current user ID found, skipping created_by');
-      }
-
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('calculators')
         .insert([snakeCaseData])
         .select()
         .single();
-
-      // If error is about missing column, retry without the problematic columns
-      if (error && (error.message?.includes('column') || error.code === 'PGRST204' || error.code === '42703')) {
-        console.log('⚠️ Column error detected, retrying without optional columns');
-        console.log('Error details:', error);
-
-        // Remove optional columns that might not exist
-        delete snakeCaseData.created_by;
-        delete snakeCaseData.settings;
-
-        const retry = await supabase
-          .from('calculators')
-          .insert([snakeCaseData])
-          .select()
-          .single();
-        data = retry.data;
-        error = retry.error;
-      }
 
       if (error) {
         console.error('❌ Supabase error details:', error);

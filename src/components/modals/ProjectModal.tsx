@@ -15,12 +15,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   project,
 }) => {
-  const { addProject, updateProject, getCurrentOrganizationCustomers, getCurrentOrganizationUsers, currentOrganization } = useProject();
+  const { addProject, updateProject, getCurrentOrganizationCustomers, currentOrganization } = useProject();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     customerId: '',
-    createdBy: '',
     status: 'planning' as const,
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
@@ -28,20 +27,17 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   });
 
   const customers = getCurrentOrganizationCustomers();
-  const users = getCurrentOrganizationUsers();
 
   useEffect(() => {
     if (project) {
       console.log('🔄 useEffect: Loading project data:', {
         projectId: project.id,
-        projectCreatedBy: project.createdBy,
         isOpen
       });
       setFormData({
         name: project.name,
         description: project.description,
         customerId: project.customerId,
-        createdBy: project.createdBy || '',
         status: project.status,
         startDate: project.startDate.split('T')[0],
         endDate: project.endDate ? project.endDate.split('T')[0] : '',
@@ -53,7 +49,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         name: '',
         description: '',
         customerId: '',
-        createdBy: '',
         status: 'planning',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
@@ -70,34 +65,15 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       return;
     }
 
-    console.log('📋 Current formData before processing:', {
-      createdBy: formData.createdBy,
-      createdByType: typeof formData.createdBy,
-      allFormData: formData
-    });
-
-    // Convert empty string to undefined for createdBy
-    const createdByValue = formData.createdBy === '' ? undefined : formData.createdBy;
-
     const projectData = {
       name: formData.name,
       description: formData.description,
       customerId: formData.customerId,
-      createdBy: createdByValue,
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
       budget: formData.budget ? Number(formData.budget) : undefined
     };
-
-    console.log('📝 Submitting project:', {
-      isUpdate: !!project,
-      formDataCreatedBy: formData.createdBy,
-      formDataCreatedByIsEmptyString: formData.createdBy === '',
-      createdByValue,
-      projectDataCreatedBy: projectData.createdBy,
-      projectDataCreatedByType: typeof projectData.createdBy
-    });
 
     if (project) {
       const updatedProject: Project = {
@@ -105,24 +81,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         name: projectData.name,
         description: projectData.description,
         customerId: projectData.customerId,
-        createdBy: projectData.createdBy,
         status: projectData.status,
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         budget: projectData.budget
       };
-      console.log('🔄 Calling updateProject with:', {
-        id: updatedProject.id,
-        name: updatedProject.name,
-        createdBy: updatedProject.createdBy,
-        createdByType: typeof updatedProject.createdBy,
-        isNull: updatedProject.createdBy === null,
-        isUndefined: updatedProject.createdBy === undefined,
-        fullProject: updatedProject
-      });
       updateProject(updatedProject);
     } else {
-      console.log('➕ Calling addProject with:', projectData);
       addProject({
         ...projectData,
         organizationId: currentOrganization.id
@@ -223,32 +188,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         Du må legge til kunder først før du kan opprette prosjekter.
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="input-label">Prosjekteier</label>
-                    <select
-                      value={formData.createdBy}
-                      onChange={(e) => {
-                        console.log('🎯 Owner changed:', {
-                          newValue: e.target.value,
-                          previousValue: formData.createdBy
-                        });
-                        setFormData({ ...formData, createdBy: e.target.value });
-                      }}
-                      className="w-full"
-                      disabled={!currentOrganization}
-                    >
-                      <option value="">Ingen spesifikk eier</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name} {user.email && `(${user.email})`}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-text-muted mt-1">
-                      Velg hvem som er ansvarlig for dette prosjektet
-                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
