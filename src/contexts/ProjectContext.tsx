@@ -474,12 +474,24 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const camelCaseProjects = toCamelCase(projects || []);
         dispatch({ type: 'SET_PROJECTS', payload: camelCaseProjects });
 
-        // Load calculators
-        const { data: calculators, error: calculatorError } = await supabase
+        // Load calculators (explicitly select columns to avoid errors with missing optional columns)
+        let { data: calculators, error: calculatorError } = await supabase
           .from('calculators')
-          .select('*')
+          .select('id, organization_id, project_id, name, description, entries, summary, created_at, updated_at, created_by, settings')
           .in('organization_id', organizations.map(org => org.id))
           .order('created_at', { ascending: false });
+
+        // If error about missing columns, retry without optional columns
+        if (calculatorError && (calculatorError.code === 'PGRST204' || calculatorError.message?.includes('column'))) {
+          console.log('⚠️ Optional columns not found, retrying with basic columns only');
+          const retry = await supabase
+            .from('calculators')
+            .select('id, organization_id, project_id, name, description, entries, summary, created_at, updated_at')
+            .in('organization_id', organizations.map(org => org.id))
+            .order('created_at', { ascending: false });
+          calculators = retry.data;
+          calculatorError = retry.error;
+        }
 
         if (calculatorError) {
           console.error('❌ Error loading calculators:', calculatorError);
@@ -984,11 +996,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         name: calculatorData.name,
         description: calculatorData.description,
         entries: calculatorData.entries,
-        summary: calculatorData.summary,
-        settings: calculatorData.settings
+        summary: calculatorData.summary
       };
 
-      // Add created_by if we have the current user's ID
+      // Add optional fields if they exist
+      if (calculatorData.settings) {
+        snakeCaseData.settings = calculatorData.settings;
+      }
+
       if (currentUserId) {
         snakeCaseData.created_by = currentUserId;
         console.log('✅ Adding created_by to calculator:', currentUserId);
@@ -1002,10 +1017,15 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select()
         .single();
 
-      // If error is about missing column, retry without created_by
-      if (error && (error.message?.includes('column') || error.code === '42703')) {
-        console.log('⚠️ Column created_by does not exist, retrying without it');
+      // If error is about missing column, retry without the problematic columns
+      if (error && (error.message?.includes('column') || error.code === 'PGRST204' || error.code === '42703')) {
+        console.log('⚠️ Column error detected, retrying without optional columns');
+        console.log('Error details:', error);
+
+        // Remove optional columns that might not exist
         delete snakeCaseData.created_by;
+        delete snakeCaseData.settings;
+
         const retry = await supabase
           .from('calculators')
           .insert([snakeCaseData])
