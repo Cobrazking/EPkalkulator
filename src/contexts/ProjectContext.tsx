@@ -466,7 +466,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Load projects
         const { data: projects, error: projectError } = await supabase
           .from('projects')
-          .select('*')
+          .select('id, name, description, customer_id, status, start_date, end_date, budget, organization_id, created_at, updated_at, created_by')
           .in('organization_id', organizations.map(org => org.id))
           .order('created_at', { ascending: false });
 
@@ -853,7 +853,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       let { data, error } = await supabase
         .from('projects')
         .insert([snakeCaseData])
-        .select()
+        .select('id, name, description, customer_id, status, start_date, end_date, budget, organization_id, created_at, updated_at, created_by')
         .single();
 
       // If error is about missing column, retry without created_by
@@ -863,7 +863,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const retry = await supabase
           .from('projects')
           .insert([snakeCaseData])
-          .select()
+          .select('id, name, description, customer_id, status, start_date, end_date, budget, organization_id, created_at, updated_at')
           .single();
         data = retry.data;
         error = retry.error;
@@ -918,8 +918,14 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('projects')
         .update(snakeCaseData)
         .eq('id', project.id)
-        .select()
+        .select('id, name, description, customer_id, status, start_date, end_date, budget, organization_id, created_at, updated_at, created_by')
         .single();
+
+      console.log('📥 Raw response from Supabase:', {
+        data,
+        error,
+        dataCreatedBy: data?.created_by
+      });
 
       if (error) {
         console.error('❌ Update error:', error);
@@ -997,7 +1003,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data: newProject, error: projectError } = await supabase
         .from('projects')
         .insert([newProjectData])
-        .select()
+        .select('id, name, description, customer_id, status, start_date, end_date, budget, organization_id, created_at, updated_at, created_by')
         .single();
 
       if (projectError) throw projectError;
