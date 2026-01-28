@@ -37,6 +37,18 @@ const CalculatorPage: React.FC = () => {
   const calculator = calculatorId ? getCalculatorById(calculatorId) : null;
   const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
 
+  // Debug logging
+  useEffect(() => {
+    if (calculator) {
+      console.log('🔄 Calculator object from context:', {
+        id: calculator.id,
+        settingsExists: !!calculator.settings,
+        companyInfoExists: !!calculator.settings?.companyInfo,
+        companyInfo: calculator.settings?.companyInfo
+      });
+    }
+  }, [calculator]);
+
   const initialSettings: CalculationSettings = {
     defaultKostpris: 700,
     defaultTimepris: 995,
@@ -158,6 +170,7 @@ const CalculatorPage: React.FC = () => {
 
   // Reset on component mount and when calculator ID changes
   useEffect(() => {
+    console.log('🔄 RESET - Calculator ID changed, resetting state...', { calculatorId });
     // Reset state to ensure settings are reloaded from database
     dataInitializedRef.current.companyInfo = false;
     setSettingsLoaded(false);
@@ -211,10 +224,12 @@ const CalculatorPage: React.FC = () => {
 
                     // Only set companyInfo if not already initialized (prevents overwriting user input)
                     if (!dataInitializedRef.current.companyInfo) {
+                      console.log('📖 LOADING - dataInitialized is false, loading settings...');
                       // If we have a calculator, merge global settings with calculator-specific settings
                       if (calculatorId && calculator && calculator.settings?.companyInfo) {
                         const calcSettings = calculator.settings.companyInfo;
-                        setCompanyInfo({
+                        console.log('📖 LOADING - Calculator settings from DB:', calcSettings);
+                        const loadedCompanyInfo = {
                           // Use calculator-specific firma if available, otherwise use global
                           firma: calcSettings.firma || globalCompanyInfo.firma,
                           // For logo, refNr, and tilbudstittel: check if property exists in calculator settings
@@ -226,7 +241,9 @@ const CalculatorPage: React.FC = () => {
                           tlf: calcSettings.tlf || globalCompanyInfo.tlf,
                           refNr: 'refNr' in calcSettings ? (calcSettings.refNr || '') : '',
                           tilbudstittel: 'tilbudstittel' in calcSettings ? (calcSettings.tilbudstittel || '') : ''
-                        });
+                        };
+                        console.log('📖 LOADING - Setting companyInfo to:', loadedCompanyInfo);
+                        setCompanyInfo(loadedCompanyInfo);
                       } else {
                         // For new calculators, use global settings from user_settings
                         setCompanyInfo({
@@ -240,8 +257,11 @@ const CalculatorPage: React.FC = () => {
                         });
                       }
                       dataInitializedRef.current.companyInfo = true;
+                      console.log('📖 LOADING - dataInitializedRef.companyInfo set to true');
+                    } else {
+                      console.log('⏭️  LOADING - dataInitializedRef.companyInfo already true, skipping load');
                     }
-                    
+
                     // Load calculation settings
                     if (calculatorId && calculator && calculator.settings?.calculationSettings) {
                       setCalculationSettings(calculator.settings.calculationSettings);
@@ -423,6 +443,7 @@ const CalculatorPage: React.FC = () => {
       setIsSaving(true);
       
       // Save company info with the calculator (customer info is always loaded from customer object)
+      console.log('💾 SAVING - Current companyInfo state:', companyInfo);
       const calculatorData = {
         organizationId: currentOrganization.id,
         projectId,
@@ -435,7 +456,7 @@ const CalculatorPage: React.FC = () => {
           calculationSettings: calculationSettings
         }
       };
-      
+      console.log('💾 SAVING - Data to save:', calculatorData.settings);
 
       if (calculatorId && calculator) {
         // Update existing calculator
