@@ -471,6 +471,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         console.log('✅ Projects loaded:', projects?.length || 0);
+        if (projects && projects.length > 0) {
+          console.log('📊 Sample project data:', {
+            firstProject: projects[0],
+            hasCreatedBy: 'created_by' in projects[0],
+            createdByValue: projects[0].created_by
+          });
+        }
         const camelCaseProjects = toCamelCase(projects || []);
         dispatch({ type: 'SET_PROJECTS', payload: camelCaseProjects });
 

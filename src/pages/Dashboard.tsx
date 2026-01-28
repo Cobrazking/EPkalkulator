@@ -42,6 +42,21 @@ const Dashboard: React.FC = () => {
   const calculators = getCurrentOrganizationCalculators();
   const users = getCurrentOrganizationUsers();
 
+  // Debug: Log createdBy values
+  useEffect(() => {
+    console.log('📊 Projects with createdBy:', allProjects.map(p => ({
+      name: p.name,
+      createdBy: p.createdBy,
+      hasCreatedBy: !!p.createdBy
+    })));
+    console.log('👥 Available users:', users.map(u => ({ id: u.id, name: u.name })));
+  }, [allProjects, users]);
+
+  // Count projects per user
+  const getProjectCountForUser = (userId: string) => {
+    return allProjects.filter(p => p.createdBy === userId).length;
+  };
+
   // Filter projects by status and user
   const filteredProjects = allProjects.filter(project => {
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
@@ -564,6 +579,11 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center gap-2 mb-2">
                 <Users size={14} className="text-text-muted" />
                 <span className="text-xs text-text-muted">Filtrer etter bruker:</span>
+                {allProjects.length > 0 && allProjects.every(p => !p.createdBy) && (
+                  <span className="text-xs text-yellow-400 ml-auto" title="Prosjekter opprettet før brukersporing ble aktivert vil ikke bli vist i filteret">
+                    ⚠️ Ingen brukersporing
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
                 <button
@@ -576,19 +596,25 @@ const Dashboard: React.FC = () => {
                 >
                   Alle brukere
                 </button>
-                {users.map(user => (
-                  <button
-                    key={user.id}
-                    onClick={() => setUserFilter(user.id)}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                      userFilter === user.id
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
-                    }`}
-                  >
-                    {user.name}
-                  </button>
-                ))}
+                {users.map(user => {
+                  const projectCount = getProjectCountForUser(user.id);
+                  return (
+                    <button
+                      key={user.id}
+                      onClick={() => {
+                        console.log('🔍 Filtering by user:', { userId: user.id, userName: user.name, projectCount });
+                        setUserFilter(user.id);
+                      }}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                        userFilter === user.id
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-background-darker/50 text-text-muted hover:text-text-primary border border-border'
+                      }`}
+                    >
+                      {user.name} ({projectCount})
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -616,18 +642,25 @@ const Dashboard: React.FC = () => {
               <div className="text-center py-6 text-text-muted">
                 <FolderOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">
-                  {statusFilter === 'all' 
-                    ? 'Ingen prosjekter ennå' 
+                  {statusFilter === 'all' && userFilter === 'all'
+                    ? 'Ingen prosjekter ennå'
+                    : userFilter !== 'all' && statusFilter === 'all'
+                    ? `Ingen prosjekter for ${getUserById(userFilter)?.name || 'valgt bruker'}`
+                    : userFilter !== 'all' && statusFilter !== 'all'
+                    ? `Ingen prosjekter for ${getUserById(userFilter)?.name || 'valgt bruker'} med status "${getStatusText(statusFilter)}"`
                     : `Ingen prosjekter med status "${getStatusText(statusFilter)}"`
                   }
                 </p>
-                {statusFilter === 'all' ? (
+                {statusFilter === 'all' && userFilter === 'all' ? (
                   <Link to="/projects" className="text-primary-400 hover:text-primary-300 text-xs">
                     Opprett ditt første prosjekt
                   </Link>
                 ) : (
-                  <button 
-                    onClick={() => setStatusFilter('all')}
+                  <button
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setUserFilter('all');
+                    }}
                     className="text-primary-400 hover:text-primary-300 text-xs"
                   >
                     Vis alle prosjekter
