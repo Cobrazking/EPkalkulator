@@ -838,8 +838,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: projectData.budget
       };
 
-      // Add created_by if we have the current user's ID
-      if (currentUserId) {
+      // Add created_by - prefer explicit createdBy from projectData, otherwise use current user
+      if (projectData.createdBy) {
+        snakeCaseData.created_by = projectData.createdBy;
+      } else if (currentUserId) {
         snakeCaseData.created_by = currentUserId;
       }
 
@@ -875,7 +877,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProject = async (project: Project) => {
     try {
-      const snakeCaseData = {
+      const snakeCaseData: any = {
         name: project.name,
         description: project.description,
         customer_id: project.customerId,
@@ -885,6 +887,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: project.budget,
         updated_at: new Date().toISOString()
       };
+
+      // Include created_by if it's set
+      if (project.createdBy !== undefined) {
+        snakeCaseData.created_by = project.createdBy || null;
+      }
 
       const { data, error } = await supabase
         .from('projects')
@@ -930,8 +937,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const originalCalculators = state.calculators.filter(c => c.projectId === projectId);
     
     try {
+      const currentUserId = getCurrentUserId();
       // Create new project
-      const newProjectData = {
+      const newProjectData: any = {
         organization_id: originalProject.organizationId,
         customer_id: originalProject.customerId,
         name: `${originalProject.name} (Kopi)`,
@@ -941,6 +949,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         end_date: null,
         budget: originalProject.budget
       };
+
+      // Copy created_by from original project, or use current user
+      if (originalProject.createdBy) {
+        newProjectData.created_by = originalProject.createdBy;
+      } else if (currentUserId) {
+        newProjectData.created_by = currentUserId;
+      }
 
       const { data: newProject, error: projectError } = await supabase
         .from('projects')

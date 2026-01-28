@@ -621,23 +621,34 @@ const Dashboard: React.FC = () => {
 
           <div className="space-y-2">
             {recentProjects.length > 0 ? (
-              recentProjects.map((project) => (
-                <Link
-                  key={project.id}
-                  to={`/projects/${project.id}`}
-                  className="block p-2.5 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-text-primary truncate text-sm">{project.name}</h3>
-                      <p className="text-xs text-text-muted truncate">{getCustomerName(project.customerId)}</p>
+              recentProjects.map((project) => {
+                const projectOwner = project.createdBy ? getUserById(project.createdBy) : null;
+                return (
+                  <Link
+                    key={project.id}
+                    to={`/projects/${project.id}`}
+                    className="block p-2.5 rounded-lg bg-background-darker/50 hover:bg-background-darker transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-text-primary truncate text-sm">{project.name}</h3>
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                          <span className="truncate">{getCustomerName(project.customerId)}</span>
+                          {projectOwner && (
+                            <>
+                              <span>•</span>
+                              <span className="truncate">{projectOwner.name}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 flex-shrink-0 ${getStatusColor(project.status)}`}>
+                        {getStatusText(project.status)}
+                      </span>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 flex-shrink-0 ${getStatusColor(project.status)}`}>
-                      {getStatusText(project.status)}
-                    </span>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                );
+              })
             ) : (
               <div className="text-center py-6 text-text-muted">
                 <FolderOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />

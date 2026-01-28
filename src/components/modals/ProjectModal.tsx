@@ -15,11 +15,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   project,
 }) => {
-  const { addProject, updateProject, getCurrentOrganizationCustomers, currentOrganization } = useProject();
+  const { addProject, updateProject, getCurrentOrganizationCustomers, getCurrentOrganizationUsers, currentOrganization } = useProject();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     customerId: '',
+    createdBy: '',
     status: 'planning' as const,
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
@@ -27,6 +28,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   });
 
   const customers = getCurrentOrganizationCustomers();
+  const users = getCurrentOrganizationUsers();
 
   useEffect(() => {
     if (project) {
@@ -34,6 +36,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         name: project.name,
         description: project.description,
         customerId: project.customerId,
+        createdBy: project.createdBy || '',
         status: project.status,
         startDate: project.startDate.split('T')[0],
         endDate: project.endDate ? project.endDate.split('T')[0] : '',
@@ -44,6 +47,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         name: '',
         description: '',
         customerId: '',
+        createdBy: '',
         status: 'planning',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
@@ -54,22 +58,23 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!currentOrganization) {
       alert('Du må velge en organisasjon først');
       return;
     }
-    
+
     const projectData = {
       name: formData.name,
       description: formData.description,
       customerId: formData.customerId,
+      createdBy: formData.createdBy || undefined,
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
       budget: formData.budget ? Number(formData.budget) : undefined
     };
-    
+
     if (project) {
       updateProject({
         ...project,
@@ -81,7 +86,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         organizationId: currentOrganization.id
       });
     }
-    
+
     onClose();
   };
 
@@ -176,6 +181,26 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                         Du må legge til kunder først før du kan opprette prosjekter.
                       </p>
                     )}
+                  </div>
+
+                  <div>
+                    <label className="input-label">Prosjekteier</label>
+                    <select
+                      value={formData.createdBy}
+                      onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
+                      className="w-full"
+                      disabled={!currentOrganization}
+                    >
+                      <option value="">Ingen spesifikk eier</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} {user.email && `(${user.email})`}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-text-muted mt-1">
+                      Velg hvem som er ansvarlig for dette prosjektet
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
