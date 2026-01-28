@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   coverInfoBox: {
     backgroundColor: '#2a2a2a',
     padding: 30,
-    borderLeft: '4px solid #3b82f6',
+    borderLeft: '4px solid #f97316',
   },
   coverInfoLabel: {
     fontSize: 10,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
     padding: 20,
     borderRadius: 4,
-    borderLeft: '3px solid #3b82f6',
+    borderLeft: '3px solid #f97316',
   },
   infoTitle: {
     fontSize: 11,
@@ -221,11 +221,9 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   totalHighlight: {
-    fontSize: 13,
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
-    padding: 8,
-    borderRadius: 4,
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1a1a1a',
   },
   closingPage: {
     backgroundColor: '#1a1a1a',
