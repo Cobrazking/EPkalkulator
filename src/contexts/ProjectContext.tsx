@@ -982,32 +982,49 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateCalculator = async (calculator: Calculator) => {
     try {
-      console.log('🔄 UPDATE_CALCULATOR - Received calculator:', calculator);
-      console.log('🔄 UPDATE_CALCULATOR - Settings to save:', calculator.settings);
-      const snakeCaseData = {
+      // First, try to update with settings
+      let snakeCaseData: any = {
         name: calculator.name,
         description: calculator.description,
         entries: calculator.entries,
         summary: calculator.summary,
-        settings: calculator.settings,
         updated_at: new Date().toISOString()
       };
-      console.log('🔄 UPDATE_CALCULATOR - Data being sent to DB:', snakeCaseData);
 
-      const { data, error } = await supabase
+      // Try to include settings if the column exists
+      if (calculator.settings) {
+        snakeCaseData.settings = calculator.settings;
+      }
+
+      let { data, error } = await supabase
         .from('calculators')
         .update(snakeCaseData)
         .eq('id', calculator.id)
         .select()
         .single();
 
+      // If error is about missing column, try without settings
+      if (error && error.message?.includes('column') && error.message?.includes('settings')) {
+        console.log('⚠️ settings column does not exist in database, using localStorage fallback');
+        delete snakeCaseData.settings;
+        const retry = await supabase
+          .from('calculators')
+          .update(snakeCaseData)
+          .eq('id', calculator.id)
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (error) throw error;
 
-      console.log('✅ Calculator updated in DB:', data);
-      console.log('✅ Settings from DB:', data.settings);
+      // Preserve settings in memory even if not in DB
       const camelCaseCalculator = toCamelCase(data);
-      console.log('✅ After camelCase conversion:', camelCaseCalculator);
-      console.log('✅ Settings after conversion:', camelCaseCalculator.settings);
+      if (calculator.settings && !camelCaseCalculator.settings) {
+        camelCaseCalculator.settings = calculator.settings;
+      }
+
       dispatch({ type: 'UPDATE_CALCULATOR', payload: camelCaseCalculator });
     } catch (error) {
       console.error('❌ Failed to update calculator:', error);

@@ -37,17 +37,6 @@ const CalculatorPage: React.FC = () => {
   const calculator = calculatorId ? getCalculatorById(calculatorId) : null;
   const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
 
-  // Debug logging
-  useEffect(() => {
-    if (calculator) {
-      console.log('🔄 Calculator object from context:', {
-        id: calculator.id,
-        settingsExists: !!calculator.settings,
-        companyInfoExists: !!calculator.settings?.companyInfo,
-        companyInfo: calculator.settings?.companyInfo
-      });
-    }
-  }, [calculator]);
 
   const initialSettings: CalculationSettings = {
     defaultKostpris: 700,
@@ -170,7 +159,6 @@ const CalculatorPage: React.FC = () => {
 
   // Reset on component mount and when calculator ID changes
   useEffect(() => {
-    console.log('🔄 RESET - Calculator ID changed, resetting state...', { calculatorId });
     // Reset state to ensure settings are reloaded from database
     dataInitializedRef.current.companyInfo = false;
     setSettingsLoaded(false);
@@ -225,10 +213,27 @@ const CalculatorPage: React.FC = () => {
                     // Only set companyInfo if not already initialized (prevents overwriting user input)
                     if (!dataInitializedRef.current.companyInfo) {
                       console.log('📖 LOADING - dataInitialized is false, loading settings...');
+
+                      // First try localStorage fallback (in case DB doesn't have settings column)
+                      let localStorageSettings = null;
+                      if (calculatorId) {
+                        const localKey = `calculator_settings_${calculatorId}`;
+                        const stored = localStorage.getItem(localKey);
+                        if (stored) {
+                          try {
+                            localStorageSettings = JSON.parse(stored);
+                            console.log('📖 FALLBACK: Loaded from localStorage:', localStorageSettings);
+                          } catch (e) {
+                            console.error('Failed to parse localStorage settings:', e);
+                          }
+                        }
+                      }
+
                       // If we have a calculator, merge global settings with calculator-specific settings
-                      if (calculatorId && calculator && calculator.settings?.companyInfo) {
-                        const calcSettings = calculator.settings.companyInfo;
-                        console.log('📖 LOADING - Calculator settings from DB:', calcSettings);
+                      if (calculatorId && calculator && (calculator.settings?.companyInfo || localStorageSettings)) {
+                        // Prefer DB settings, fallback to localStorage
+                        const calcSettings = calculator.settings?.companyInfo || localStorageSettings?.companyInfo || {};
+                        console.log('📖 LOADING - Calculator settings from DB/localStorage:', calcSettings);
                         const loadedCompanyInfo = {
                           // Use calculator-specific firma if available, otherwise use global
                           firma: calcSettings.firma || globalCompanyInfo.firma,
@@ -262,15 +267,37 @@ const CalculatorPage: React.FC = () => {
                       console.log('⏭️  LOADING - dataInitializedRef.companyInfo already true, skipping load');
                     }
 
-                    // Load calculation settings
-                    if (calculatorId && calculator && calculator.settings?.calculationSettings) {
-                      setCalculationSettings(calculator.settings.calculationSettings);
-                    } else if (settings.calculation_settings) {
-                      setCalculationSettings({
-                        defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
-                        defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
-                        defaultPaslag: settings.calculation_settings.defaultPaslag || 20
-                      });
+                    // Load calculation settings (with localStorage fallback)
+                    let calcSettingsLoaded = false;
+                    if (calculatorId) {
+                      // Try localStorage first
+                      const localKey = `calculator_settings_${calculatorId}`;
+                      const stored = localStorage.getItem(localKey);
+                      if (stored) {
+                        try {
+                          const localStorageSettings = JSON.parse(stored);
+                          if (localStorageSettings.calculationSettings) {
+                            setCalculationSettings(localStorageSettings.calculationSettings);
+                            calcSettingsLoaded = true;
+                            console.log('📖 FALLBACK: Loaded calculationSettings from localStorage');
+                          }
+                        } catch (e) {
+                          console.error('Failed to parse localStorage calculationSettings:', e);
+                        }
+                      }
+                    }
+
+                    // Fallback to DB or global settings
+                    if (!calcSettingsLoaded) {
+                      if (calculatorId && calculator && calculator.settings?.calculationSettings) {
+                        setCalculationSettings(calculator.settings.calculationSettings);
+                      } else if (settings.calculation_settings) {
+                        setCalculationSettings({
+                          defaultKostpris: settings.calculation_settings.defaultKostpris || 700,
+                          defaultTimepris: settings.calculation_settings.defaultTimepris || 995,
+                          defaultPaslag: settings.calculation_settings.defaultPaslag || 20
+                        });
+                      }
                     }
                   } else {
                     // No global settings found, use organization defaults
@@ -457,6 +484,18 @@ const CalculatorPage: React.FC = () => {
         }
       };
       console.log('💾 SAVING - Data to save:', calculatorData.settings);
+
+      // ALSO save to localStorage as fallback (in case database doesn't have settings column)
+      if (calculatorId) {
+        const localKey = `calculator_settings_${calculatorId}`;
+        const settingsToStore = {
+          companyInfo,
+          calculationSettings,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(localKey, JSON.stringify(settingsToStore));
+        console.log('💾 FALLBACK: Saved to localStorage:', localKey, settingsToStore);
+      }
 
       if (calculatorId && calculator) {
         // Update existing calculator
