@@ -819,7 +819,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budget: projectData.budget
       };
 
-      // Add created_by if we have the current user's ID and column exists
+      // Add created_by if we have the current user's ID
       if (currentUserId) {
         snakeCaseData.created_by = currentUserId;
       }
@@ -831,7 +831,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .single();
 
       // If error is about missing column, retry without created_by
-      if (error && error.message?.includes('column') && error.message?.includes('created_by')) {
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        console.log('⚠️ Column created_by does not exist in projects, retrying without it');
         delete snakeCaseData.created_by;
         const retry = await supabase
           .from('projects')
@@ -973,6 +974,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       const currentUserId = getCurrentUserId();
+      console.log('👤 Current user ID for calculator:', currentUserId);
+      console.log('👥 All users in state:', state.users.map(u => ({ id: u.id, authUserId: u.authUserId, name: u.name })));
+      console.log('🔐 Auth user ID:', user?.id);
+
       const snakeCaseData: any = {
         organization_id: calculatorData.organizationId,
         project_id: calculatorData.projectId,
@@ -983,9 +988,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         settings: calculatorData.settings
       };
 
-      // Add created_by if we have the current user's ID and column exists
+      // Add created_by if we have the current user's ID
       if (currentUserId) {
         snakeCaseData.created_by = currentUserId;
+        console.log('✅ Adding created_by to calculator:', currentUserId);
+      } else {
+        console.log('⚠️ No current user ID found, skipping created_by');
       }
 
       let { data, error } = await supabase
@@ -995,7 +1003,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .single();
 
       // If error is about missing column, retry without created_by
-      if (error && error.message?.includes('column') && error.message?.includes('created_by')) {
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        console.log('⚠️ Column created_by does not exist, retrying without it');
         delete snakeCaseData.created_by;
         const retry = await supabase
           .from('calculators')
@@ -1006,7 +1015,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         error = retry.error;
       }
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error details:', error);
+        throw error;
+      }
 
       console.log('✅ Calculator added:', data);
       const camelCaseCalculator = toCamelCase(data);
