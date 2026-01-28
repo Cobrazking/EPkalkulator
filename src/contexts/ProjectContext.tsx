@@ -250,6 +250,11 @@ const projectReducer = (state: ProjectState, action: ProjectAction): ProjectStat
       return { ...state, projects: [...state.projects, action.payload] };
     
     case 'UPDATE_PROJECT':
+      console.log('🔄 Reducer UPDATE_PROJECT:', {
+        payloadId: action.payload.id,
+        payloadCreatedBy: action.payload.createdBy,
+        payload: action.payload
+      });
       return {
         ...state,
         projects: state.projects.map(project =>
@@ -909,12 +914,19 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw error;
       }
 
-      console.log('✅ Project updated successfully:', {
+      console.log('✅ Project updated successfully from DB:', {
         id: data.id,
         name: data.name,
-        created_by: data.created_by
+        created_by: data.created_by,
+        rawData: data
       });
       const camelCaseProject = toCamelCase(data);
+      console.log('✅ After toCamelCase conversion:', {
+        id: camelCaseProject.id,
+        name: camelCaseProject.name,
+        createdBy: camelCaseProject.createdBy,
+        camelCaseProject
+      });
       dispatch({ type: 'UPDATE_PROJECT', payload: camelCaseProject });
     } catch (error) {
       console.error('❌ Failed to update project:', error);

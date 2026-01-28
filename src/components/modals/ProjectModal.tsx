@@ -32,6 +32,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
   useEffect(() => {
     if (project) {
+      console.log('🔄 useEffect: Loading project data:', {
+        projectId: project.id,
+        projectCreatedBy: project.createdBy,
+        isOpen
+      });
       setFormData({
         name: project.name,
         description: project.description,
@@ -43,6 +48,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         budget: project.budget ? project.budget.toString() : ''
       });
     } else {
+      console.log('🔄 useEffect: Creating new project form');
       setFormData({
         name: '',
         description: '',
@@ -64,6 +70,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       return;
     }
 
+    console.log('📋 Current formData before processing:', {
+      createdBy: formData.createdBy,
+      createdByType: typeof formData.createdBy,
+      allFormData: formData
+    });
+
     const projectData = {
       name: formData.name,
       description: formData.description,
@@ -78,7 +90,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     console.log('📝 Submitting project:', {
       isUpdate: !!project,
       formDataCreatedBy: formData.createdBy,
-      projectDataCreatedBy: projectData.createdBy
+      projectDataCreatedBy: projectData.createdBy,
+      projectDataCreatedByType: typeof projectData.createdBy
     });
 
     if (project) {
@@ -196,7 +209,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                     <label className="input-label">Prosjekteier</label>
                     <select
                       value={formData.createdBy}
-                      onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
+                      onChange={(e) => {
+                        console.log('🎯 Owner changed:', {
+                          newValue: e.target.value,
+                          previousValue: formData.createdBy
+                        });
+                        setFormData({ ...formData, createdBy: e.target.value });
+                      }}
                       className="w-full"
                       disabled={!currentOrganization}
                     >
