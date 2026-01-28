@@ -156,10 +156,13 @@ const CalculatorPage: React.FC = () => {
     }
   }, [currentOrganization]);
 
-  // Reset dataInitializedRef and settingsLoaded when calculator changes
+  // Reset on component mount and when calculator ID changes
   useEffect(() => {
+    // Reset state to ensure settings are reloaded from database
     dataInitializedRef.current.companyInfo = false;
     setSettingsLoaded(false);
+    setInitialLoad(true);
+    setHasUnsavedChanges(false);
   }, [calculatorId]);
 
   // Load user-specific global settings
