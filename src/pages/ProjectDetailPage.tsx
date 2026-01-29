@@ -43,6 +43,9 @@ const ProjectDetailPage: React.FC = () => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const project = projectId ? getProjectById(projectId) : null;
+  const accessibleProjects = getCurrentOrganizationProjects();
+  const hasAccess = project ? accessibleProjects.some(p => p.id === project.id) : false;
+
   const customer = project ? getCustomerById(project.customerId) : null;
   const calculators = projectId ? getCalculatorsByProject(projectId) : [];
   const availableProjects = getCurrentOrganizationProjects().filter(p => p.id !== projectId);
@@ -62,11 +65,18 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [openDropdownId]);
 
-  if (!project) {
+  if (!project || !hasAccess) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-text-primary mb-2">Prosjekt ikke funnet</h2>
-        <p className="text-text-muted mb-4">Det forespurte prosjektet eksisterer ikke.</p>
+        <h2 className="text-xl font-semibold text-text-primary mb-2">
+          {!project ? 'Prosjekt ikke funnet' : 'Ingen tilgang'}
+        </h2>
+        <p className="text-text-muted mb-4">
+          {!project
+            ? 'Det forespurte prosjektet eksisterer ikke.'
+            : 'Du har ikke tilgang til dette prosjektet.'
+          }
+        </p>
         <Link to="/projects" className="btn-primary">
           Tilbake til prosjekter
         </Link>

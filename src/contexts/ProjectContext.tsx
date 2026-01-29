@@ -1436,14 +1436,49 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return dbUser?.id;
   };
 
+  // Get current user's role in current organization
+  const getCurrentUserRole = (): 'admin' | 'manager' | 'user' | undefined => {
+    if (!user || !state.currentOrganizationId) return undefined;
+    const dbUser = state.users.find(
+      u => u.authUserId === user.id && u.organizationId === state.currentOrganizationId
+    );
+    return dbUser?.role;
+  };
+
   const getCurrentOrganizationCustomers = () =>
     state.customers.filter(customer => customer.organizationId === state.currentOrganizationId);
-  
-  const getCurrentOrganizationProjects = () => 
-    state.projects.filter(project => project.organizationId === state.currentOrganizationId);
-  
-  const getCurrentOrganizationCalculators = () => 
-    state.calculators.filter(calculator => calculator.organizationId === state.currentOrganizationId);
+
+  const getCurrentOrganizationProjects = () => {
+    const allProjects = state.projects.filter(project => project.organizationId === state.currentOrganizationId);
+    const userRole = getCurrentUserRole();
+    const currentUserId = getCurrentUserId();
+
+    // If user is 'user' role, only show their own projects
+    if (userRole === 'user' && currentUserId) {
+      return allProjects.filter(project => project.createdBy === currentUserId);
+    }
+
+    // Managers and admins see all projects
+    return allProjects;
+  };
+
+  const getCurrentOrganizationCalculators = () => {
+    const allCalculators = state.calculators.filter(calculator => calculator.organizationId === state.currentOrganizationId);
+    const userRole = getCurrentUserRole();
+    const currentUserId = getCurrentUserId();
+
+    // If user is 'user' role, only show calculators from their own projects
+    if (userRole === 'user' && currentUserId) {
+      const userProjectIds = state.projects
+        .filter(project => project.organizationId === state.currentOrganizationId && project.createdBy === currentUserId)
+        .map(project => project.id);
+
+      return allCalculators.filter(calculator => userProjectIds.includes(calculator.projectId));
+    }
+
+    // Managers and admins see all calculators
+    return allCalculators;
+  };
   
   const getCurrentOrganizationUsers = () => 
     state.users.filter(user => user.organizationId === state.currentOrganizationId);
