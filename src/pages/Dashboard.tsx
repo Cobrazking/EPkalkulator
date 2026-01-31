@@ -100,9 +100,9 @@ const Dashboard: React.FC = () => {
 
   const stats = {
     totalCustomers: customers.length,
-    totalProjects: allProjects.length,
-    activeProjects: allProjects.filter(p => p.status === 'active').length,
-    totalCalculators: calculators.length,
+    totalProjects: filteredProjects.length,
+    activeProjects: filteredProjects.filter(p => p.status === 'active').length,
+    totalCalculators: filteredCalculators.length,
     ...advancedStats
   };
 
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
   };
 
   const getStatusCount = (status: string) => {
-    return allProjects.filter(project => project.status === status).length;
+    return filteredProjects.filter(project => project.status === status).length;
   };
 
   const handleRefresh = async () => {
