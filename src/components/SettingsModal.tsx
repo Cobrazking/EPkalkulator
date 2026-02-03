@@ -143,7 +143,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Firmanavn</label>
                         <input
                           type="text"
-                          value={companyInfo.firma}
+                          value={companyInfo.firma || ''}
                           onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, firma: e.target.value })}
                           className="w-full"
                           placeholder="Firmanavn"
@@ -220,7 +220,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Navn</label>
                         <input
                           type="text"
-                          value={companyInfo.navn}
+                          value={companyInfo.navn || ''}
                           onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, navn: e.target.value })}
                           className="w-full"
                         />
@@ -229,7 +229,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">E-post</label>
                         <input
                           type="email"
-                          value={companyInfo.epost}
+                          value={companyInfo.epost || ''}
                           onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, epost: e.target.value })}
                           className="w-full"
                         />
@@ -238,7 +238,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Telefon</label>
                         <input
                           type="tel"
-                          value={companyInfo.tlf}
+                          value={companyInfo.tlf || ''}
                           onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, tlf: e.target.value })}
                           className="w-full"
                         />
@@ -247,7 +247,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Ref. nr</label>
                         <input
                           type="text"
-                          value={companyInfo.refNr}
+                          value={companyInfo.refNr || ''}
                           onChange={(e) => onUpdateCompanyInfo({ ...companyInfo, refNr: e.target.value })}
                           className="w-full"
                         />
@@ -274,7 +274,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           <label className="input-label">Firma</label>
                           <input
                             type="text"
-                            value={customerInfo.firma}
+                            value={customerInfo.firma || ''}
                             readOnly
                             disabled
                             className="w-full bg-background-darker/50 cursor-not-allowed"
@@ -285,7 +285,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Kontaktperson</label>
                         <input
                           type="text"
-                          value={customerInfo.kunde}
+                          value={customerInfo.kunde || ''}
                           readOnly
                           disabled
                           className="w-full bg-background-darker/50 cursor-not-allowed"
@@ -295,7 +295,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Adresse</label>
                         <input
                           type="text"
-                          value={customerInfo.adresse}
+                          value={customerInfo.adresse || ''}
                           readOnly
                           disabled
                           className="w-full bg-background-darker/50 cursor-not-allowed"
@@ -305,7 +305,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">E-post</label>
                         <input
                           type="email"
-                          value={customerInfo.epost}
+                          value={customerInfo.epost || ''}
                           readOnly
                           disabled
                           className="w-full bg-background-darker/50 cursor-not-allowed"
@@ -315,7 +315,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <label className="input-label">Telefon</label>
                         <input
                           type="tel"
-                          value={customerInfo.tlf}
+                          value={customerInfo.tlf || ''}
                           readOnly
                           disabled
                           className="w-full bg-background-darker/50 cursor-not-allowed"

@@ -238,15 +238,13 @@ const CalculatorPage: React.FC = () => {
                         const calcSettings = calculator.settings?.companyInfo || localStorageSettings?.companyInfo || {};
                         console.log('📖 LOADING - Calculator settings from DB/localStorage:', calcSettings);
                         const loadedCompanyInfo = {
-                          // Use calculator-specific firma if available, otherwise use global
-                          firma: calcSettings.firma || globalCompanyInfo.firma,
-                          // For logo, refNr, and tilbudstittel: check if property exists in calculator settings
-                          // If it exists (even as undefined/null/empty), use it to override global
+                          // Check if property exists in calculator settings, use it even if empty
+                          // Only fallback to global if property doesn't exist at all
+                          firma: 'firma' in calcSettings ? (calcSettings.firma || '') : globalCompanyInfo.firma,
                           logo: 'logo' in calcSettings ? calcSettings.logo : globalCompanyInfo.logo,
-                          // Calculator-specific settings or fallback to global user settings
-                          navn: calcSettings.navn || globalCompanyInfo.navn,
-                          epost: calcSettings.epost || globalCompanyInfo.epost,
-                          tlf: calcSettings.tlf || globalCompanyInfo.tlf,
+                          navn: 'navn' in calcSettings ? (calcSettings.navn || '') : globalCompanyInfo.navn,
+                          epost: 'epost' in calcSettings ? (calcSettings.epost || '') : globalCompanyInfo.epost,
+                          tlf: 'tlf' in calcSettings ? (calcSettings.tlf || '') : globalCompanyInfo.tlf,
                           refNr: 'refNr' in calcSettings ? (calcSettings.refNr || '') : '',
                           tilbudstittel: 'tilbudstittel' in calcSettings ? (calcSettings.tilbudstittel || '') : ''
                         };
@@ -317,14 +315,13 @@ const CalculatorPage: React.FC = () => {
                       if (calculatorId && calculator && calculator.settings?.companyInfo) {
                         const calcSettings = calculator.settings.companyInfo;
                         setCompanyInfo({
-                          // Global defaults
-                          firma: calcSettings.firma || defaultCompanyInfo.firma,
-                          // For logo, refNr, and tilbudstittel: check if property exists in calculator settings
+                          // Check if property exists in calculator settings, use it even if empty
+                          // Only fallback to global if property doesn't exist at all
+                          firma: 'firma' in calcSettings ? (calcSettings.firma || '') : defaultCompanyInfo.firma,
                           logo: 'logo' in calcSettings ? calcSettings.logo : defaultCompanyInfo.logo,
-                          // Calculator-specific settings or use organization defaults
-                          navn: calcSettings.navn || defaultCompanyInfo.navn,
-                          epost: calcSettings.epost || defaultCompanyInfo.epost,
-                          tlf: calcSettings.tlf || defaultCompanyInfo.tlf,
+                          navn: 'navn' in calcSettings ? (calcSettings.navn || '') : defaultCompanyInfo.navn,
+                          epost: 'epost' in calcSettings ? (calcSettings.epost || '') : defaultCompanyInfo.epost,
+                          tlf: 'tlf' in calcSettings ? (calcSettings.tlf || '') : defaultCompanyInfo.tlf,
                           refNr: 'refNr' in calcSettings ? (calcSettings.refNr || '') : '',
                           tilbudstittel: 'tilbudstittel' in calcSettings ? (calcSettings.tilbudstittel || '') : ''
                         });
